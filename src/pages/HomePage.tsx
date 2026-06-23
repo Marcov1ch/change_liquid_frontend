@@ -125,9 +125,9 @@ export function HomePage() {
 
     return (
         <div style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h1 style={{ margin: 0 }}>Мои автомобили</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ marginBottom: '20px' }}>
+                <h1 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Мои автомобили</h1>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <span>{user?.username}</span>
                     <Link
                         to="/profile"
