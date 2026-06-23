@@ -40,12 +40,14 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
     }, [formData.brand]);
 
     const validatePlateNumber = (value: string) => {
-        const allowedLetters = 'АВЕКМНОРСТУХ';
-        const pattern = new RegExp(`^[${allowedLetters}]\\d{3}[${allowedLetters}]{2}\\d{2,3}$`);
-        const cleaned = value.replace(/\s/g, '').toUpperCase();
+        const allowedLetters = 'АВЕІКМНОРСТУХ';
+        const rfPattern = new RegExp(`^[${allowedLetters}]\\d{3}[${allowedLetters}]{2}\\d{2,3}$`);
+        const byCurrentPattern = new RegExp(`^\\d{4}[${allowedLetters}]{2}\\d$`);
+        const byOldPattern = new RegExp(`^\\d{4}[${allowedLetters}]{2}$`);
+        const cleaned = value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
 
-        if (!pattern.test(cleaned) && cleaned !== '') {
-            setPlateError('Некорректный формат госномера. Разрешённые буквы: А, В, Е, К, М, Н, О, Р, С, Т, У, Х. Пример: А123АА198');
+        if (!rfPattern.test(cleaned) && !byCurrentPattern.test(cleaned) && !byOldPattern.test(cleaned) && cleaned !== '') {
+            setPlateError('Некорректный формат госномера. Допустимые форматы: А123АА178 (РФ) или 1234AB7 (РБ)');
             return false;
         }
         setPlateError('');
@@ -53,7 +55,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
     };
 
     const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
+        const value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
         setFormData({ ...formData, plate_number: value });
         validatePlateNumber(value);
     };
@@ -134,7 +136,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         value={formData.plate_number}
                         onChange={handlePlateChange}
                         required
-                        placeholder="А123АА198"
+                        placeholder="А123АА178 или 1234AB7"
                         style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                     {plateError && <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{plateError}</div>}
