@@ -51,9 +51,13 @@ export function HomePage() {
     }, [selectedId]);
 
     const handleAddVehicle = async (newVehicle: any) => {
-        await api.createVehicle(newVehicle);
-        await loadAllVehicles();
-        setShowForm(false);
+        try {
+            await api.createVehicle(newVehicle);
+            await loadAllVehicles();
+            setShowForm(false);
+        } catch (error: any) {
+            alert(error.message);
+        }
     };
 
     const handleReplacementsUpdate = async () => {

@@ -5,13 +5,14 @@ import { api } from '../api/client';
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (vehicle: any) => void;
+    onSubmit: (vehicle: any) => Promise<void>;
 }
 
 export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
     const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
     const [models, setModels] = useState<{ value: string; label: string }[]>([]);
     const [plateError, setPlateError] = useState('');
+    const [yearError, setYearError] = useState('');
     const [formData, setFormData] = useState({
         brand: '',
         model: '',
@@ -57,27 +58,39 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
         validatePlateNumber(value);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validatePlateNumber(formData.plate_number)) {
             alert('Пожалуйста, исправьте ошибки в форме');
             return;
         }
-        onSubmit(formData);
-        setFormData({
-            brand: '',
-            model: '',
-            plate_number: '',
-            year: new Date().getFullYear(),
-            current_km: 0,
-            oil_interval_km: 7000,
-            transmission_interval_km: 60000,
-            brake_interval_km: 40000,
-            coolant_interval_km: 60000,
-            power_steering_interval_km: 40000,
-            differential_oil_interval_km: 50000
-        });
-        setPlateError('');
+
+        const currentYear = new Date().getFullYear();
+        if (formData.year > currentYear || formData.year < 1960) {
+            setYearError(`Год выпуска должен быть от 1960 до ${currentYear}`);
+            return;
+        }
+        setYearError('');
+
+        try {
+            await onSubmit(formData);
+            setFormData({
+                brand: '',
+                model: '',
+                plate_number: '',
+                year: new Date().getFullYear(),
+                current_km: 0,
+                oil_interval_km: 7000,
+                transmission_interval_km: 60000,
+                brake_interval_km: 40000,
+                coolant_interval_km: 60000,
+                power_steering_interval_km: 40000,
+                differential_oil_interval_km: 50000
+            });
+            setPlateError('');
+        } catch {
+            // ошибка уже показана в HomePage
+        }
     };
 
     return (
@@ -132,10 +145,11 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                     <input
                         type="number"
                         value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                        onChange={(e) => { setFormData({ ...formData, year: parseInt(e.target.value) }); setYearError(''); }}
                         required
                         style={{ width: '100%', padding: '8px', marginTop: '5px' }}
                     />
+                    {yearError && <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{yearError}</div>}
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
