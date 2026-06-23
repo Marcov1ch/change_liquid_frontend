@@ -183,7 +183,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                 backgroundColor: '#e0e0e0',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '8px'
             }}>
                 <span style={{ fontWeight: 'bold' }}>
                     Замены жидкостей для: {selectedVehicle.brand} {selectedVehicle.model}
@@ -255,20 +257,20 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                                                     placeholder="Название"
                                                                     value={editForm.liquid_name}
                                                                     onChange={(e) => setEditForm({ ...editForm, liquid_name: e.target.value })}
-                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
+                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
                                                                 />
                                                                 <input
                                                                     type="number"
                                                                     placeholder="Пробег"
                                                                     value={editForm.km_at_replacement}
                                                                     onChange={(e) => setEditForm({ ...editForm, km_at_replacement: e.target.value })}
-                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
+                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
                                                                 />
                                                                 <input
                                                                     type="date"
                                                                     value={editForm.replacement_date}
                                                                     onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
-                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px' }}
+                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
                                                                 />
                                                                 <div style={{ display: 'flex', gap: '8px' }}>
                                                                     <button onClick={saveEdit} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px' }}>Сохранить</button>

@@ -27,7 +27,6 @@ export function Modal({ isOpen, onClose, title, children }: Props) {
                 backgroundColor: 'white',
                 padding: '30px',
                 borderRadius: '10px',
-                width: '500px',
                 maxWidth: '90%',
                 maxHeight: '80%',
                 overflowY: 'auto'

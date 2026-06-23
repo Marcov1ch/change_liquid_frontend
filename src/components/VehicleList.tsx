@@ -70,7 +70,7 @@ export function VehicleList({
                             border: '1px solid #ddd',
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between', flexWrap: 'wrap' }}>
                             {/* Левая часть - кликабельная */}
                             <div
                                 style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}
@@ -83,7 +83,7 @@ export function VehicleList({
                             </div>
 
                             {/* Правая часть - кнопки */}
-                            <div style={{ display: 'flex', gap: '5px' }}>
+                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                                 {!showArchived ? (
                                     // Активные авто - полный набор кнопок
                                     <>
@@ -129,7 +129,7 @@ export function VehicleList({
                                                     value={newKmValue}
                                                     onChange={(e) => setNewKmValue(e.target.value)}
                                                     placeholder="Новый пробег"
-                                                    style={{ width: '120px', padding: '5px' }}
+                                                    style={{ width: '120px', padding: '5px', boxSizing: 'border-box' }}
                                                     autoFocus
                                                 />
                                                 <button

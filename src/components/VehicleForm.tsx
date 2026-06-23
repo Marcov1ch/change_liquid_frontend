@@ -102,7 +102,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         value={formData.brand}
                         onChange={(e) => setFormData({ ...formData, brand: e.target.value, model: '' })}
                         required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     >
                         <option value="">Выберите марку</option>
                         {brands.map(brand => (
@@ -118,7 +118,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                         required
                         disabled={!formData.brand}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     >
                         <option value="">{formData.brand ? "Выберите модель" : "Сначала выберите марку"}</option>
                         {models.map(model => (
@@ -147,7 +147,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         value={formData.year}
                         onChange={(e) => { setFormData({ ...formData, year: parseInt(e.target.value) }); setYearError(''); }}
                         required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                     {yearError && <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{yearError}</div>}
                 </div>
@@ -159,7 +159,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         value={formData.current_km}
                         onChange={(e) => setFormData({ ...formData, current_km: parseInt(e.target.value) })}
                         required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -172,7 +172,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         type="number"
                         value={formData.oil_interval_km}
                         onChange={(e) => setFormData({ ...formData, oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -182,7 +182,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         type="number"
                         value={formData.transmission_interval_km}
                         onChange={(e) => setFormData({ ...formData, transmission_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -192,7 +192,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         type="number"
                         value={formData.brake_interval_km}
                         onChange={(e) => setFormData({ ...formData, brake_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -202,7 +202,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         type="number"
                         value={formData.coolant_interval_km}
                         onChange={(e) => setFormData({ ...formData, coolant_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -212,7 +212,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         type="number"
                         value={formData.power_steering_interval_km}
                         onChange={(e) => setFormData({ ...formData, power_steering_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
@@ -222,7 +222,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         type="number"
                         value={formData.differential_oil_interval_km}
                         onChange={(e) => setFormData({ ...formData, differential_oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
                 </div>
 
