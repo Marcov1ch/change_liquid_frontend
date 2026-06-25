@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { api } from '../api/client';
+import type { Vehicle } from '../types';
 
 interface Props {
-    vehicles: any[];
+    vehicles: Vehicle[];
     selectedId: number | null;
     onSelect: (id: number) => void;
     onVehicleUpdate: () => void;
-    onEditVehicle: (vehicle: any) => void;
+    onEditVehicle: (vehicle: Vehicle) => void;
     onDeleteVehicle: (id: number) => void;
     onHardDeleteVehicle: (id: number) => void;
     onRestoreVehicle: (id: number) => void;
     showArchived: boolean;
     statusIcons: Record<string, string>;
-    getVehicleStatus: (vehicle: any) => string;
+    getVehicleStatus: (vehicle: Vehicle) => string;
 }
 
 export function VehicleList({
