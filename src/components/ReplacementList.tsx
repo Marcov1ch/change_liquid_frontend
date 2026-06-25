@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { api } from '../api/client';
+import type { Replacement, Vehicle } from '../types';
 
 interface Props {
-    replacements: any[];
+    replacements: Replacement[];
     vehicleId: number | null;
-    selectedVehicle: any;
+    selectedVehicle: Vehicle | undefined;
     onClose: () => void;
     onReplacementsUpdate: () => void;
 }
@@ -37,7 +38,7 @@ const liquidTypesList = [
 
 export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onReplacementsUpdate }: Props) {
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-    const [editingReplacement, setEditingReplacement] = useState<any>(null);
+    const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newReplacement, setNewReplacement] = useState({
         liquid_type: 'engine_oil',
@@ -56,7 +57,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     if (!vehicleId || !selectedVehicle) return null;
 
     // Группируем замены по типу жидкости
-    const grouped = replacements.reduce((acc: any, replacement) => {
+    const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
         const type = replacement.liquid_type;
         if (!acc[type]) {
             acc[type] = [];
@@ -67,7 +68,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
     // Сортируем замены в каждой группе от новых к старым (по пробегу)
     Object.keys(grouped).forEach(type => {
-        grouped[type].sort((a: any, b: any) => {
+        grouped[type].sort((a, b) => {
             if (b.km_at_replacement !== a.km_at_replacement) {
                 return b.km_at_replacement - a.km_at_replacement;
             }
@@ -79,7 +80,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
     };
 
-    const startEdit = (replacement: any) => {
+    const startEdit = (replacement: Replacement) => {
         setEditingReplacement(replacement);
         setEditForm({
             km_at_replacement: String(replacement.km_at_replacement),
@@ -96,7 +97,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     const saveEdit = async () => {
         if (!editingReplacement) return;
 
-        const updateData: any = {};
+        const updateData: Record<string, string | number> = {};
 
         if (editForm.liquid_name !== editingReplacement.liquid_name) {
             updateData.liquid_name = editForm.liquid_name;
@@ -237,7 +238,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
                                     {openGroups[type] && (
                                         <ul style={{ listStyle: 'none', padding: '0 0 0 10px', margin: '10px 0 0 0' }}>
-                                            {grouped[type].map((r: any, idx: number) => {
+                                            {grouped[type].map((r: Replacement, idx: number) => {
                                                 const itemStatus = r.status || 'unknown';
                                                 const itemStatusStyle = statusStyles[itemStatus] || statusStyles.unknown;
 

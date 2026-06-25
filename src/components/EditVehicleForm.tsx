@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
+import type { Vehicle } from '../types';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    vehicle: any;
+    vehicle: Vehicle | null;
     onUpdate: () => void;
 }
 
@@ -71,7 +72,7 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
     };
 
     const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
+        const value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
         setFormData({ ...formData, plate_number: value });
         validatePlateNumber(value);
     };
@@ -83,6 +84,8 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
             alert('Пожалуйста, исправьте ошибки в форме');
             return;
         }
+
+        if (!vehicle) return;
 
         try {
             await api.updateVehicle(vehicle.id, formData);

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
+import type { VehicleFormData } from '../types';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (vehicle: any) => Promise<void>;
+    onSubmit: (vehicle: VehicleFormData) => Promise<void>;
 }
 
 export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {

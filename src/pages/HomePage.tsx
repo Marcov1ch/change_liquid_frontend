@@ -6,15 +6,16 @@ import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
+import type { Vehicle, Replacement, VehicleFormData } from '../types';
 
 export function HomePage() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [vehicles, setVehicles] = useState<any[]>([]);
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [replacements, setReplacements] = useState<any[]>([]);
+    const [replacements, setReplacements] = useState<Replacement[]>([]);
     const [showForm, setShowForm] = useState(false);
-    const [editingVehicle, setEditingVehicle] = useState<any>(null);
+    const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
     const [showEditForm, setShowEditForm] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
 
@@ -50,13 +51,15 @@ export function HomePage() {
         loadReplacements();
     }, [selectedId]);
 
-    const handleAddVehicle = async (newVehicle: any) => {
+    const handleAddVehicle = async (newVehicle: VehicleFormData) => {
         try {
             await api.createVehicle(newVehicle);
             await loadAllVehicles();
             setShowForm(false);
-        } catch (error: any) {
-            alert(error.message);
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            }
         }
     };
 
@@ -72,7 +75,7 @@ export function HomePage() {
         }
     };
 
-    const handleEditVehicle = (vehicle: any) => {
+    const handleEditVehicle = (vehicle: Vehicle) => {
         setEditingVehicle(vehicle);
         setShowEditForm(true);
     };
@@ -111,7 +114,7 @@ export function HomePage() {
         }
     };
 
-    const getVehicleStatus = (vehicle: any) => {
+    const getVehicleStatus = (vehicle: Vehicle) => {
         return vehicle.vehicle_status || 'unknown';
     };
 
