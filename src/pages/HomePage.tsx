@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { VehicleList } from '../components/VehicleList';
@@ -129,19 +129,19 @@ export function HomePage() {
     return (
         <div style={{ padding: '20px' }}>
             <div style={{ marginBottom: '20px' }}>
-                <h1 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Мои автомобили</h1>
+                <h1 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: 28 }}>Мои автомобили</h1>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <span>{user?.username}</span>
-                    <Link
-                        to="/profile"
+                    <button
+                        onClick={() => navigate('/profile')}
                         style={{
                             padding: '6px 14px', fontSize: 14, cursor: 'pointer',
                             backgroundColor: '#007bff', color: 'white',
-                            textDecoration: 'none', border: 'none', borderRadius: 5
+                            border: 'none', borderRadius: 5
                         }}
                     >
                         Профиль
-                    </Link>
+                    </button>
                     <button
                         onClick={() => { logout(); navigate('/login'); }}
                         style={{
