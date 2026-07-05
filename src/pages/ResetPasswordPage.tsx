@@ -44,7 +44,7 @@ export function ResetPasswordPage() {
     if (!token) {
         return (
             <div style={{ maxWidth: 400, margin: '100px auto', padding: 20 }}>
-                <h1>Недействительная ссылка</h1>
+                <h1 style={{ fontSize: 28 }}>Недействительная ссылка</h1>
                 <p>Отсутствует токен восстановления. Перейдите по ссылке из письма.</p>
                 <p style={{ marginTop: 15, textAlign: 'center' }}>
                     <Link to="/forgot-password">Запросить новое письмо</Link>
@@ -56,7 +56,7 @@ export function ResetPasswordPage() {
     if (done) {
         return (
             <div style={{ maxWidth: 400, margin: '100px auto', padding: 20 }}>
-                <h1>Пароль изменён</h1>
+                <h1 style={{ fontSize: 28 }}>Пароль изменён</h1>
                 <p>Теперь вы можете войти с новым паролем.</p>
                 <p style={{ marginTop: 15, textAlign: 'center' }}>
                     <Link to="/login">Войти</Link>
@@ -67,7 +67,7 @@ export function ResetPasswordPage() {
 
     return (
         <div style={{ maxWidth: 400, margin: '100px auto', padding: 20 }}>
-            <h1>Новый пароль</h1>
+            <h1 style={{ fontSize: 28 }}>Новый пароль</h1>
             <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: 15 }}>
                     <label style={{ display: 'block', marginBottom: 5 }}>Новый пароль</label>
