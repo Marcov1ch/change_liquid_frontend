@@ -199,6 +199,20 @@ export const api = {
     deleteAccount: () =>
         authFetch(`${AUTH_BASE}/me`, { method: 'DELETE' })
             .then(res => handleResponse<{ detail: string }>(res)),
+
+    forgotPassword: (email: string) =>
+        fetch(`${AUTH_BASE}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        }).then(res => handleResponse<{ detail: string }>(res)),
+
+    resetPassword: (token: string, new_password: string) =>
+        fetch(`${AUTH_BASE}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, new_password }),
+        }).then(res => handleResponse<{ detail: string }>(res)),
 }
 
 export { getAccessToken, getRefreshToken, setTokens, clearTokens }

@@ -1,32 +1,48 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { Link } from 'react-router-dom'
 
-export function LoginPage() {
+export function ForgotPasswordPage() {
     const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
+    const [email, setEmail] = useState('')
+    const [sent, setSent] = useState(false)
     const [error, setError] = useState('')
     const [submitting, setSubmitting] = useState(false)
-    const { login } = useAuth()
-    const navigate = useNavigate()
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
         setError('')
         setSubmitting(true)
         try {
-            await login(username, password)
-            navigate('/', { replace: true })
+            const res = await fetch('/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.detail || 'Ошибка')
+            setSent(true)
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Ошибка входа')
+            setError(err instanceof Error ? err.message : 'Ошибка')
         } finally {
             setSubmitting(false)
         }
     }
 
+    if (sent) {
+        return (
+            <div style={{ maxWidth: 400, margin: '100px auto', padding: 20 }}>
+                <h1 style={{ fontSize: 28 }}>Проверьте почту</h1>
+                <p>Если такой email зарегистрирован, мы отправили на него ссылку для восстановления пароля.</p>
+                <p style={{ marginTop: 15, textAlign: 'center' }}>
+                    <Link to="/login">Вернуться ко входу</Link>
+                </p>
+            </div>
+        )
+    }
+
     return (
         <div style={{ maxWidth: 400, margin: '100px auto', padding: 20 }}>
-            <h1>Вход</h1>
+            <h1 style={{ fontSize: 28 }}>Восстановление пароля</h1>
             <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: 15 }}>
                     <label style={{ display: 'block', marginBottom: 5 }}>Имя пользователя</label>
@@ -39,11 +55,11 @@ export function LoginPage() {
                     />
                 </div>
                 <div style={{ marginBottom: 15 }}>
-                    <label style={{ display: 'block', marginBottom: 5 }}>Пароль</label>
+                    <label style={{ display: 'block', marginBottom: 5 }}>Email</label>
                     <input
-                        type="password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
                         required
                         style={{ width: '100%', padding: '8px 12px', fontSize: 16, boxSizing: 'border-box' }}
                     />
@@ -57,14 +73,11 @@ export function LoginPage() {
                         backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: 5
                     }}
                 >
-                    {submitting ? 'Вход...' : 'Войти'}
+                    {submitting ? 'Отправка...' : 'Отправить'}
                 </button>
             </form>
-            <p style={{ marginTop: 10, textAlign: 'center' }}>
-                <Link to="/forgot-password">Забыли пароль?</Link>
-            </p>
-            <p style={{ marginTop: 10, textAlign: 'center' }}>
-                Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+            <p style={{ marginTop: 15, textAlign: 'center' }}>
+                <Link to="/login">Вернуться ко входу</Link>
             </p>
         </div>
     )
