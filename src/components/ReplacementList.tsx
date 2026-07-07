@@ -202,7 +202,13 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
             {/* Замены жидкостей */}
             <div style={{ padding: '10px' }}>
                 {replacements.length === 0 ? (
-                    <p style={{ margin: '0 0 15px 0', color: '#666' }}>Нет замен</p>
+                    <div style={{ margin: '0 0 15px 0', padding: '12px', backgroundColor: '#fff3cd', borderRadius: '5px', border: '1px solid #ffc107' }}>
+                        <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>Нет замен</p>
+                        <p style={{ margin: '0', fontSize: '13px', color: '#856404' }}>
+                            Чтобы начать отслеживание — добавьте первую замену.
+                            После этого система будет рассчитывать статус и напоминать о следующей замене.
+                        </p>
+                    </div>
                 ) : (
                     <div>
                         {Object.keys(grouped).map(type => {

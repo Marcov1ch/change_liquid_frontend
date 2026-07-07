@@ -80,6 +80,7 @@ export function VehicleList({
                                 <span style={{ fontSize: '20px' }}>{icon}</span>
                                 <span>
                                     {vehicle.brand} {vehicle.model} - {vehicle.current_km} км ({vehicle.plate_number})
+                                    {status === 'unknown' && <span style={{ color: 'red', marginLeft: '6px' }}>*</span>}
                                 </span>
                             </div>
 
