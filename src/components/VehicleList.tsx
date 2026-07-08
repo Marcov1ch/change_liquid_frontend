@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import { api } from '../api/client';
 import type { Vehicle } from '../types';
 
 interface Props {
     vehicles: Vehicle[];
     selectedId: number | null;
     onSelect: (id: number) => void;
-    onVehicleUpdate: () => void;
     onEditVehicle: (vehicle: Vehicle) => void;
     onDeleteVehicle: (id: number) => void;
     onHardDeleteVehicle: (id: number) => void;
     onRestoreVehicle: (id: number) => void;
+    onUpdateKm: (vehicleId: number, newKm: number) => Promise<void>;
     showArchived: boolean;
     statusIcons: Record<string, string>;
     getVehicleStatus: (vehicle: Vehicle) => string;
@@ -20,11 +19,11 @@ export function VehicleList({
     vehicles,
     selectedId,
     onSelect,
-    onVehicleUpdate,
     onEditVehicle,
     onDeleteVehicle,
     onHardDeleteVehicle,
     onRestoreVehicle,
+    onUpdateKm,
     showArchived,
     statusIcons,
     getVehicleStatus
@@ -40,13 +39,11 @@ export function VehicleList({
         }
 
         try {
-            await api.updateVehicleKm(vehicleId, newKm);
+            await onUpdateKm(vehicleId, newKm);
             setEditingKm(null);
             setNewKmValue('');
-            onVehicleUpdate();
-        } catch (error) {
-            console.error('Ошибка при обновлении пробега:', error);
-            alert('Не удалось обновить пробег');
+        } catch {
+            // ошибка уже показана в HomePage
         }
     };
 
