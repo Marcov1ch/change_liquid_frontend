@@ -6,7 +6,6 @@ import { ProfilePage } from './pages/ProfilePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
-import './App.css'
 
 function App() {
     return (

@@ -1,78 +1,79 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
-import type { Vehicle, Replacement, VehicleFormData } from '../types';
+import type { Vehicle, VehicleFormData } from '../types';
 
 export function HomePage() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const queryClient = useQueryClient();
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [replacements, setReplacements] = useState<Replacement[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
     const [showEditForm, setShowEditForm] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
 
+    const { data: vehicles = [] } = useQuery({
+        queryKey: ['vehicles'],
+        queryFn: api.getAllVehicles,
+    });
+
+    const { data: replacements = [] } = useQuery({
+        queryKey: ['replacements', selectedId],
+        queryFn: () => api.getReplacements(selectedId!),
+        enabled: !!selectedId,
+    });
+
     const selectedVehicle = vehicles.find(v => v.id === selectedId);
 
     // Разделяем на активные и архивные
-    const activeVehicles = vehicles.filter(v => {
-        console.log('Авто:', v.id, 'is_active:', v.is_active);
-        return v.is_active !== false;
-    });
+    const activeVehicles = vehicles.filter(v => v.is_active !== false);
     const archivedVehicles = vehicles.filter(v => v.is_active === false);
 
-    const loadAllVehicles = async () => {
-        const data = await api.getAllVehicles();  // все авто (активные + архивные)
-        console.log('Загружено авто:', data);
-        setVehicles(data);
+    const invalidateVehicles = () => queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    const invalidateReplacements = () => {
+        if (selectedId) queryClient.invalidateQueries({ queryKey: ['replacements', selectedId] });
     };
 
-    const loadReplacements = async () => {
-        if (selectedId) {
-            const data = await api.getReplacements(selectedId);
-            setReplacements(data);
-        } else {
-            setReplacements([]);
-        }
-    };
+    const createVehicleMutation = useMutation({
+        mutationFn: api.createVehicle,
+        onSuccess: () => {
+            invalidateVehicles();
+            setShowForm(false);
+        },
+    });
 
-    useEffect(() => {
-        loadAllVehicles();
-    }, []);
-
-    useEffect(() => {
-        loadReplacements();
-    }, [selectedId]);
+    const updateKmMutation = useMutation({
+        mutationFn: ({ vehicleId, newKm }: { vehicleId: number; newKm: number }) =>
+            api.updateVehicleKm(vehicleId, newKm),
+        onSuccess: () => {
+            invalidateVehicles();
+            invalidateReplacements();
+        },
+    });
 
     const handleAddVehicle = async (newVehicle: VehicleFormData) => {
         try {
-            await api.createVehicle(newVehicle);
-            await loadAllVehicles();
-            setShowForm(false);
+            await createVehicleMutation.mutateAsync(newVehicle);
         } catch (error) {
-            if (error instanceof Error) {
-                alert(error.message);
-            }
+            if (error instanceof Error) alert(error.message);
         }
     };
 
-    const handleReplacementsUpdate = async () => {
-        await loadReplacements();
-        await loadAllVehicles();
+    const handleReplacementsUpdate = () => {
+        invalidateReplacements();
+        invalidateVehicles();
     };
 
-    const handleVehicleUpdate = async () => {
-        await loadAllVehicles();
-        if (selectedId) {
-            await loadReplacements();
-        }
+    const handleVehicleUpdate = () => {
+        invalidateVehicles();
+        invalidateReplacements();
     };
 
     const handleEditVehicle = (vehicle: Vehicle) => {
@@ -84,7 +85,7 @@ export function HomePage() {
         if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
         try {
             await api.deleteVehicle(id);
-            await loadAllVehicles();
+            invalidateVehicles();
             if (selectedId === id) setSelectedId(null);
         } catch (error) {
             console.error('Ошибка при удалении:', error);
@@ -96,7 +97,7 @@ export function HomePage() {
         if (!confirm('ПОЛНОСТЬЮ удалить автомобиль из базы данных? Это действие необратимо!')) return;
         try {
             await api.hardDeleteVehicle(id);
-            await loadAllVehicles();
+            invalidateVehicles();
             if (selectedId === id) setSelectedId(null);
         } catch (error) {
             console.error('Ошибка при жестком удалении:', error);
@@ -107,10 +108,19 @@ export function HomePage() {
     const handleRestoreVehicle = async (id: number) => {
         try {
             await api.restoreVehicle(id);
-            await loadAllVehicles();
+            invalidateVehicles();
         } catch (error) {
             console.error('Ошибка при восстановлении:', error);
             alert('Не удалось восстановить автомобиль');
+        }
+    };
+
+    const handleUpdateKm = async (vehicleId: number, newKm: number) => {
+        try {
+            await updateKmMutation.mutateAsync({ vehicleId, newKm });
+        } catch (error) {
+            console.error('Ошибка при обновлении пробега:', error);
+            alert('Не удалось обновить пробег');
         }
     };
 
@@ -205,11 +215,11 @@ export function HomePage() {
                 vehicles={showArchived ? archivedVehicles : activeVehicles}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
-                onVehicleUpdate={handleVehicleUpdate}
                 onEditVehicle={handleEditVehicle}
                 onDeleteVehicle={handleDeleteVehicle}
                 onHardDeleteVehicle={handleHardDeleteVehicle}
                 onRestoreVehicle={handleRestoreVehicle}
+                onUpdateKm={handleUpdateKm}
                 showArchived={showArchived}
                 statusIcons={statusIcons}
                 getVehicleStatus={getVehicleStatus}
