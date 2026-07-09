@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import type { QueryClient } from '@tanstack/react-query'
 import { api, setTokens, clearTokens, getRefreshToken } from '../api/client'
 import type { User } from '../types'
 
@@ -17,14 +18,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children, queryClient }: { children: ReactNode; queryClient: QueryClient }) {
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
     const logout = useCallback(() => {
         clearTokens()
         setUser(null)
-    }, [])
+        queryClient.clear()
+    }, [queryClient])
 
     useEffect(() => {
         const handleForceLogout = () => logout()
