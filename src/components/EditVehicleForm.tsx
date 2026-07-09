@@ -25,7 +25,13 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
         brake_interval_km: 40000,
         coolant_interval_km: 60000,
         power_steering_interval_km: 40000,
-        differential_oil_interval_km: 50000
+        differential_oil_interval_km: 50000,
+        oil_notify_enabled: true,
+        transmission_notify_enabled: true,
+        brake_notify_enabled: true,
+        coolant_notify_enabled: true,
+        power_steering_notify_enabled: true,
+        differential_oil_notify_enabled: true,
     });
 
     useEffect(() => {
@@ -41,7 +47,13 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
                 brake_interval_km: vehicle.brake_interval_km || 40000,
                 coolant_interval_km: vehicle.coolant_interval_km || 60000,
                 power_steering_interval_km: vehicle.power_steering_interval_km || 40000,
-                differential_oil_interval_km: vehicle.differential_oil_interval_km || 50000
+                differential_oil_interval_km: vehicle.differential_oil_interval_km || 50000,
+                oil_notify_enabled: vehicle.oil_notify_enabled,
+                transmission_notify_enabled: vehicle.transmission_notify_enabled,
+                brake_notify_enabled: vehicle.brake_notify_enabled,
+                coolant_notify_enabled: vehicle.coolant_notify_enabled,
+                power_steering_notify_enabled: vehicle.power_steering_notify_enabled,
+                differential_oil_notify_enabled: vehicle.differential_oil_notify_enabled,
             });
         }
     }, [vehicle]);
@@ -227,6 +239,69 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
                         onChange={(e) => setFormData({ ...formData, differential_oil_interval_km: parseInt(e.target.value) })}
                         style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
+                </div>
+
+                <hr />
+                <h4>Уведомления по email</h4>
+
+                <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                        type="checkbox"
+                        id="edit_oil_notify"
+                        checked={formData.oil_notify_enabled}
+                        onChange={(e) => setFormData({ ...formData, oil_notify_enabled: e.target.checked })}
+                    />
+                    <label htmlFor="edit_oil_notify">Моторное масло</label>
+                </div>
+
+                <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                        type="checkbox"
+                        id="edit_transmission_notify"
+                        checked={formData.transmission_notify_enabled}
+                        onChange={(e) => setFormData({ ...formData, transmission_notify_enabled: e.target.checked })}
+                    />
+                    <label htmlFor="edit_transmission_notify">Масло АКПП</label>
+                </div>
+
+                <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                        type="checkbox"
+                        id="edit_brake_notify"
+                        checked={formData.brake_notify_enabled}
+                        onChange={(e) => setFormData({ ...formData, brake_notify_enabled: e.target.checked })}
+                    />
+                    <label htmlFor="edit_brake_notify">Тормозная жидкость</label>
+                </div>
+
+                <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                        type="checkbox"
+                        id="edit_coolant_notify"
+                        checked={formData.coolant_notify_enabled}
+                        onChange={(e) => setFormData({ ...formData, coolant_notify_enabled: e.target.checked })}
+                    />
+                    <label htmlFor="edit_coolant_notify">Антифриз</label>
+                </div>
+
+                <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                        type="checkbox"
+                        id="edit_power_steering_notify"
+                        checked={formData.power_steering_notify_enabled}
+                        onChange={(e) => setFormData({ ...formData, power_steering_notify_enabled: e.target.checked })}
+                    />
+                    <label htmlFor="edit_power_steering_notify">Жидкость ГУР</label>
+                </div>
+
+                <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                        type="checkbox"
+                        id="edit_differential_oil_notify"
+                        checked={formData.differential_oil_notify_enabled}
+                        onChange={(e) => setFormData({ ...formData, differential_oil_notify_enabled: e.target.checked })}
+                    />
+                    <label htmlFor="edit_differential_oil_notify">Масло в редукторе</label>
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>

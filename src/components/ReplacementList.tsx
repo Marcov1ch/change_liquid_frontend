@@ -24,6 +24,7 @@ const statusStyles: Record<string, { backgroundColor: string; color: string; bor
     warning: { backgroundColor: '#fff3cd', color: '#856404', borderColor: '#ffc107', icon: '🟡' },
     critical: { backgroundColor: '#f8d7da', color: '#721c24', borderColor: '#fd7e14', icon: '🟠' },
     overdue: { backgroundColor: '#f8d7da', color: '#721c24', borderColor: '#dc3545', icon: '🔴' },
+    replaced: { backgroundColor: '#e9ecef', color: '#6c757d', borderColor: '#ced4da', icon: '📌' },
     unknown: { backgroundColor: '#e9ecef', color: '#6c757d', borderColor: '#ced4da', icon: '⚪' }
 };
 
