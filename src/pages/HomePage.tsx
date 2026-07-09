@@ -20,9 +20,8 @@ export function HomePage() {
     const [showArchived, setShowArchived] = useState(false);
 
     const { data: vehicles = [] } = useQuery({
-        queryKey: ['vehicles', user?.id],
+        queryKey: ['vehicles'],
         queryFn: api.getAllVehicles,
-        enabled: !!user,
     });
 
     const { data: replacements = [] } = useQuery({
