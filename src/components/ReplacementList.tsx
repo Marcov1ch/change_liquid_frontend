@@ -3,511 +3,415 @@ import { api } from '../api/client';
 import type { Replacement, Vehicle, ComponentConfig } from '../types';
 
 interface Props {
-    replacements: Replacement[];
-    vehicleId: number | null;
-    selectedVehicle: Vehicle | undefined;
-    onClose: () => void;
-    onReplacementsUpdate: () => void;
+  replacements: Replacement[];
+  vehicleId: number | null;
+  selectedVehicle: Vehicle | undefined;
+  onClose: () => void;
+  onReplacementsUpdate: () => void;
 }
 
-const statusStyles: Record<string, { backgroundColor: string; color: string; borderColor: string; icon: string }> = {
-    good: { backgroundColor: '#d4edda', color: '#155724', borderColor: '#28a745', icon: '🟢' },
-    warning: { backgroundColor: '#fff3cd', color: '#856404', borderColor: '#ffc107', icon: '🟡' },
-    critical: { backgroundColor: '#f8d7da', color: '#721c24', borderColor: '#fd7e14', icon: '🟠' },
-    overdue: { backgroundColor: '#f8d7da', color: '#721c24', borderColor: '#dc3545', icon: '🔴' },
-    unknown: { backgroundColor: '#e9ecef', color: '#6c757d', borderColor: '#ced4da', icon: '⚪' },
-    replaced: { backgroundColor: '#f8f9fa', color: '#6c757d', borderColor: '#dee2e6', icon: '📌' }
+const statusStyles: Record<string, { bg: string; text: string; border: string; icon: string }> = {
+  good: { bg: 'bg-[#E6F7E6]', text: 'text-[#1B5E1B]', border: 'border-l-[#28A745]', icon: '🟢' },
+  warning: { bg: 'bg-[#FFF8E1]', text: 'text-[#7A6100]', border: 'border-l-[#FFC107]', icon: '🟡' },
+  critical: { bg: 'bg-[#FFF0E6]', text: 'text-[#7A2D00]', border: 'border-l-[#E06900]', icon: '🟠' },
+  overdue: { bg: 'bg-error-container', text: 'text-error-on-container', border: 'border-l-error', icon: '🔴' },
+  unknown: { bg: 'bg-surface-variant/50', text: 'text-surface-on-variant', border: 'border-l-outline', icon: '⚪' },
+  replaced: { bg: 'bg-[#F5F5F5]', text: 'text-outline', border: 'border-l-outline-variant', icon: '📌' },
 };
 
 export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onReplacementsUpdate }: Props) {
-    const [configs, setConfigs] = useState<ComponentConfig[]>([]);
-    const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-    const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
-    const [showAddForm, setShowAddForm] = useState(false);
-    const [newReplacement, setNewReplacement] = useState({
-        component_type: '',
+  const [configs, setConfigs] = useState<ComponentConfig[]>([]);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newReplacement, setNewReplacement] = useState({
+    component_type: '',
+    component_name: '',
+    component_price: 0,
+    work_price: 0,
+    replacement_date: new Date().toISOString().split('T')[0],
+    km_at_replacement: selectedVehicle?.current_km || 0,
+  });
+  const [editForm, setEditForm] = useState({
+    km_at_replacement: '',
+    replacement_date: '',
+    component_name: '',
+  });
+
+  useEffect(() => {
+    api.getComponentConfigs().then(data => {
+      setConfigs(data.configs);
+      if (data.configs.length > 0) {
+        setNewReplacement(prev => prev.component_type ? prev : { ...prev, component_type: data.configs[0].key });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (selectedVehicle && configs.length > 0) {
+      setNewReplacement(prev => prev.component_type ? prev : { ...prev, component_type: configs[0].key });
+    }
+  }, [selectedVehicle, configs]);
+
+  if (!vehicleId || !selectedVehicle) return null;
+
+  const liquidNames: Record<string, string> = {};
+  configs.forEach(c => { liquidNames[c.key] = c.name; });
+
+  const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
+    const type = replacement.component_type;
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(replacement);
+    return acc;
+  }, {});
+
+  Object.keys(grouped).forEach(type => {
+    grouped[type].sort((a, b) => {
+      if (b.km_at_replacement !== a.km_at_replacement) return b.km_at_replacement - a.km_at_replacement;
+      return new Date(b.replacement_date).getTime() - new Date(a.replacement_date).getTime();
+    });
+  });
+
+  const toggleGroup = (type: string) => {
+    setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  const handleToggleNotify = async (type: string) => {
+    if (!selectedVehicle) return;
+    const currentVal = selectedVehicle.notify_flags[type] ?? true;
+    try {
+      await api.updateNotify(selectedVehicle.id, { [type]: !currentVal });
+      onReplacementsUpdate();
+    } catch {
+      alert('Не удалось изменить настройку уведомлений');
+    }
+  };
+
+  const startEdit = (replacement: Replacement) => {
+    setEditingReplacement(replacement);
+    setEditForm({
+      km_at_replacement: String(replacement.km_at_replacement),
+      replacement_date: replacement.replacement_date,
+      component_name: replacement.component_name,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingReplacement(null);
+    setEditForm({ km_at_replacement: '', replacement_date: '', component_name: '' });
+  };
+
+  const saveEdit = async () => {
+    if (!editingReplacement) return;
+
+    const updateData: Record<string, string | number> = {};
+    if (editForm.component_name !== editingReplacement.component_name) updateData.component_name = editForm.component_name;
+    if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
+    if (editForm.replacement_date !== editingReplacement.replacement_date) updateData.replacement_date = editForm.replacement_date;
+
+    if (Object.keys(updateData).length === 0) { setEditingReplacement(null); return; }
+
+    try {
+      await api.updateReplacement(editingReplacement.id, updateData);
+      setEditingReplacement(null);
+      onReplacementsUpdate();
+    } catch (error) {
+      console.error('Ошибка при обновлении:', error);
+      alert('Не удалось обновить замену');
+    }
+  };
+
+  const deleteReplacement = async (id: number) => {
+    if (!confirm('Удалить эту замену?')) return;
+    try {
+      await api.deleteReplacement(id);
+      onReplacementsUpdate();
+    } catch (error) {
+      console.error('Ошибка при удалении:', error);
+      alert('Не удалось удалить замену');
+    }
+  };
+
+  const handleAddReplacement = async () => {
+    if (!newReplacement.component_name.trim()) {
+      alert('Введите название компонента');
+      return;
+    }
+    try {
+      await api.createReplacement(vehicleId, {
+        component_type: newReplacement.component_type,
+        component_name: newReplacement.component_name,
+        component_price: newReplacement.component_price,
+        work_price: newReplacement.work_price,
+        replacement_date: newReplacement.replacement_date,
+        km_at_replacement: newReplacement.km_at_replacement,
+      });
+      setShowAddForm(false);
+      setNewReplacement({
+        component_type: configs[0]?.key || '',
         component_name: '',
         component_price: 0,
         work_price: 0,
         replacement_date: new Date().toISOString().split('T')[0],
-        km_at_replacement: selectedVehicle?.current_km || 0
-    });
-    const [editForm, setEditForm] = useState({
-        km_at_replacement: '',
-        replacement_date: '',
-        component_name: ''
-    });
+        km_at_replacement: selectedVehicle.current_km,
+      });
+      onReplacementsUpdate();
+    } catch (error) {
+      console.error('Ошибка при добавлении:', error);
+      alert('Не удалось добавить замену');
+    }
+  };
 
-    useEffect(() => {
-        api.getComponentConfigs().then(data => {
-            setConfigs(data.configs);
-            if (!newReplacement.component_type && data.configs.length > 0) {
-                setNewReplacement(prev => ({ ...prev, component_type: data.configs[0].key }));
-            }
-        });
-    }, []);
-
-    useEffect(() => {
-        if (selectedVehicle && !newReplacement.component_type && configs.length > 0) {
-            setNewReplacement(prev => ({ ...prev, component_type: configs[0].key }));
-        }
-    }, [selectedVehicle, configs]);
-
-    if (!vehicleId || !selectedVehicle) return null;
-
-    const liquidNames: Record<string, string> = {};
-    configs.forEach(c => { liquidNames[c.key] = c.name; });
-
-    // Группируем замены по типу компонента
-    const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
-        const type = replacement.component_type;
-        if (!acc[type]) {
-            acc[type] = [];
-        }
-        acc[type].push(replacement);
-        return acc;
-    }, {});
-
-    // Сортируем замены в каждой группе от новых к старым (по пробегу)
-    Object.keys(grouped).forEach(type => {
-        grouped[type].sort((a, b) => {
-            if (b.km_at_replacement !== a.km_at_replacement) {
-                return b.km_at_replacement - a.km_at_replacement;
-            }
-            return new Date(b.replacement_date).getTime() - new Date(a.replacement_date).getTime();
-        });
-    });
-
-    const toggleGroup = (type: string) => {
-        setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
-    };
-
-    const handleToggleNotify = async (type: string) => {
-        if (!selectedVehicle) return;
-        const currentVal = selectedVehicle.notify_flags[type] ?? true;
-        const newNotifyFlags = { [type]: !currentVal };
-        try {
-            await api.updateNotify(selectedVehicle.id, newNotifyFlags);
-            onReplacementsUpdate();
-        } catch {
-            alert('Не удалось изменить настройку уведомлений');
-        }
-    };
-
-    const startEdit = (replacement: Replacement) => {
-        setEditingReplacement(replacement);
-        setEditForm({
-            km_at_replacement: String(replacement.km_at_replacement),
-            replacement_date: replacement.replacement_date,
-            component_name: replacement.component_name
-        });
-    };
-
-    const cancelEdit = () => {
-        setEditingReplacement(null);
-        setEditForm({ km_at_replacement: '', replacement_date: '', component_name: '' });
-    };
-
-    const saveEdit = async () => {
-        if (!editingReplacement) return;
-
-        const updateData: Record<string, string | number> = {};
-
-        if (editForm.component_name !== editingReplacement.component_name) {
-            updateData.component_name = editForm.component_name;
-        }
-
-        if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) {
-            updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
-        }
-
-        if (editForm.replacement_date !== editingReplacement.replacement_date) {
-            updateData.replacement_date = editForm.replacement_date;
-        }
-
-        if (Object.keys(updateData).length === 0) {
-            setEditingReplacement(null);
-            return;
-        }
-
-        try {
-            await api.updateReplacement(editingReplacement.id, updateData);
-            setEditingReplacement(null);
-            onReplacementsUpdate();
-        } catch (error) {
-            console.error('Ошибка при обновлении:', error);
-            alert('Не удалось обновить замену');
-        }
-    };
-
-    const deleteReplacement = async (id: number) => {
-        if (!confirm('Удалить эту замену?')) return;
-
-        try {
-            await api.deleteReplacement(id);
-            onReplacementsUpdate();
-        } catch (error) {
-            console.error('Ошибка при удалении:', error);
-            alert('Не удалось удалить замену');
-        }
-    };
-
-    const handleAddReplacement = async () => {
-        if (!newReplacement.component_name.trim()) {
-            alert('Введите название компонента');
-            return;
-        }
-
-        try {
-            await api.createReplacement(vehicleId, {
-                component_type: newReplacement.component_type,
-                component_name: newReplacement.component_name,
-                component_price: newReplacement.component_price,
-                work_price: newReplacement.work_price,
-                replacement_date: newReplacement.replacement_date,
-                km_at_replacement: newReplacement.km_at_replacement
-            });
-
-            setShowAddForm(false);
-            setNewReplacement({
-                component_type: configs[0]?.key || '',
-                component_name: '',
-                component_price: 0,
-                work_price: 0,
-                replacement_date: new Date().toISOString().split('T')[0],
-                km_at_replacement: selectedVehicle.current_km
-            });
-            onReplacementsUpdate();
-        } catch (error) {
-            console.error('Ошибка при добавлении:', error);
-            alert('Не удалось добавить замену');
-        }
-    };
-
-    return (
-        <div style={{
-            marginTop: '10px',
-            backgroundColor: '#f5f5f5',
-            borderRadius: '5px',
-            border: '1px solid #ddd',
-            overflow: 'hidden'
-        }}>
-            {/* Заголовок с информацией об авто и кнопкой закрытия */}
-            <div style={{
-                padding: '10px',
-                backgroundColor: '#e0e0e0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '8px'
-            }}>
-                <span style={{ fontWeight: 'bold' }}>
-                    Замены для: {selectedVehicle.brand} {selectedVehicle.model}
-                </span>
-                <button
-                    onClick={onClose}
-                    style={{ padding: '2px 8px', cursor: 'pointer' }}
-                >
-                    ✕
-                </button>
-            </div>
-
-            {/* Замены */}
-            <div style={{ padding: '10px' }}>
-                {replacements.length === 0 ? (
-                    <div style={{ margin: '0 0 15px 0', padding: '12px', backgroundColor: '#fff3cd', borderRadius: '5px', border: '1px solid #ffc107' }}>
-                        <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>Нет замен</p>
-                        <p style={{ margin: '0', fontSize: '13px', color: '#856404' }}>
-                            Чтобы начать отслеживание — добавьте первую замену.
-                            После этого система будет рассчитывать статус и напоминать о следующей замене.
-                        </p>
-                    </div>
-                ) : (
-                    <div>
-                        {Object.keys(grouped).map(type => {
-                            // Берём статус первой замены в группе (самой новой)
-                            const firstReplacement = grouped[type][0];
-                            const status = firstReplacement.status || 'unknown';
-                            const statusStyle = statusStyles[status] || statusStyles.unknown;
-
-                            return (
-                                <div key={type} style={{ marginBottom: '15px' }}>
-                                    <div
-                                        onClick={() => toggleGroup(type)}
-                                        style={{
-                                            padding: '8px 10px',
-                                            backgroundColor: statusStyle.backgroundColor,
-                                            color: statusStyle.color,
-                                            borderRadius: '5px',
-                                            cursor: 'pointer',
-                                            fontWeight: 'bold',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            border: `1px solid ${statusStyle.borderColor}`
-                                        }}
-                                    >
-                                        <span>{openGroups[type] ? '▼' : '▶'}</span>
-                                        <span>{statusStyle.icon}</span>
-                                        <span>{liquidNames[type] || type}</span>
-                                        <span
-                                            onClick={(e) => { e.stopPropagation(); handleToggleNotify(type); }}
-                                            style={{ cursor: 'pointer', fontSize: '14px', marginLeft: '4px' }}
-                                            title="Вкл/Выкл уведомления"
-                                        >
-                                            {selectedVehicle.notify_flags?.[type] ? '🔔' : '🔕'}
-                                        </span>
-                                        <span style={{ fontSize: '12px', marginLeft: 'auto' }}>
-                                            {grouped[type].length} замен
-                                        </span>
-                                    </div>
-
-                                    {openGroups[type] && (
-                                        <ul style={{ listStyle: 'none', padding: '0 0 0 10px', margin: '10px 0 0 0' }}>
-                                            {grouped[type].map((r: Replacement, idx: number) => {
-                                                const itemStatus = r.status || 'unknown';
-                                                const itemStatusStyle = statusStyles[itemStatus] || statusStyles.unknown;
-
-                                                return (
-                                                    <li key={r.id} style={{
-                                                        marginBottom: '8px',
-                                                        padding: '10px',
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '5px',
-                                                        border: '1px solid #eee',
-                                                        borderLeft: idx === 0 ? `3px solid ${itemStatusStyle.borderColor}` : '1px solid #eee'
-                                                    }}>
-                                                        {editingReplacement?.id === r.id ? (
-                                                            <div>
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Название"
-                                                                    value={editForm.component_name}
-                                                                    onChange={(e) => setEditForm({ ...editForm, component_name: e.target.value })}
-                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
-                                                                />
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="Пробег"
-                                                                    value={editForm.km_at_replacement}
-                                                                    onChange={(e) => setEditForm({ ...editForm, km_at_replacement: e.target.value })}
-                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
-                                                                />
-                                                                <input
-                                                                    type="date"
-                                                                    value={editForm.replacement_date}
-                                                                    onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
-                                                                    style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
-                                                                />
-                                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                                    <button onClick={saveEdit} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px' }}>Сохранить</button>
-                                                                    <button onClick={cancelEdit} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '3px' }}>Отмена</button>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                    <div>
-                                                                        {idx === 0 && (
-                                                                            <span style={{ color: itemStatusStyle.borderColor, marginRight: '8px' }}>
-                                                                                {itemStatusStyle.icon}
-                                                                            </span>
-                                                                        )}
-                                                                        <strong>{r.component_name}</strong>
-                                                                        {idx === 0 && (
-                                                                            <span style={{ fontSize: '11px', color: itemStatusStyle.borderColor, marginLeft: '8px' }}>
-                                                                                последняя
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div>
-                                                                        <button
-                                                                            onClick={() => startEdit(r)}
-                                                                            style={{
-                                                                                fontSize: '12px',
-                                                                                padding: '2px 6px',
-                                                                                marginRight: '5px',
-                                                                                cursor: 'pointer',
-                                                                                backgroundColor: '#ffc107',
-                                                                                border: 'none',
-                                                                                borderRadius: '3px'
-                                                                            }}
-                                                                        >
-                                                                            ✏️
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => deleteReplacement(r.id)}
-                                                                            style={{
-                                                                                fontSize: '12px',
-                                                                                padding: '2px 6px',
-                                                                                cursor: 'pointer',
-                                                                                backgroundColor: '#dc3545',
-                                                                                color: 'white',
-                                                                                border: 'none',
-                                                                                borderRadius: '3px'
-                                                                            }}
-                                                                        >
-                                                                            🗑️
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px', textAlign: 'left' }}>
-                                                                    📅 {r.replacement_date}
-                                                                </div>
-                                                                <div style={{ fontSize: '12px', color: '#666', textAlign: 'left' }}>
-                                                                    📍 {r.km_at_replacement} км | ⏱ Следующая замена: {r.next_replacement_km} км
-                                                                </div>
-                                                                <div style={{ fontSize: '11px', marginTop: '5px', color: itemStatusStyle.color, textAlign: 'left' }}>
-                                                                    {r.status_message}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Кнопка добавления замены */}
-                <div style={{ marginTop: '15px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
-                    {!showAddForm ? (
-                        <button
-                            onClick={() => setShowAddForm(true)}
-                            style={{
-                                width: '100%',
-                                padding: '10px',
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontSize: '14px'
-                            }}
-                        >
-                            + Добавить замену
-                        </button>
-                    ) : (
-                        <div style={{
-                            backgroundColor: 'white',
-                            padding: '15px',
-                            borderRadius: '5px',
-                            border: '1px solid #ddd',
-                            maxWidth: '100%',
-                            overflowX: 'auto'
-                        }}>
-                            <h4 style={{ margin: '0 0 10px 0' }}>Новая замена</h4>
-
-                            <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Тип</label>
-                                <select
-                                    value={newReplacement.component_type}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, component_type: e.target.value })}
-                                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                                >
-                                    {configs.map(cfg => (
-                                        <option key={cfg.key} value={cfg.key}>{cfg.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Название *</label>
-                                <input
-                                    type="text"
-                                    placeholder="например: Mobil 1 5W-30"
-                                    value={newReplacement.component_name}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, component_name: e.target.value })}
-                                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Цена (₽)</label>
-                                <input
-                                    type="number"
-                                    placeholder="5000"
-                                    value={newReplacement.component_price === 0 ? '' : newReplacement.component_price}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Стоимость работы (₽)</label>
-                                <input
-                                    type="number"
-                                    placeholder="1500"
-                                    value={newReplacement.work_price === 0 ? '' : newReplacement.work_price}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Пробег при замене (км)</label>
-                                <input
-                                    type="number"
-                                    placeholder={String(selectedVehicle?.current_km || 0)}
-                                    value={newReplacement.km_at_replacement === 0 ? '' : newReplacement.km_at_replacement}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Дата замены</label>
-                                <input
-                                    type="date"
-                                    value={newReplacement.replacement_date}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, replacement_date: e.target.value })}
-                                    style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-                                />
-                            </div>
-
-                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '15px', padding: '8px', backgroundColor: '#f0f0f0', borderRadius: '3px' }}>
-                                💡 Поля с ценой можно оставить пустыми
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button
-                                    onClick={handleAddReplacement}
-                                    style={{
-                                        flex: 1,
-                                        padding: '8px',
-                                        backgroundColor: '#28a745',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '3px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Сохранить
-                                </button>
-                                <button
-                                    onClick={() => setShowAddForm(false)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '8px',
-                                        backgroundColor: '#6c757d',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '3px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Отмена
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
+  return (
+    <div className="md3-card overflow-hidden animate-fade-in">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-variant/50 border-b border-outline-variant">
+        <div className="flex items-center gap-3 min-w-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#44474E" strokeWidth="1.5" strokeLinecap="round" className="shrink-0">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+          </svg>
+          <span className="text-title-sm text-surface-on truncate">
+            Замены: {selectedVehicle.brand} {selectedVehicle.model}
+          </span>
         </div>
-    );
+        <button
+          onClick={onClose}
+          className="flex items-center justify-center w-8 h-8 rounded-md3-full text-surface-on-variant hover:bg-surface-variant transition-colors shrink-0"
+          aria-label="Закрыть"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="p-4">
+        {replacements.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#FFF8E1] flex items-center justify-center">
+              <span className="text-xl">📋</span>
+            </div>
+            <p className="text-title-sm text-surface-on mb-1">Нет замен</p>
+            <p className="text-body-md text-outline max-w-xs">
+              Чтобы начать отслеживание — добавьте первую замену. Система будет рассчитывать статус и напоминать о следующей замене.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {Object.keys(grouped).map(type => {
+              const firstReplacement = grouped[type][0];
+              const status = firstReplacement.status || 'unknown';
+              const sStyle = statusStyles[status] || statusStyles.unknown;
+              const isOpen = openGroups[type];
+
+              return (
+                <div key={type} className="md3-card overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup(type)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left ${sStyle.bg} ${sStyle.text} transition-colors`}
+                    aria-expanded={isOpen}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}>
+                      <polygon points="8 5 19 12 8 19 8 5" />
+                    </svg>
+                    <span>{sStyle.icon}</span>
+                    <span className="text-label-lg flex-1">{liquidNames[type] || type}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleToggleNotify(type); }}
+                      className="text-label-lg hover:opacity-70 transition-opacity"
+                      aria-label={selectedVehicle.notify_flags?.[type] ? 'Отключить уведомления' : 'Включить уведомления'}
+                    >
+                      {selectedVehicle.notify_flags?.[type] ? '🔔' : '🔕'}
+                    </button>
+                    <span className="text-label-sm opacity-70">{grouped[type].length} {grouped[type].length === 1 ? 'замена' : 'замен'}</span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="flex flex-col gap-2 p-3">
+                      {grouped[type].map((r: Replacement, idx: number) => {
+                        const itemStatus = r.status || 'unknown';
+                        const itemStyle = statusStyles[itemStatus] || statusStyles.unknown;
+
+                        return (
+                          <div
+                            key={r.id}
+                            className={`p-3 rounded-md3-sm border-l-4 ${itemStyle.border} bg-surface transition-shadow duration-200 hover:shadow-md3-1`}
+                          >
+                            {editingReplacement?.id === r.id ? (
+                              <div className="flex flex-col gap-3">
+                                <input
+                                  type="text"
+                                  placeholder="Название"
+                                  value={editForm.component_name}
+                                  onChange={(e) => setEditForm({ ...editForm, component_name: e.target.value })}
+                                  className="md3-field"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="Пробег"
+                                  value={editForm.km_at_replacement}
+                                  onChange={(e) => setEditForm({ ...editForm, km_at_replacement: e.target.value })}
+                                  className="md3-field"
+                                />
+                                <input
+                                  type="date"
+                                  value={editForm.replacement_date}
+                                  onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
+                                  className="md3-field"
+                                />
+                                <div className="flex gap-2">
+                                  <button onClick={saveEdit} className="md3-btn-primary !py-2 !px-4 !rounded-md3-sm text-label-sm flex-1">Сохранить</button>
+                                  <button onClick={cancelEdit} className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm">Отмена</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    {idx === 0 && <span className="text-label-md">{itemStyle.icon}</span>}
+                                    <span className="text-label-lg text-surface-on">{r.component_name}</span>
+                                    {idx === 0 && <span className="md3-badge bg-primary-container text-primary-on-container">последняя</span>}
+                                  </div>
+                                  <div className="flex gap-1 shrink-0">
+                                    <button
+                                      onClick={() => startEdit(r)}
+                                      className="flex items-center justify-center w-8 h-8 rounded-md3-full text-[#7A6100] hover:bg-[#FFF8E1] transition-colors"
+                                      aria-label="Редактировать"
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => deleteReplacement(r.id)}
+                                      className="flex items-center justify-center w-8 h-8 rounded-md3-full text-error hover:bg-error-container transition-colors"
+                                      aria-label="Удалить"
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
+                                  <span>📅 {r.replacement_date}</span>
+                                  <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
+                                  <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
+                                </div>
+                                {r.status_message && (
+                                  <p className={`mt-1 text-body-sm ${itemStyle.text}`}>{r.status_message}</p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-4 pt-4 border-t border-outline-variant">
+          {!showAddForm ? (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="md3-btn-primary w-full"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Добавить замену
+            </button>
+          ) : (
+            <div className="md3-elevated p-4">
+              <h4 className="text-title-sm text-surface-on mb-4">Новая замена</h4>
+
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="block text-label-md text-surface-on-variant mb-1">Тип</label>
+                  <select
+                    value={newReplacement.component_type}
+                    onChange={(e) => setNewReplacement({ ...newReplacement, component_type: e.target.value })}
+                    className="md3-select"
+                  >
+                    {configs.map(cfg => (
+                      <option key={cfg.key} value={cfg.key}>{cfg.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-label-md text-surface-on-variant mb-1">Название *</label>
+                  <input
+                    type="text"
+                    placeholder="например: Mobil 1 5W-30"
+                    value={newReplacement.component_name}
+                    onChange={(e) => setNewReplacement({ ...newReplacement, component_name: e.target.value })}
+                    className="md3-field"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
+                    <input
+                      type="number"
+                      placeholder="5000"
+                      value={newReplacement.component_price === 0 ? '' : newReplacement.component_price}
+                      onChange={(e) => setNewReplacement({ ...newReplacement, component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                      className="md3-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
+                    <input
+                      type="number"
+                      placeholder="1500"
+                      value={newReplacement.work_price === 0 ? '' : newReplacement.work_price}
+                      onChange={(e) => setNewReplacement({ ...newReplacement, work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                      className="md3-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
+                    <input
+                      type="number"
+                      placeholder={String(selectedVehicle?.current_km || 0)}
+                      value={newReplacement.km_at_replacement === 0 ? '' : newReplacement.km_at_replacement}
+                      onChange={(e) => setNewReplacement({ ...newReplacement, km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                      className="md3-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
+                    <input
+                      type="date"
+                      value={newReplacement.replacement_date}
+                      onChange={(e) => setNewReplacement({ ...newReplacement, replacement_date: e.target.value })}
+                      className="md3-field"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-md3-sm bg-surface-variant/50 text-body-sm text-outline">
+                  💡 Поля с ценой можно оставить пустыми
+                </div>
+
+                <div className="flex gap-3 pt-1">
+                  <button onClick={handleAddReplacement} className="md3-btn-primary flex-1">Сохранить</button>
+                  <button onClick={() => setShowAddForm(false)} className="md3-btn-text flex-1">Отмена</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
