@@ -153,6 +153,13 @@ export const api = {
     restoreVehicle: (vehicleId: number) =>
         authFetch(`${API_BASE}/vehicles/${vehicleId}/restore`, { method: 'PATCH' }).then(res => handleResponse<Vehicle>(res)),
 
+    updateNotify: (vehicleId: number, data: Partial<Record<string, boolean>>) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/notify`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<Vehicle>(res)),
+
     getReplacements: (vehicleId: number) =>
         authFetch(`${API_BASE}/vehicles/${vehicleId}/replacements`).then(res => handleResponse<Replacement[]>(res)),
 

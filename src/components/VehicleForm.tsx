@@ -25,7 +25,13 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
         brake_interval_km: 40000,
         coolant_interval_km: 60000,
         power_steering_interval_km: 40000,
-        differential_oil_interval_km: 50000
+        differential_oil_interval_km: 50000,
+        oil_notify_enabled: true,
+        transmission_notify_enabled: true,
+        brake_notify_enabled: true,
+        coolant_notify_enabled: true,
+        power_steering_notify_enabled: true,
+        differential_oil_notify_enabled: true
     });
 
     useEffect(() => {
@@ -88,7 +94,13 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                 brake_interval_km: 40000,
                 coolant_interval_km: 60000,
                 power_steering_interval_km: 40000,
-                differential_oil_interval_km: 50000
+                differential_oil_interval_km: 50000,
+                oil_notify_enabled: true,
+                transmission_notify_enabled: true,
+                brake_notify_enabled: true,
+                coolant_notify_enabled: true,
+                power_steering_notify_enabled: true,
+                differential_oil_notify_enabled: true
             });
             setPlateError('');
         } catch {
@@ -227,6 +239,29 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                         onChange={(e) => setFormData({ ...formData, differential_oil_interval_km: parseInt(e.target.value) })}
                         style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
                     />
+                </div>
+
+                <hr />
+                <h4>Уведомления</h4>
+
+                <div style={{ marginBottom: '10px' }}>
+                    {([
+                        ['oil_notify_enabled', 'Моторное масло'],
+                        ['transmission_notify_enabled', 'Масло АКПП'],
+                        ['brake_notify_enabled', 'Тормозная жидкость'],
+                        ['coolant_notify_enabled', 'Антифриз'],
+                        ['power_steering_notify_enabled', 'Жидкость ГУР'],
+                        ['differential_oil_notify_enabled', 'Масло в редукторе'],
+                    ] as const).map(([field, label]) => (
+                        <label key={field} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                                checked={(formData as unknown as Record<string, boolean>)[field]}
+                                onChange={(e) => setFormData({ ...formData, [field]: e.target.checked })}
+                            />
+                            {label}
+                        </label>
+                    ))}
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
