@@ -37,6 +37,15 @@ const liquidTypesList = [
     { value: 'differential_oil', label: 'Масло в редукторе' }
 ];
 
+const liquidNotifyMap: Record<string, string> = {
+    'engine_oil': 'oil_notify_enabled',
+    'transmission_oil': 'transmission_notify_enabled',
+    'brake_fluid': 'brake_notify_enabled',
+    'coolant': 'coolant_notify_enabled',
+    'power_steering_fluid': 'power_steering_notify_enabled',
+    'differential_oil': 'differential_oil_notify_enabled'
+};
+
 export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onReplacementsUpdate }: Props) {
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
     const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
@@ -79,6 +88,18 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
     const toggleGroup = (type: string) => {
         setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
+    };
+
+    const handleToggleNotify = async (type: string) => {
+        const field = liquidNotifyMap[type];
+        if (!field || !selectedVehicle) return;
+        const newValue = !(selectedVehicle as unknown as Record<string, boolean>)[field];
+        try {
+            await api.updateNotify(selectedVehicle.id, { [field]: newValue });
+            onReplacementsUpdate();
+        } catch {
+            alert('Не удалось изменить настройку уведомлений');
+        }
     };
 
     const startEdit = (replacement: Replacement) => {
@@ -238,6 +259,13 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                         <span>{openGroups[type] ? '▼' : '▶'}</span>
                                         <span>{statusStyle.icon}</span>
                                         <span>{liquidNames[type] || type}</span>
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); handleToggleNotify(type); }}
+                                            style={{ cursor: 'pointer', fontSize: '14px', marginLeft: '4px' }}
+                                            title="Вкл/Выкл уведомления"
+                                        >
+                                            {(selectedVehicle as unknown as Record<string, boolean>)?.[liquidNotifyMap[type]] ? '🔔' : '🔕'}
+                                        </span>
                                         <span style={{ fontSize: '12px', marginLeft: 'auto' }}>
                                             {grouped[type].length} замен
                                         </span>

@@ -21,6 +21,12 @@ export interface Vehicle {
     coolant_km_remaining?: number | null;
     power_steering_km_remaining?: number | null;
     differential_oil_km_remaining?: number | null;
+    oil_notify_enabled: boolean;
+    transmission_notify_enabled: boolean;
+    brake_notify_enabled: boolean;
+    coolant_notify_enabled: boolean;
+    power_steering_notify_enabled: boolean;
+    differential_oil_notify_enabled: boolean;
 }
 
 export interface Replacement {
@@ -55,6 +61,12 @@ export interface VehicleFormData {
     coolant_interval_km: number;
     power_steering_interval_km: number;
     differential_oil_interval_km: number;
+    oil_notify_enabled: boolean;
+    transmission_notify_enabled: boolean;
+    brake_notify_enabled: boolean;
+    coolant_notify_enabled: boolean;
+    power_steering_notify_enabled: boolean;
+    differential_oil_notify_enabled: boolean;
 }
 
 export interface User {
