@@ -10,241 +10,245 @@ import { EditVehicleForm } from '../components/EditVehicleForm';
 import type { Vehicle, VehicleFormData } from '../types';
 
 export function HomePage() {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-    const queryClient = useQueryClient();
-    const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [showForm, setShowForm] = useState(false);
-    const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-    const [showEditForm, setShowEditForm] = useState(false);
-    const [showArchived, setShowArchived] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-    const { data: vehicles = [] } = useQuery({
-        queryKey: ['vehicles'],
-        queryFn: api.getAllVehicles,
-    });
+  const { data: vehicles = [] } = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: api.getAllVehicles,
+  });
 
-    const { data: replacements = [] } = useQuery({
-        queryKey: ['replacements', selectedId],
-        queryFn: () => api.getReplacements(selectedId!),
-        enabled: !!selectedId,
-    });
+  const { data: replacements = [] } = useQuery({
+    queryKey: ['replacements', selectedId],
+    queryFn: () => api.getReplacements(selectedId!),
+    enabled: !!selectedId,
+  });
 
-    const selectedVehicle = vehicles.find(v => v.id === selectedId);
+  const selectedVehicle = vehicles.find(v => v.id === selectedId);
 
-    // Разделяем на активные и архивные
-    const activeVehicles = vehicles.filter(v => v.is_active !== false);
-    const archivedVehicles = vehicles.filter(v => v.is_active === false);
+  const activeVehicles = vehicles.filter(v => v.is_active !== false);
+  const archivedVehicles = vehicles.filter(v => v.is_active === false);
 
-    const invalidateVehicles = () => queryClient.invalidateQueries({ queryKey: ['vehicles'] });
-    const invalidateReplacements = () => {
-        if (selectedId) queryClient.invalidateQueries({ queryKey: ['replacements', selectedId] });
-    };
+  const invalidateVehicles = () => queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+  const invalidateReplacements = () => {
+    if (selectedId) queryClient.invalidateQueries({ queryKey: ['replacements', selectedId] });
+  };
 
-    const createVehicleMutation = useMutation({
-        mutationFn: api.createVehicle,
-        onSuccess: () => {
-            invalidateVehicles();
-            setShowForm(false);
-        },
-    });
+  const createVehicleMutation = useMutation({
+    mutationFn: api.createVehicle,
+    onSuccess: () => {
+      invalidateVehicles();
+      setShowForm(false);
+    },
+  });
 
-    const updateKmMutation = useMutation({
-        mutationFn: ({ vehicleId, newKm }: { vehicleId: number; newKm: number }) =>
-            api.updateVehicleKm(vehicleId, newKm),
-        onSuccess: () => {
-            invalidateVehicles();
-            invalidateReplacements();
-        },
-    });
+  const updateKmMutation = useMutation({
+    mutationFn: ({ vehicleId, newKm }: { vehicleId: number; newKm: number }) =>
+      api.updateVehicleKm(vehicleId, newKm),
+    onSuccess: () => {
+      invalidateVehicles();
+      invalidateReplacements();
+    },
+  });
 
-    const handleAddVehicle = async (newVehicle: VehicleFormData) => {
-        try {
-            await createVehicleMutation.mutateAsync(newVehicle);
-        } catch (error) {
-            if (error instanceof Error) alert(error.message);
-        }
-    };
+  const handleAddVehicle = async (newVehicle: VehicleFormData) => {
+    try {
+      await createVehicleMutation.mutateAsync(newVehicle);
+    } catch (error) {
+      if (error instanceof Error) alert(error.message);
+    }
+  };
 
-    const handleReplacementsUpdate = () => {
-        invalidateReplacements();
-        invalidateVehicles();
-    };
+  const handleReplacementsUpdate = () => {
+    invalidateReplacements();
+    invalidateVehicles();
+  };
 
-    const handleVehicleUpdate = () => {
-        invalidateVehicles();
-        invalidateReplacements();
-    };
+  const handleVehicleUpdate = () => {
+    invalidateVehicles();
+    invalidateReplacements();
+  };
 
-    const handleEditVehicle = (vehicle: Vehicle) => {
-        setEditingVehicle(vehicle);
-        setShowEditForm(true);
-    };
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setEditingVehicle(vehicle);
+    setShowEditForm(true);
+  };
 
-    const handleDeleteVehicle = async (id: number) => {
-        if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
-        try {
-            await api.deleteVehicle(id);
-            invalidateVehicles();
-            if (selectedId === id) setSelectedId(null);
-        } catch (error) {
-            console.error('Ошибка при удалении:', error);
-            alert('Не удалось удалить автомобиль');
-        }
-    };
+  const handleDeleteVehicle = async (id: number) => {
+    if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
+    try {
+      await api.deleteVehicle(id);
+      invalidateVehicles();
+      if (selectedId === id) setSelectedId(null);
+    } catch (error) {
+      console.error('Ошибка при удалении:', error);
+      alert('Не удалось удалить автомобиль');
+    }
+  };
 
-    const handleHardDeleteVehicle = async (id: number) => {
-        if (!confirm('ПОЛНОСТЬЮ удалить автомобиль из базы данных? Это действие необратимо!')) return;
-        try {
-            await api.hardDeleteVehicle(id);
-            invalidateVehicles();
-            if (selectedId === id) setSelectedId(null);
-        } catch (error) {
-            console.error('Ошибка при жестком удалении:', error);
-            alert('Не удалось удалить автомобиль');
-        }
-    };
+  const handleHardDeleteVehicle = async (id: number) => {
+    if (!confirm('ПОЛНОСТЬЮ удалить автомобиль из базы данных? Это действие необратимо!')) return;
+    try {
+      await api.hardDeleteVehicle(id);
+      invalidateVehicles();
+      if (selectedId === id) setSelectedId(null);
+    } catch (error) {
+      console.error('Ошибка при жестком удалении:', error);
+      alert('Не удалось удалить автомобиль');
+    }
+  };
 
-    const handleRestoreVehicle = async (id: number) => {
-        try {
-            await api.restoreVehicle(id);
-            invalidateVehicles();
-        } catch (error) {
-            console.error('Ошибка при восстановлении:', error);
-            alert('Не удалось восстановить автомобиль');
-        }
-    };
+  const handleRestoreVehicle = async (id: number) => {
+    try {
+      await api.restoreVehicle(id);
+      invalidateVehicles();
+    } catch (error) {
+      console.error('Ошибка при восстановлении:', error);
+      alert('Не удалось восстановить автомобиль');
+    }
+  };
 
-    const handleUpdateKm = async (vehicleId: number, newKm: number) => {
-        try {
-            await updateKmMutation.mutateAsync({ vehicleId, newKm });
-        } catch (error) {
-            console.error('Ошибка при обновлении пробега:', error);
-            alert('Не удалось обновить пробег');
-        }
-    };
+  const handleUpdateKm = async (vehicleId: number, newKm: number) => {
+    try {
+      await updateKmMutation.mutateAsync({ vehicleId, newKm });
+    } catch (error) {
+      console.error('Ошибка при обновлении пробега:', error);
+      alert('Не удалось обновить пробег');
+    }
+  };
 
-    const getVehicleStatus = (vehicle: Vehicle) => {
-        return vehicle.vehicle_status || 'unknown';
-    };
+  const getVehicleStatus = (vehicle: Vehicle) => vehicle.vehicle_status || 'unknown';
 
-    const statusIcons = {
-        overdue: '🔴',
-        critical: '🟠',
-        warning: '🟡',
-        good: '🟢',
-        unknown: '⚪'
-    };
+  const statusIcons = {
+    overdue: '🔴',
+    critical: '🟠',
+    warning: '🟡',
+    good: '🟢',
+    unknown: '⚪',
+  };
 
-    return (
-        <div style={{ padding: '20px' }}>
-            <div style={{ marginBottom: '20px' }}>
-                <h1 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: 28 }}>Мои автомобили</h1>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span>{user?.username}</span>
-                    <button
-                        onClick={() => navigate('/profile')}
-                        style={{
-                            padding: '6px 14px', fontSize: 14, cursor: 'pointer',
-                            backgroundColor: '#007bff', color: 'white',
-                            border: 'none', borderRadius: 5
-                        }}
-                    >
-                        Профиль
-                    </button>
-                    <button
-                        onClick={() => { logout(); navigate('/login'); }}
-                        style={{
-                            padding: '6px 14px', fontSize: 14, cursor: 'pointer',
-                            backgroundColor: '#6c757d', color: 'white',
-                            border: 'none', borderRadius: 5
-                        }}
-                    >
-                        Выйти
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-surface">
+      <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-sm border-b border-outline-variant shadow-md3-1">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A6DFF" strokeWidth="1.5" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
+            </svg>
+            <h1 className="text-title-md text-surface-on m-0 hidden sm:block">ChangeLiquid</h1>
+          </div>
 
+          <div className="flex items-center gap-2">
+            <span className="text-body-md text-outline hidden sm:block">{user?.username}</span>
             <button
-                onClick={() => setShowForm(true)}
-                style={{
-                    padding: '10px 20px',
-                    fontSize: '16px',
-                    marginBottom: '20px',
-                    cursor: 'pointer',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px'
-                }}
+              onClick={() => navigate('/profile')}
+              className="md3-btn-tonal !py-2 !px-4 !rounded-md3-sm text-label-sm"
             >
-                + Добавить автомобиль
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+              </svg>
+              <span className="hidden sm:inline">Профиль</span>
             </button>
-
-            {/* Переключатель вкладок */}
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-                <button
-                    onClick={() => setShowArchived(false)}
-                    style={{
-                        padding: '8px 16px',
-                        cursor: 'pointer',
-                        backgroundColor: !showArchived ? '#007bff' : '#f0f0f0',
-                        color: !showArchived ? 'white' : '#333',
-                        border: 'none',
-                        borderRadius: '5px'
-                    }}
-                >
-                    Активные ({activeVehicles.length})
-                </button>
-                <button
-                    onClick={() => setShowArchived(true)}
-                    style={{
-                        padding: '8px 16px',
-                        cursor: 'pointer',
-                        backgroundColor: showArchived ? '#007bff' : '#f0f0f0',
-                        color: showArchived ? 'white' : '#333',
-                        border: 'none',
-                        borderRadius: '5px'
-                    }}
-                >
-                    Архив ({archivedVehicles.length})
-                </button>
-            </div>
-
-            <VehicleList
-                vehicles={showArchived ? archivedVehicles : activeVehicles}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                onEditVehicle={handleEditVehicle}
-                onDeleteVehicle={handleDeleteVehicle}
-                onHardDeleteVehicle={handleHardDeleteVehicle}
-                onRestoreVehicle={handleRestoreVehicle}
-                onUpdateKm={handleUpdateKm}
-                showArchived={showArchived}
-                statusIcons={statusIcons}
-                getVehicleStatus={getVehicleStatus}
-            />
-
-            <ReplacementList
-                replacements={replacements}
-                vehicleId={selectedId}
-                selectedVehicle={selectedVehicle}
-                onClose={() => setSelectedId(null)}
-                onReplacementsUpdate={handleReplacementsUpdate}
-            />
-
-            <VehicleForm
-                isOpen={showForm}
-                onClose={() => setShowForm(false)}
-                onSubmit={handleAddVehicle}
-            />
-
-            <EditVehicleForm
-                isOpen={showEditForm}
-                onClose={() => setShowEditForm(false)}
-                vehicle={editingVehicle}
-                onUpdate={handleVehicleUpdate}
-            />
+            <button
+              onClick={() => { logout(); navigate('/login'); }}
+              className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm text-outline"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
         </div>
-    );
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 py-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowForm(true)}
+              className="md3-btn-primary"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Добавить
+            </button>
+          </div>
+
+          <div className="flex gap-2 bg-surface-variant/50 p-1 rounded-md3-md" role="tablist">
+            <button
+              onClick={() => setShowArchived(false)}
+              role="tab"
+              aria-selected={!showArchived}
+              className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                !showArchived
+                  ? 'bg-surface shadow-md3-1 text-primary'
+                  : 'text-surface-on-variant hover:bg-surface-variant/50'
+              }`}
+            >
+              Активные ({activeVehicles.length})
+            </button>
+            <button
+              onClick={() => setShowArchived(true)}
+              role="tab"
+              aria-selected={showArchived}
+              className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                showArchived
+                  ? 'bg-surface shadow-md3-1 text-primary'
+                  : 'text-surface-on-variant hover:bg-surface-variant/50'
+              }`}
+            >
+              Архив ({archivedVehicles.length})
+            </button>
+          </div>
+        </div>
+
+        <VehicleList
+          vehicles={showArchived ? archivedVehicles : activeVehicles}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          onEditVehicle={handleEditVehicle}
+          onDeleteVehicle={handleDeleteVehicle}
+          onHardDeleteVehicle={handleHardDeleteVehicle}
+          onRestoreVehicle={handleRestoreVehicle}
+          onUpdateKm={handleUpdateKm}
+          showArchived={showArchived}
+          statusIcons={statusIcons}
+          getVehicleStatus={getVehicleStatus}
+        />
+
+        {selectedVehicle && (
+          <div className="mt-6 animate-slide-up">
+            <ReplacementList
+              replacements={replacements}
+              vehicleId={selectedId}
+              selectedVehicle={selectedVehicle}
+              onClose={() => setSelectedId(null)}
+              onReplacementsUpdate={handleReplacementsUpdate}
+            />
+          </div>
+        )}
+
+        <VehicleForm
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSubmit={handleAddVehicle}
+        />
+
+        <EditVehicleForm
+          isOpen={showEditForm}
+          onClose={() => setShowEditForm(false)}
+          vehicle={editingVehicle}
+          onUpdate={handleVehicleUpdate}
+        />
+      </main>
+    </div>
+  );
 }
