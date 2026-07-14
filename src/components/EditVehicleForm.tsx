@@ -8,9 +8,10 @@ interface Props {
   onClose: () => void;
   vehicle: Vehicle | null;
   onUpdate: () => void;
+  onDelete: (id: number) => Promise<void>;
 }
 
-export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
+export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }: Props) {
   const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
   const [models, setModels] = useState<{ value: string; label: string }[]>([]);
   const [configs, setConfigs] = useState<ComponentConfig[]>([]);
@@ -103,8 +104,20 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!vehicle) return;
+    if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
+    try {
+      await onDelete(vehicle.id);
+      onClose();
+    } catch (error) {
+      console.error('Ошибка при удалении:', error);
+      alert('Не удалось удалить автомобиль');
+    }
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Редактировать автомобиль">
+    <Modal isOpen={isOpen} onClose={onClose} title="Настройки">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
           <label className="block text-label-lg text-surface-on mb-2">Марка</label>
@@ -150,33 +163,34 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
           {plateError && <p className="mt-1 text-body-sm text-error">{plateError}</p>}
         </div>
 
-        <div>
-          <label className="block text-label-lg text-surface-on mb-2">Год выпуска</label>
-          <input
-            type="number"
-            value={formData.year}
-            onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-            required
-            className="md3-field"
-          />
-        </div>
-
-        <div>
-          <label className="block text-label-lg text-surface-on mb-2">Пробег (км)</label>
-          <input
-            type="number"
-            value={formData.current_km}
-            onChange={(e) => setFormData({ ...formData, current_km: parseInt(e.target.value) })}
-            required
-            className="md3-field"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-label-lg text-surface-on mb-2">Год выпуска</label>
+            <input
+              type="number"
+              value={formData.year}
+              onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+              required
+              className="md3-field"
+            />
+          </div>
+          <div>
+            <label className="block text-label-lg text-surface-on mb-2">Пробег (км)</label>
+            <input
+              type="number"
+              value={formData.current_km}
+              onChange={(e) => setFormData({ ...formData, current_km: parseInt(e.target.value) })}
+              required
+              className="md3-field"
+            />
+          </div>
         </div>
 
         <hr className="md3-divider" />
 
         <h4 className="text-title-sm text-surface-on m-0">Интервалы замен (км)</h4>
 
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
           {configs.map(cfg => (
             <div key={cfg.key}>
               <label className="block text-label-md text-surface-on-variant mb-1">{cfg.name}</label>
@@ -206,6 +220,21 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
               <span className="text-body-md text-surface-on">{cfg.name}</span>
             </label>
           ))}
+        </div>
+
+        <hr className="md3-divider" />
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="md3-btn-danger w-full"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            Удалить автомобиль
+          </button>
         </div>
 
         <div className="flex gap-3 justify-end pt-2">

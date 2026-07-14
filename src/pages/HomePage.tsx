@@ -80,18 +80,6 @@ export function HomePage() {
     setShowEditForm(true);
   };
 
-  const handleDeleteVehicle = async (id: number) => {
-    if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
-    try {
-      await api.deleteVehicle(id);
-      invalidateVehicles();
-      if (selectedId === id) setSelectedId(null);
-    } catch (error) {
-      console.error('Ошибка при удалении:', error);
-      alert('Не удалось удалить автомобиль');
-    }
-  };
-
   const handleHardDeleteVehicle = async (id: number) => {
     if (!confirm('ПОЛНОСТЬЮ удалить автомобиль из базы данных? Это действие необратимо!')) return;
     try {
@@ -215,7 +203,6 @@ export function HomePage() {
           selectedId={selectedId}
           onSelect={setSelectedId}
           onEditVehicle={handleEditVehicle}
-          onDeleteVehicle={handleDeleteVehicle}
           onHardDeleteVehicle={handleHardDeleteVehicle}
           onRestoreVehicle={handleRestoreVehicle}
           onUpdateKm={handleUpdateKm}
@@ -247,6 +234,16 @@ export function HomePage() {
           onClose={() => setShowEditForm(false)}
           vehicle={editingVehicle}
           onUpdate={handleVehicleUpdate}
+          onDelete={async (id) => {
+            try {
+              await api.deleteVehicle(id);
+              invalidateVehicles();
+              if (selectedId === id) setSelectedId(null);
+            } catch (error) {
+              console.error('Ошибка при удалении:', error);
+              alert('Не удалось удалить автомобиль');
+            }
+          }}
         />
       </main>
     </div>
