@@ -73,9 +73,9 @@ export function VehicleList({
               selectedId === vehicle.id ? 'ring-2 ring-primary shadow-md3-2' : ''
             }`}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
+            <div className="flex flex-row flex-wrap items-center gap-3 p-4">
               <div
-                className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
                 onClick={() => onSelect(vehicle.id)}
                 role="button"
                 tabIndex={0}
@@ -96,7 +96,7 @@ export function VehicleList({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap shrink-0">
+              <div className="flex items-center gap-2 flex-wrap shrink-0 sm:ml-auto">
                 {!showArchived ? (
                   <>
                     <button

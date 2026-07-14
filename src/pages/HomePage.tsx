@@ -130,7 +130,7 @@ export function HomePage() {
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
             </svg>
-            <h1 className="text-title-md text-surface-on m-0 hidden sm:block">ChangeLiquid</h1>
+            <h1 className="text-title-md text-surface-on m-0">ChangeLiquid</h1>
           </div>
 
           <div className="flex items-center gap-2">
