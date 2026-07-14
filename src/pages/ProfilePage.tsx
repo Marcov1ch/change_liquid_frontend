@@ -22,9 +22,9 @@ export function ProfilePage() {
         setEmailSubmitting(true)
         try {
             await updateEmail(email)
-            alert('Email updated')
+            alert('Email обновлён')
         } catch (err: unknown) {
-            setEmailError(err instanceof Error ? err.message : 'Failed to update email')
+            setEmailError(err instanceof Error ? err.message : 'Не удалось обновить email')
         } finally {
             setEmailSubmitting(false)
         }
@@ -35,127 +35,136 @@ export function ProfilePage() {
         setPasswordError('')
 
         if (newPassword !== confirmPassword) {
-            setPasswordError('Passwords do not match')
+            setPasswordError('Пароли не совпадают')
             return
         }
 
         setPasswordSubmitting(true)
         try {
             await changePassword(oldPassword, newPassword)
-            alert('Password changed')
+            alert('Пароль изменён')
             setOldPassword('')
             setNewPassword('')
             setConfirmPassword('')
         } catch (err: unknown) {
-            setPasswordError(err instanceof Error ? err.message : 'Failed to change password')
+            setPasswordError(err instanceof Error ? err.message : 'Не удалось изменить пароль')
         } finally {
             setPasswordSubmitting(false)
         }
     }
 
     const handleDeleteAccount = async () => {
-        if (!confirm('Are you sure? Your account and all data will be deactivated.')) return
+        if (!confirm('Вы уверены? Ваш аккаунт и все данные будут деактивированы.')) return
         try {
             await deleteAccount()
             navigate('/login', { replace: true })
         } catch (err: unknown) {
-            alert(err instanceof Error ? err.message : 'Failed to delete account')
+            alert(err instanceof Error ? err.message : 'Не удалось удалить аккаунт')
         }
     }
 
-    const inputStyle = { width: '100%', padding: '8px 12px', fontSize: 16, boxSizing: 'border-box' } as const
-    const buttonStyle = { width: '100%', padding: '10px', fontSize: 16, cursor: 'pointer', color: 'white', border: 'none', borderRadius: 5 } as const
+    const inputClass = "w-full px-3 py-2.5 text-body-large rounded-md-sm border border-md-outline bg-md-surface text-md-on-surface transition-all duration-md-2 focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-md-primary";
 
     return (
-        <div style={{ maxWidth: 500, margin: '40px auto', padding: 20 }}>
-            <h1>Profile</h1>
+        <div className="max-w-lg mx-auto space-y-8">
+            <h1 className="text-headline-medium">Профиль</h1>
 
-            <div style={{ marginBottom: 30 }}>
-                <h2>Email</h2>
-                <form onSubmit={handleEmailSubmit}>
-                    <div style={{ marginBottom: 15 }}>
-                        <label style={{ display: 'block', marginBottom: 5 }}>Email</label>
+            <section className="md-card space-y-4">
+                <h2 className="text-title-medium">Email</h2>
+                <form onSubmit={handleEmailSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-label-large mb-1 text-md-on-surface">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
-                            style={inputStyle}
+                            className={inputClass}
                         />
                     </div>
-                    {emailError && <p style={{ color: 'red' }}>{emailError}</p>}
+                    {emailError && <p className="text-md-error text-body-medium">{emailError}</p>}
                     <button
                         type="submit"
                         disabled={emailSubmitting}
-                        style={{ ...buttonStyle, backgroundColor: '#007bff' }}
+                        className="w-full py-2.5 px-4 rounded-md-full text-label-large
+                                   bg-md-primary text-md-on-primary
+                                   transition-all duration-md-2 hover:shadow-md-1
+                                   active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+                                   flex items-center justify-center gap-2"
                     >
-                        {emailSubmitting ? 'Saving...' : 'Save'}
+                        {emailSubmitting && (
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white
+                                             rounded-md-full animate-spin" />
+                        )}
+                        {emailSubmitting ? 'Сохранение...' : 'Сохранить'}
                     </button>
                 </form>
-            </div>
+            </section>
 
-            <div style={{ marginBottom: 30 }}>
-                <h2>Change password</h2>
-                <form onSubmit={handlePasswordSubmit}>
-                    <div style={{ marginBottom: 15 }}>
-                        <label style={{ display: 'block', marginBottom: 5 }}>Current password</label>
+            <section className="md-card space-y-4">
+                <h2 className="text-title-medium">Сменить пароль</h2>
+                <form onSubmit={handlePasswordSubmit} className="space-y-3">
+                    <div>
+                        <label className="block text-label-large mb-1 text-md-on-surface">Текущий пароль</label>
                         <input
                             type="password"
                             value={oldPassword}
                             onChange={e => setOldPassword(e.target.value)}
                             required
-                            style={inputStyle}
+                            className={inputClass}
                         />
                     </div>
-                    <div style={{ marginBottom: 15 }}>
-                        <label style={{ display: 'block', marginBottom: 5 }}>New password</label>
+                    <div>
+                        <label className="block text-label-large mb-1 text-md-on-surface">Новый пароль</label>
                         <input
                             type="password"
                             value={newPassword}
                             onChange={e => setNewPassword(e.target.value)}
                             required
-                            style={inputStyle}
+                            className={inputClass}
                         />
                     </div>
-                    <div style={{ marginBottom: 15 }}>
-                        <label style={{ display: 'block', marginBottom: 5 }}>Confirm new password</label>
+                    <div>
+                        <label className="block text-label-large mb-1 text-md-on-surface">Подтвердите пароль</label>
                         <input
                             type="password"
                             value={confirmPassword}
                             onChange={e => setConfirmPassword(e.target.value)}
                             required
-                            style={inputStyle}
+                            className={inputClass}
                         />
                     </div>
-                    {passwordError && <p style={{ color: 'red' }}>{passwordError}</p>}
+                    {passwordError && <p className="text-md-error text-body-medium">{passwordError}</p>}
                     <button
                         type="submit"
                         disabled={passwordSubmitting}
-                        style={{ ...buttonStyle, backgroundColor: '#007bff' }}
+                        className="w-full py-2.5 px-4 rounded-md-full text-label-large
+                                   bg-md-primary text-md-on-primary
+                                   transition-all duration-md-2 hover:shadow-md-1
+                                   active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+                                   flex items-center justify-center gap-2"
                     >
-                        {passwordSubmitting ? 'Changing...' : 'Change password'}
+                        {passwordSubmitting && (
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white
+                                             rounded-md-full animate-spin" />
+                        )}
+                        {passwordSubmitting ? 'Смена...' : 'Сменить пароль'}
                     </button>
                 </form>
-            </div>
+            </section>
 
-            <div>
-                <h2>Delete account</h2>
+            <section className="md-card space-y-4">
+                <h2 className="text-title-medium">Удалить аккаунт</h2>
                 <button
                     onClick={handleDeleteAccount}
-                    style={{ ...buttonStyle, backgroundColor: '#dc3545' }}
+                    className="w-full py-2.5 px-4 rounded-md-full text-label-large
+                               bg-md-error text-md-on-error
+                               transition-all duration-md-2 hover:shadow-md-1
+                               active:scale-[0.98]"
                 >
-                    Delete account
+                    Удалить аккаунт
                 </button>
-            </div>
-
-            <div style={{ marginTop: 20, textAlign: 'center' }}>
-                <button
-                    onClick={() => navigate('/')}
-                    style={{ ...buttonStyle, backgroundColor: '#6c757d', maxWidth: 200 }}
-                >
-                    Back to home
-                </button>
-            </div>
+            </section>
         </div>
     )
 }

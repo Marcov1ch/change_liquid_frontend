@@ -43,120 +43,100 @@ export function VehicleList({
             setEditingKm(null);
             setNewKmValue('');
         } catch {
-            // ошибка уже показана в HomePage
+            // error handled in HomePage
         }
     };
 
     if (vehicles.length === 0) {
-        return <p>Нет автомобилей. Добавьте первый!</p>;
+        return (
+            <div className="text-center py-12 px-4">
+                <p className="text-body-large text-md-on-surface-variant">
+                    Нет автомобилей. Добавьте первый!
+                </p>
+            </div>
+        );
     }
 
     return (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div className="space-y-2">
             {vehicles.map(vehicle => {
                 const status = getVehicleStatus(vehicle);
                 const icon = statusIcons[status] || '⚪';
+                const isSelected = selectedId === vehicle.id;
 
                 return (
-                    <li
+                    <div
                         key={vehicle.id}
-                        style={{
-                            marginBottom: '10px',
-                            padding: '10px',
-                            backgroundColor: selectedId === vehicle.id ? '#e0e0e0' : '#f5f5f5',
-                            borderRadius: '5px',
-                            border: '1px solid #ddd',
-                        }}
+                        className={`rounded-md-md border transition-all duration-md-2 cursor-pointer
+                                    ${isSelected
+                                ? 'bg-md-secondary-container border-md-secondary shadow-md-1'
+                                : 'bg-md-surface border-md-outline-variant hover:shadow-md-1 hover:border-md-outline'
+                            }`}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                            {/* Левая часть - кликабельная */}
+                        <div className="p-3 flex items-center gap-3 flex-wrap">
                             <div
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}
+                                className="flex items-center gap-3 flex-1 min-w-0"
                                 onClick={() => onSelect(vehicle.id)}
                             >
-                                <span style={{ fontSize: '20px' }}>{icon}</span>
-                                <span>
-                                    {vehicle.brand} {vehicle.model} - {vehicle.current_km} км ({vehicle.plate_number})
-                                    {status === 'unknown' && <span style={{ color: 'red', marginLeft: '6px' }}>*</span>}
-                                </span>
+                                <span className="text-xl flex-shrink-0">{icon}</span>
+                                <div className="min-w-0">
+                                    <p className="text-body-medium text-md-on-surface truncate">
+                                        {vehicle.brand} {vehicle.model}
+                                    </p>
+                                    <p className="text-body-small text-md-on-surface-variant">
+                                        {vehicle.current_km} км ({vehicle.plate_number})
+                                        {status === 'unknown' && <span className="text-md-error ml-1">*</span>}
+                                    </p>
+                                </div>
                             </div>
 
-                            {/* Правая часть - кнопки */}
-                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                            <div className="flex gap-1.5 flex-wrap">
                                 {!showArchived ? (
-                                    // Активные авто - полный набор кнопок
                                     <>
-                                        {/* Кнопка редактирования */}
                                         <button
                                             onClick={() => onEditVehicle(vehicle)}
-                                            style={{
-                                                padding: '5px 10px',
-                                                fontSize: '12px',
-                                                cursor: 'pointer',
-                                                backgroundColor: '#17a2b8',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '3px'
-                                            }}
+                                            className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                       text-body-medium bg-md-tertiary-container text-md-on-tertiary-container
+                                                       transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
                                             title="Редактировать"
                                         >
                                             ✏️
                                         </button>
-
-                                        {/* Кнопка удаления (мягкое) */}
                                         <button
                                             onClick={() => onDeleteVehicle(vehicle.id)}
-                                            style={{
-                                                padding: '5px 10px',
-                                                fontSize: '12px',
-                                                cursor: 'pointer',
-                                                backgroundColor: '#ffc107',
-                                                color: '#000',
-                                                border: 'none',
-                                                borderRadius: '3px'
-                                            }}
+                                            className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                       text-body-medium bg-yellow-100 text-yellow-800
+                                                       transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
                                             title="Удалить (в архив)"
                                         >
                                             🗑️
                                         </button>
-
-                                        {/* Кнопка обновления пробега */}
                                         {editingKm === vehicle.id ? (
-                                            <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                            <div className="flex gap-1.5 items-center">
                                                 <input
                                                     type="number"
                                                     value={newKmValue}
                                                     onChange={(e) => setNewKmValue(e.target.value)}
                                                     placeholder="Новый пробег"
-                                                    style={{ width: '120px', padding: '5px', boxSizing: 'border-box' }}
+                                                    className="w-28 px-2 py-1.5 text-body-small rounded-md-sm
+                                                               border border-md-outline bg-md-surface
+                                                               text-md-on-surface
+                                                               focus:outline-none focus:ring-2 focus:ring-md-primary"
                                                     autoFocus
                                                 />
                                                 <button
                                                     onClick={() => handleUpdateKm(vehicle.id, vehicle.current_km)}
-                                                    style={{
-                                                        padding: '5px 10px',
-                                                        backgroundColor: '#28a745',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        borderRadius: '3px',
-                                                        cursor: 'pointer'
-                                                    }}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                               bg-md-status-good-text text-white text-body-medium
+                                                               transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
                                                 >
                                                     ✓
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        setEditingKm(null);
-                                                        setNewKmValue('');
-                                                    }}
-                                                    style={{
-                                                        padding: '5px 10px',
-                                                        backgroundColor: '#6c757d',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        borderRadius: '3px',
-                                                        cursor: 'pointer'
-                                                    }}
+                                                    onClick={() => { setEditingKm(null); setNewKmValue(''); }}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                               bg-md-outline text-white text-body-medium
+                                                               transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
                                                 >
                                                     ✕
                                                 </button>
@@ -164,15 +144,9 @@ export function VehicleList({
                                         ) : (
                                             <button
                                                 onClick={() => setEditingKm(vehicle.id)}
-                                                style={{
-                                                    padding: '5px 10px',
-                                                    fontSize: '12px',
-                                                    cursor: 'pointer',
-                                                    backgroundColor: '#007bff',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '3px'
-                                                }}
+                                                className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                           text-body-medium bg-md-primary-container text-md-on-primary-container
+                                                           transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
                                                 title="Обновить пробег"
                                             >
                                                 📍
@@ -180,35 +154,22 @@ export function VehicleList({
                                         )}
                                     </>
                                 ) : (
-                                    // Архивные авто - только восстановление и жесткое удаление
                                     <>
                                         <button
                                             onClick={() => onRestoreVehicle(vehicle.id)}
-                                            style={{
-                                                padding: '5px 10px',
-                                                fontSize: '12px',
-                                                cursor: 'pointer',
-                                                backgroundColor: '#28a745',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '3px'
-                                            }}
+                                            className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                       text-body-medium bg-md-status-good-text text-white
+                                                       transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
                                             title="Восстановить из архива"
                                         >
                                             ↩️
                                         </button>
                                         <button
                                             onClick={() => onHardDeleteVehicle(vehicle.id)}
-                                            style={{
-                                                padding: '5px 10px',
-                                                fontSize: '12px',
-                                                cursor: 'pointer',
-                                                backgroundColor: '#dc3545',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '3px'
-                                            }}
-                                            title="Полностью удалить из базы данных"
+                                            className="inline-flex items-center justify-center w-9 h-9 rounded-md-full
+                                                       text-body-medium bg-md-error text-md-on-error
+                                                       transition-all duration-md-2 hover:shadow-md-1 active:scale-90"
+                                            title="Полностью удалить"
                                         >
                                             💀
                                         </button>
@@ -216,9 +177,9 @@ export function VehicleList({
                                 )}
                             </div>
                         </div>
-                    </li>
+                    </div>
                 );
             })}
-        </ul>
+        </div>
     );
 }

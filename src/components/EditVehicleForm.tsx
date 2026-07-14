@@ -10,10 +10,29 @@ interface Props {
     onUpdate: () => void;
 }
 
+const intervalFields = [
+    { key: 'oil_interval_km', label: 'Моторное масло' },
+    { key: 'transmission_interval_km', label: 'Масло АКПП' },
+    { key: 'brake_interval_km', label: 'Тормозная жидкость' },
+    { key: 'coolant_interval_km', label: 'Антифриз' },
+    { key: 'power_steering_interval_km', label: 'Жидкость ГУР' },
+    { key: 'differential_oil_interval_km', label: 'Масло в редукторе' },
+] as const;
+
+const notifyFields = [
+    { key: 'oil_notify_enabled', label: 'Моторное масло' },
+    { key: 'transmission_notify_enabled', label: 'Масло АКПП' },
+    { key: 'brake_notify_enabled', label: 'Тормозная жидкость' },
+    { key: 'coolant_notify_enabled', label: 'Антифриз' },
+    { key: 'power_steering_notify_enabled', label: 'Жидкость ГУР' },
+    { key: 'differential_oil_notify_enabled', label: 'Масло в редукторе' },
+] as const;
+
 export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
     const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
     const [models, setModels] = useState<{ value: string; label: string }[]>([]);
     const [plateError, setPlateError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         brand: '',
         model: '',
@@ -99,6 +118,7 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
 
         if (!vehicle) return;
 
+        setSubmitting(true);
         try {
             await api.updateVehicle(vehicle.id, formData);
             onUpdate();
@@ -106,19 +126,24 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
         } catch (error) {
             console.error('Ошибка при обновлении:', error);
             alert('Не удалось обновить автомобиль');
+        } finally {
+            setSubmitting(false);
         }
     };
 
+    const inputClass = "w-full px-3 py-2 text-body-large rounded-md-sm border border-md-outline bg-md-surface text-md-on-surface transition-all duration-md-2 focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-md-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+    const selectClass = "w-full px-3 py-2 text-body-large rounded-md-sm border border-md-outline bg-md-surface text-md-on-surface transition-all duration-md-2 focus:outline-none focus:ring-2 focus:ring-md-primary focus:border-md-primary disabled:opacity-50 disabled:cursor-not-allowed";
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Редактировать автомобиль">
-            <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Марка</label>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-label-large mb-1 text-md-on-surface">Марка</label>
                     <select
                         value={formData.brand}
                         onChange={(e) => setFormData({ ...formData, brand: e.target.value, model: '' })}
                         required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+                        className={selectClass}
                     >
                         <option value="">Выберите марку</option>
                         {brands.map(brand => (
@@ -127,14 +152,14 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
                     </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Модель</label>
+                <div>
+                    <label className="block text-label-large mb-1 text-md-on-surface">Модель</label>
                     <select
                         value={formData.model}
                         onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                         required
                         disabled={!formData.brand}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+                        className={selectClass}
                     >
                         <option value="">{formData.brand ? "Выберите модель" : "Сначала выберите марку"}</option>
                         {models.map(model => (
@@ -143,130 +168,111 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
                     </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Госномер</label>
+                <div>
+                    <label className="block text-label-large mb-1 text-md-on-surface">Госномер</label>
                     <input
                         type="text"
                         value={formData.plate_number}
                         onChange={handlePlateChange}
                         required
                         placeholder="А123АА178 или 1234AB7"
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+                        className={inputClass}
                     />
-                    {plateError && <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{plateError}</div>}
+                    {plateError && <p className="text-md-error text-body-small mt-1">{plateError}</p>}
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Год выпуска</label>
-                    <input
-                        type="number"
-                        value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                        required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-label-large mb-1 text-md-on-surface">Год выпуска</label>
+                        <input
+                            type="number"
+                            value={formData.year}
+                            onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                            required
+                            className={inputClass}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-label-large mb-1 text-md-on-surface">Пробег (км)</label>
+                        <input
+                            type="number"
+                            value={formData.current_km}
+                            onChange={(e) => setFormData({ ...formData, current_km: parseInt(e.target.value) })}
+                            required
+                            className={inputClass}
+                        />
+                    </div>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Пробег (км)</label>
-                    <input
-                        type="number"
-                        value={formData.current_km}
-                        onChange={(e) => setFormData({ ...formData, current_km: parseInt(e.target.value) })}
-                        required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
+                <div className="md-divider" />
 
-                <hr />
-                <h4>Интервалы замен (км)</h4>
+                <h4 className="text-title-small text-md-on-surface mb-3">Интервалы замен (км)</h4>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Моторное масло</label>
-                    <input
-                        type="number"
-                        value={formData.oil_interval_km}
-                        onChange={(e) => setFormData({ ...formData, oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Масло АКПП</label>
-                    <input
-                        type="number"
-                        value={formData.transmission_interval_km}
-                        onChange={(e) => setFormData({ ...formData, transmission_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Тормозная жидкость</label>
-                    <input
-                        type="number"
-                        value={formData.brake_interval_km}
-                        onChange={(e) => setFormData({ ...formData, brake_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Антифриз</label>
-                    <input
-                        type="number"
-                        value={formData.coolant_interval_km}
-                        onChange={(e) => setFormData({ ...formData, coolant_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Жидкость ГУР</label>
-                    <input
-                        type="number"
-                        value={formData.power_steering_interval_km}
-                        onChange={(e) => setFormData({ ...formData, power_steering_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Масло в редукторе</label>
-                    <input
-                        type="number"
-                        value={formData.differential_oil_interval_km}
-                        onChange={(e) => setFormData({ ...formData, differential_oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <hr />
-                <h4>Уведомления</h4>
-
-                <div style={{ marginBottom: '10px' }}>
-                    {([
-                        ['oil_notify_enabled', 'Моторное масло'],
-                        ['transmission_notify_enabled', 'Масло АКПП'],
-                        ['brake_notify_enabled', 'Тормозная жидкость'],
-                        ['coolant_notify_enabled', 'Антифриз'],
-                        ['power_steering_notify_enabled', 'Жидкость ГУР'],
-                        ['differential_oil_notify_enabled', 'Масло в редукторе'],
-                    ] as const).map(([field, label]) => (
-                        <label key={field} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {intervalFields.map(({ key, label }) => (
+                        <div key={key}>
+                            <label className="block text-label-medium mb-1 text-md-on-surface-variant">{label}</label>
                             <input
-                                type="checkbox"
-                                                checked={(formData as unknown as Record<string, boolean>)[field]}
-                                onChange={(e) => setFormData({ ...formData, [field]: e.target.checked })}
+                                type="number"
+                                value={(formData as unknown as Record<string, number>)[key]}
+                                onChange={(e) => setFormData({ ...formData, [key]: parseInt(e.target.value) })}
+                                className={inputClass}
                             />
-                            {label}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="md-divider" />
+
+                <h4 className="text-title-small text-md-on-surface mb-3">Уведомления</h4>
+
+                <div className="space-y-2">
+                    {notifyFields.map(({ key, label }) => (
+                        <label key={key} className="flex items-center gap-3 cursor-pointer py-1">
+                            <div className="relative flex items-center justify-center">
+                                <input
+                                    type="checkbox"
+                                    checked={(formData as unknown as Record<string, boolean>)[key]}
+                                    onChange={(e) => setFormData({ ...formData, [key]: e.target.checked })}
+                                    className="peer sr-only"
+                                />
+                                <div className="w-5 h-5 rounded-md-sm border-2 border-md-outline
+                                                transition-all duration-md-2
+                                                peer-checked:bg-md-primary peer-checked:border-md-primary
+                                                peer-checked:after:content-['✓'] peer-checked:after:text-white
+                                                peer-checked:after:flex peer-checked:after:items-center
+                                                peer-checked:after:justify-center
+                                                peer-checked:after:w-full peer-checked:after:h-full
+                                                peer-checked:after:text-xs" />
+                            </div>
+                            <span className="text-body-medium text-md-on-surface">{label}</span>
                         </label>
                     ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
-                    <button type="button" onClick={onClose}>Отмена</button>
-                    <button type="submit" style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px' }}>
+                <div className="flex gap-3 justify-end pt-3 border-t border-md-outline-variant">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-5 py-2 rounded-md-full text-label-large
+                                   bg-md-surface-variant text-md-on-surface-variant
+                                   transition-all duration-md-2 hover:shadow-md-1 active:scale-[0.98]"
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="px-5 py-2 rounded-md-full text-label-large
+                                   bg-md-primary text-md-on-primary
+                                   transition-all duration-md-2 hover:shadow-md-1
+                                   active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed
+                                   flex items-center gap-2"
+                    >
+                        {submitting && (
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white
+                                             rounded-md-full animate-spin" />
+                        )}
                         Сохранить
                     </button>
                 </div>

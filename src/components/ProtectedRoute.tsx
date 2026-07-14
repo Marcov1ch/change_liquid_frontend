@@ -6,8 +6,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <p>Загрузка...</p>
+            <div className="flex items-center justify-center min-h-screen bg-md-background">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-4 border-md-outline-variant border-t-md-primary
+                                    rounded-md-full animate-spin" />
+                    <p className="text-body-large text-md-on-surface-variant">Загрузка...</p>
+                </div>
             </div>
         )
     }

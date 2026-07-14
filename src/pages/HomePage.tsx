@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
-import { useAuth } from '../context/AuthContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { VehicleForm } from '../components/VehicleForm';
@@ -10,8 +8,6 @@ import { EditVehicleForm } from '../components/EditVehicleForm';
 import type { Vehicle, VehicleFormData } from '../types';
 
 export function HomePage() {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [showForm, setShowForm] = useState(false);
@@ -32,7 +28,6 @@ export function HomePage() {
 
     const selectedVehicle = vehicles.find(v => v.id === selectedId);
 
-    // Разделяем на активные и архивные
     const activeVehicles = vehicles.filter(v => v.is_active !== false);
     const archivedVehicles = vehicles.filter(v => v.is_active === false);
 
@@ -137,75 +132,39 @@ export function HomePage() {
     };
 
     return (
-        <div style={{ padding: '20px' }}>
-            <div style={{ marginBottom: '20px' }}>
-                <h1 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: 28 }}>Мои автомобили</h1>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span>{user?.username}</span>
-                    <button
-                        onClick={() => navigate('/profile')}
-                        style={{
-                            padding: '6px 14px', fontSize: 14, cursor: 'pointer',
-                            backgroundColor: '#007bff', color: 'white',
-                            border: 'none', borderRadius: 5
-                        }}
-                    >
-                        Профиль
-                    </button>
-                    <button
-                        onClick={() => { logout(); navigate('/login'); }}
-                        style={{
-                            padding: '6px 14px', fontSize: 14, cursor: 'pointer',
-                            backgroundColor: '#6c757d', color: 'white',
-                            border: 'none', borderRadius: 5
-                        }}
-                    >
-                        Выйти
-                    </button>
-                </div>
+        <div className="space-y-5">
+            <div className="flex items-center justify-between">
+                <h1 className="text-headline-small m-0">Мои автомобили</h1>
             </div>
 
             <button
                 onClick={() => setShowForm(true)}
-                style={{
-                    padding: '10px 20px',
-                    fontSize: '16px',
-                    marginBottom: '20px',
-                    cursor: 'pointer',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px'
-                }}
+                className="w-full py-3 px-4 rounded-md-full text-label-large
+                           bg-md-primary text-md-on-primary
+                           transition-all duration-md-2 hover:shadow-md-2
+                           active:scale-[0.98]"
             >
                 + Добавить автомобиль
             </button>
 
-            {/* Переключатель вкладок */}
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+            <div className="flex gap-2 p-1 bg-md-surface-variant rounded-md-full w-fit">
                 <button
                     onClick={() => setShowArchived(false)}
-                    style={{
-                        padding: '8px 16px',
-                        cursor: 'pointer',
-                        backgroundColor: !showArchived ? '#007bff' : '#f0f0f0',
-                        color: !showArchived ? 'white' : '#333',
-                        border: 'none',
-                        borderRadius: '5px'
-                    }}
+                    className={`px-4 py-1.5 rounded-md-full text-label-large transition-all duration-md-2
+                                ${!showArchived
+                                ? 'bg-md-primary-container text-md-on-primary-container shadow-md-1'
+                                : 'text-md-on-surface-variant hover:text-md-on-surface'
+                            }`}
                 >
                     Активные ({activeVehicles.length})
                 </button>
                 <button
                     onClick={() => setShowArchived(true)}
-                    style={{
-                        padding: '8px 16px',
-                        cursor: 'pointer',
-                        backgroundColor: showArchived ? '#007bff' : '#f0f0f0',
-                        color: showArchived ? 'white' : '#333',
-                        border: 'none',
-                        borderRadius: '5px'
-                    }}
+                    className={`px-4 py-1.5 rounded-md-full text-label-large transition-all duration-md-2
+                                ${showArchived
+                                ? 'bg-md-primary-container text-md-on-primary-container shadow-md-1'
+                                : 'text-md-on-surface-variant hover:text-md-on-surface'
+                            }`}
                 >
                     Архив ({archivedVehicles.length})
                 </button>
@@ -225,13 +184,15 @@ export function HomePage() {
                 getVehicleStatus={getVehicleStatus}
             />
 
-            <ReplacementList
-                replacements={replacements}
-                vehicleId={selectedId}
-                selectedVehicle={selectedVehicle}
-                onClose={() => setSelectedId(null)}
-                onReplacementsUpdate={handleReplacementsUpdate}
-            />
+            {selectedVehicle && (
+                <ReplacementList
+                    replacements={replacements}
+                    vehicleId={selectedId}
+                    selectedVehicle={selectedVehicle}
+                    onClose={() => setSelectedId(null)}
+                    onReplacementsUpdate={handleReplacementsUpdate}
+                />
+            )}
 
             <VehicleForm
                 isOpen={showForm}
