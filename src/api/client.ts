@@ -94,7 +94,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     return res.json()
 }
 
-import type { Vehicle, Replacement, VehicleFormData } from '../types';
+import type { Vehicle, Replacement, VehicleFormData, ComponentConfig } from '../types';
 
 export const api = {
     login: (username: string, password: string) =>
@@ -157,7 +157,7 @@ export const api = {
         authFetch(`${API_BASE}/vehicles/${vehicleId}/notify`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: JSON.stringify({ notify_flags: data }),
         }).then(res => handleResponse<Vehicle>(res)),
 
     getReplacements: (vehicleId: number) =>
@@ -188,6 +188,9 @@ export const api = {
 
     getLiquids: () =>
         authFetch(`${API_BASE}/enums/liquids`).then(res => handleResponse<{ liquids: { value: string; label: string }[] }>(res)),
+
+    getComponentConfigs: () =>
+        authFetch(`${API_BASE}/enums/component-configs`).then(res => handleResponse<{ configs: ComponentConfig[] }>(res)),
 
     updateEmail: (email: string) =>
         authFetch(`${AUTH_BASE}/email`, {

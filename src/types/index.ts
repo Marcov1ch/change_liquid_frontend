@@ -8,33 +8,18 @@ export interface Vehicle {
     year: number;
     current_km: number;
     is_active: boolean;
-    oil_interval_km: number;
-    transmission_interval_km: number;
-    brake_interval_km: number;
-    coolant_interval_km: number;
-    power_steering_interval_km: number;
-    differential_oil_interval_km: number;
+    intervals: Record<string, number>;
+    notify_flags: Record<string, boolean>;
+    km_remaining: Record<string, number | null>;
     vehicle_status?: string;
-    oil_km_remaining?: number | null;
-    transmission_km_remaining?: number | null;
-    brake_km_remaining?: number | null;
-    coolant_km_remaining?: number | null;
-    power_steering_km_remaining?: number | null;
-    differential_oil_km_remaining?: number | null;
-    oil_notify_enabled: boolean;
-    transmission_notify_enabled: boolean;
-    brake_notify_enabled: boolean;
-    coolant_notify_enabled: boolean;
-    power_steering_notify_enabled: boolean;
-    differential_oil_notify_enabled: boolean;
 }
 
 export interface Replacement {
     id: number;
     vehicle_id: number;
-    liquid_name: string;
-    liquid_type: string;
-    liquid_price: number | null;
+    component_name: string;
+    component_type: string;
+    component_price: number | null;
     work_price: number | null;
     km_at_replacement: number;
     replacement_date: string;
@@ -49,24 +34,20 @@ export interface Brand {
     label: string;
 }
 
+export interface ComponentConfig {
+    key: string;
+    name: string;
+    default_interval: number;
+}
+
 export interface VehicleFormData {
     brand: string;
     model: string;
     plate_number: string;
     year: number;
     current_km: number;
-    oil_interval_km: number;
-    transmission_interval_km: number;
-    brake_interval_km: number;
-    coolant_interval_km: number;
-    power_steering_interval_km: number;
-    differential_oil_interval_km: number;
-    oil_notify_enabled: boolean;
-    transmission_notify_enabled: boolean;
-    brake_notify_enabled: boolean;
-    coolant_notify_enabled: boolean;
-    power_steering_notify_enabled: boolean;
-    differential_oil_notify_enabled: boolean;
+    intervals: Record<string, number>;
+    notify_flags: Record<string, boolean>;
 }
 
 export interface User {
