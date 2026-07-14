@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
-import type { Vehicle } from '../types';
+import type { Vehicle, ComponentConfig } from '../types';
 
 interface Props {
     isOpen: boolean;
@@ -13,6 +13,7 @@ interface Props {
 export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
     const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
     const [models, setModels] = useState<{ value: string; label: string }[]>([]);
+    const [configs, setConfigs] = useState<ComponentConfig[]>([]);
     const [plateError, setPlateError] = useState('');
     const [formData, setFormData] = useState({
         brand: '',
@@ -20,19 +21,14 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
         plate_number: '',
         year: new Date().getFullYear(),
         current_km: 0,
-        oil_interval_km: 7000,
-        transmission_interval_km: 60000,
-        brake_interval_km: 40000,
-        coolant_interval_km: 60000,
-        power_steering_interval_km: 40000,
-        differential_oil_interval_km: 50000,
-        oil_notify_enabled: true,
-        transmission_notify_enabled: true,
-        brake_notify_enabled: true,
-        coolant_notify_enabled: true,
-        power_steering_notify_enabled: true,
-        differential_oil_notify_enabled: true
     });
+    const [intervals, setIntervals] = useState<Record<string, number>>({});
+    const [notifyFlags, setNotifyFlags] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        api.getBrands().then(data => setBrands(data.brands));
+        api.getComponentConfigs().then(data => setConfigs(data.configs));
+    }, []);
 
     useEffect(() => {
         if (vehicle) {
@@ -42,25 +38,11 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
                 plate_number: vehicle.plate_number || '',
                 year: vehicle.year || new Date().getFullYear(),
                 current_km: vehicle.current_km || 0,
-                oil_interval_km: vehicle.oil_interval_km || 7000,
-                transmission_interval_km: vehicle.transmission_interval_km || 60000,
-                brake_interval_km: vehicle.brake_interval_km || 40000,
-                coolant_interval_km: vehicle.coolant_interval_km || 60000,
-                power_steering_interval_km: vehicle.power_steering_interval_km || 40000,
-                differential_oil_interval_km: vehicle.differential_oil_interval_km || 50000,
-                oil_notify_enabled: vehicle.oil_notify_enabled,
-                transmission_notify_enabled: vehicle.transmission_notify_enabled,
-                brake_notify_enabled: vehicle.brake_notify_enabled,
-                coolant_notify_enabled: vehicle.coolant_notify_enabled,
-                power_steering_notify_enabled: vehicle.power_steering_notify_enabled,
-                differential_oil_notify_enabled: vehicle.differential_oil_notify_enabled
             });
+            setIntervals(vehicle.intervals || {});
+            setNotifyFlags(vehicle.notify_flags || {});
         }
     }, [vehicle]);
-
-    useEffect(() => {
-        api.getBrands().then(data => setBrands(data.brands));
-    }, []);
 
     useEffect(() => {
         if (formData.brand) {
@@ -89,6 +71,14 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
         validatePlateNumber(value);
     };
 
+    const handleIntervalChange = (key: string, value: number) => {
+        setIntervals(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleNotifyChange = (key: string, checked: boolean) => {
+        setNotifyFlags(prev => ({ ...prev, [key]: checked }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -100,7 +90,11 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
         if (!vehicle) return;
 
         try {
-            await api.updateVehicle(vehicle.id, formData);
+            await api.updateVehicle(vehicle.id, {
+                ...formData,
+                intervals,
+                notify_flags: notifyFlags,
+            });
             onUpdate();
             onClose();
         } catch (error) {
@@ -181,85 +175,30 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate }: Props) {
                 <hr />
                 <h4>Интервалы замен (км)</h4>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Моторное масло</label>
-                    <input
-                        type="number"
-                        value={formData.oil_interval_km}
-                        onChange={(e) => setFormData({ ...formData, oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Масло АКПП</label>
-                    <input
-                        type="number"
-                        value={formData.transmission_interval_km}
-                        onChange={(e) => setFormData({ ...formData, transmission_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Тормозная жидкость</label>
-                    <input
-                        type="number"
-                        value={formData.brake_interval_km}
-                        onChange={(e) => setFormData({ ...formData, brake_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Антифриз</label>
-                    <input
-                        type="number"
-                        value={formData.coolant_interval_km}
-                        onChange={(e) => setFormData({ ...formData, coolant_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Жидкость ГУР</label>
-                    <input
-                        type="number"
-                        value={formData.power_steering_interval_km}
-                        onChange={(e) => setFormData({ ...formData, power_steering_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Масло в редукторе</label>
-                    <input
-                        type="number"
-                        value={formData.differential_oil_interval_km}
-                        onChange={(e) => setFormData({ ...formData, differential_oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
+                {configs.map(cfg => (
+                    <div key={cfg.key} style={{ marginBottom: '15px' }}>
+                        <label>{cfg.name}</label>
+                        <input
+                            type="number"
+                            value={intervals[cfg.key] ?? cfg.default_interval}
+                            onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
+                            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+                        />
+                    </div>
+                ))}
 
                 <hr />
                 <h4>Уведомления</h4>
 
                 <div style={{ marginBottom: '10px' }}>
-                    {([
-                        ['oil_notify_enabled', 'Моторное масло'],
-                        ['transmission_notify_enabled', 'Масло АКПП'],
-                        ['brake_notify_enabled', 'Тормозная жидкость'],
-                        ['coolant_notify_enabled', 'Антифриз'],
-                        ['power_steering_notify_enabled', 'Жидкость ГУР'],
-                        ['differential_oil_notify_enabled', 'Масло в редукторе'],
-                    ] as const).map(([field, label]) => (
-                        <label key={field} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
+                    {configs.map(cfg => (
+                        <label key={cfg.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
                             <input
                                 type="checkbox"
-                                                checked={(formData as unknown as Record<string, boolean>)[field]}
-                                onChange={(e) => setFormData({ ...formData, [field]: e.target.checked })}
+                                checked={notifyFlags[cfg.key] ?? true}
+                                onChange={(e) => handleNotifyChange(cfg.key, e.target.checked)}
                             />
-                            {label}
+                            {cfg.name}
                         </label>
                     ))}
                 </div>

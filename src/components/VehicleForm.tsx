@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
-import type { VehicleFormData } from '../types';
+import type { VehicleFormData, ComponentConfig } from '../types';
 
 interface Props {
     isOpen: boolean;
@@ -12,30 +12,32 @@ interface Props {
 export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
     const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
     const [models, setModels] = useState<{ value: string; label: string }[]>([]);
+    const [configs, setConfigs] = useState<ComponentConfig[]>([]);
     const [plateError, setPlateError] = useState('');
     const [yearError, setYearError] = useState('');
+    const [intervals, setIntervals] = useState<Record<string, number>>({});
+    const [notifyFlags, setNotifyFlags] = useState<Record<string, boolean>>({});
     const [formData, setFormData] = useState({
         brand: '',
         model: '',
         plate_number: '',
         year: new Date().getFullYear(),
         current_km: 0,
-        oil_interval_km: 7000,
-        transmission_interval_km: 60000,
-        brake_interval_km: 40000,
-        coolant_interval_km: 60000,
-        power_steering_interval_km: 40000,
-        differential_oil_interval_km: 50000,
-        oil_notify_enabled: true,
-        transmission_notify_enabled: true,
-        brake_notify_enabled: true,
-        coolant_notify_enabled: true,
-        power_steering_notify_enabled: true,
-        differential_oil_notify_enabled: true
     });
 
     useEffect(() => {
         api.getBrands().then(data => setBrands(data.brands));
+        api.getComponentConfigs().then(data => {
+            const cfgMap: Record<string, number> = {};
+            const notifyMap: Record<string, boolean> = {};
+            data.configs.forEach(c => {
+                cfgMap[c.key] = c.default_interval;
+                notifyMap[c.key] = true;
+            });
+            setConfigs(data.configs);
+            setIntervals(cfgMap);
+            setNotifyFlags(notifyMap);
+        });
     }, []);
 
     useEffect(() => {
@@ -67,6 +69,14 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
         validatePlateNumber(value);
     };
 
+    const handleIntervalChange = (key: string, value: number) => {
+        setIntervals(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleNotifyChange = (key: string, checked: boolean) => {
+        setNotifyFlags(prev => ({ ...prev, [key]: checked }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validatePlateNumber(formData.plate_number)) {
@@ -82,25 +92,17 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
         setYearError('');
 
         try {
-            await onSubmit(formData);
+            await onSubmit({
+                ...formData,
+                intervals,
+                notify_flags: notifyFlags,
+            });
             setFormData({
                 brand: '',
                 model: '',
                 plate_number: '',
                 year: new Date().getFullYear(),
                 current_km: 0,
-                oil_interval_km: 7000,
-                transmission_interval_km: 60000,
-                brake_interval_km: 40000,
-                coolant_interval_km: 60000,
-                power_steering_interval_km: 40000,
-                differential_oil_interval_km: 50000,
-                oil_notify_enabled: true,
-                transmission_notify_enabled: true,
-                brake_notify_enabled: true,
-                coolant_notify_enabled: true,
-                power_steering_notify_enabled: true,
-                differential_oil_notify_enabled: true
             });
             setPlateError('');
         } catch {
@@ -181,85 +183,30 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
                 <hr />
                 <h4>Интервалы замен (км)</h4>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Моторное масло</label>
-                    <input
-                        type="number"
-                        value={formData.oil_interval_km}
-                        onChange={(e) => setFormData({ ...formData, oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Масло АКПП</label>
-                    <input
-                        type="number"
-                        value={formData.transmission_interval_km}
-                        onChange={(e) => setFormData({ ...formData, transmission_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Тормозная жидкость</label>
-                    <input
-                        type="number"
-                        value={formData.brake_interval_km}
-                        onChange={(e) => setFormData({ ...formData, brake_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Антифриз</label>
-                    <input
-                        type="number"
-                        value={formData.coolant_interval_km}
-                        onChange={(e) => setFormData({ ...formData, coolant_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Жидкость ГУР</label>
-                    <input
-                        type="number"
-                        value={formData.power_steering_interval_km}
-                        onChange={(e) => setFormData({ ...formData, power_steering_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label>Масло в редукторе</label>
-                    <input
-                        type="number"
-                        value={formData.differential_oil_interval_km}
-                        onChange={(e) => setFormData({ ...formData, differential_oil_interval_km: parseInt(e.target.value) })}
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-                    />
-                </div>
+                {configs.map(cfg => (
+                    <div key={cfg.key} style={{ marginBottom: '15px' }}>
+                        <label>{cfg.name}</label>
+                        <input
+                            type="number"
+                            value={intervals[cfg.key] ?? cfg.default_interval}
+                            onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
+                            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+                        />
+                    </div>
+                ))}
 
                 <hr />
                 <h4>Уведомления</h4>
 
                 <div style={{ marginBottom: '10px' }}>
-                    {([
-                        ['oil_notify_enabled', 'Моторное масло'],
-                        ['transmission_notify_enabled', 'Масло АКПП'],
-                        ['brake_notify_enabled', 'Тормозная жидкость'],
-                        ['coolant_notify_enabled', 'Антифриз'],
-                        ['power_steering_notify_enabled', 'Жидкость ГУР'],
-                        ['differential_oil_notify_enabled', 'Масло в редукторе'],
-                    ] as const).map(([field, label]) => (
-                        <label key={field} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
+                    {configs.map(cfg => (
+                        <label key={cfg.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer' }}>
                             <input
                                 type="checkbox"
-                                                checked={(formData as unknown as Record<string, boolean>)[field]}
-                                onChange={(e) => setFormData({ ...formData, [field]: e.target.checked })}
+                                checked={notifyFlags[cfg.key] ?? true}
+                                onChange={(e) => handleNotifyChange(cfg.key, e.target.checked)}
                             />
-                            {label}
+                            {cfg.name}
                         </label>
                     ))}
                 </div>

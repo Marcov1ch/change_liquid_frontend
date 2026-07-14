@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import type { Replacement, Vehicle } from '../types';
+import type { Replacement, Vehicle, ComponentConfig } from '../types';
 
 interface Props {
     replacements: Replacement[];
@@ -9,15 +9,6 @@ interface Props {
     onClose: () => void;
     onReplacementsUpdate: () => void;
 }
-
-const liquidNames: Record<string, string> = {
-    'engine_oil': 'Моторное масло',
-    'transmission_oil': 'Масло АКПП',
-    'brake_fluid': 'Тормозная жидкость',
-    'coolant': 'Антифриз',
-    'power_steering_fluid': 'Жидкость ГУР',
-    'differential_oil': 'Масло в редукторе'
-};
 
 const statusStyles: Record<string, { backgroundColor: string; color: string; borderColor: string; icon: string }> = {
     good: { backgroundColor: '#d4edda', color: '#155724', borderColor: '#28a745', icon: '🟢' },
@@ -28,32 +19,15 @@ const statusStyles: Record<string, { backgroundColor: string; color: string; bor
     replaced: { backgroundColor: '#f8f9fa', color: '#6c757d', borderColor: '#dee2e6', icon: '📌' }
 };
 
-const liquidTypesList = [
-    { value: 'engine_oil', label: 'Моторное масло' },
-    { value: 'transmission_oil', label: 'Масло АКПП' },
-    { value: 'brake_fluid', label: 'Тормозная жидкость' },
-    { value: 'coolant', label: 'Антифриз' },
-    { value: 'power_steering_fluid', label: 'Жидкость ГУР' },
-    { value: 'differential_oil', label: 'Масло в редукторе' }
-];
-
-const liquidNotifyMap: Record<string, string> = {
-    'engine_oil': 'oil_notify_enabled',
-    'transmission_oil': 'transmission_notify_enabled',
-    'brake_fluid': 'brake_notify_enabled',
-    'coolant': 'coolant_notify_enabled',
-    'power_steering_fluid': 'power_steering_notify_enabled',
-    'differential_oil': 'differential_oil_notify_enabled'
-};
-
 export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onReplacementsUpdate }: Props) {
+    const [configs, setConfigs] = useState<ComponentConfig[]>([]);
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
     const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newReplacement, setNewReplacement] = useState({
-        liquid_type: 'engine_oil',
-        liquid_name: '',
-        liquid_price: 0,
+        component_type: '',
+        component_name: '',
+        component_price: 0,
         work_price: 0,
         replacement_date: new Date().toISOString().split('T')[0],
         km_at_replacement: selectedVehicle?.current_km || 0
@@ -61,14 +35,32 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     const [editForm, setEditForm] = useState({
         km_at_replacement: '',
         replacement_date: '',
-        liquid_name: ''
+        component_name: ''
     });
+
+    useEffect(() => {
+        api.getComponentConfigs().then(data => {
+            setConfigs(data.configs);
+            if (!newReplacement.component_type && data.configs.length > 0) {
+                setNewReplacement(prev => ({ ...prev, component_type: data.configs[0].key }));
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        if (selectedVehicle && !newReplacement.component_type && configs.length > 0) {
+            setNewReplacement(prev => ({ ...prev, component_type: configs[0].key }));
+        }
+    }, [selectedVehicle, configs]);
 
     if (!vehicleId || !selectedVehicle) return null;
 
-    // Группируем замены по типу жидкости
+    const liquidNames: Record<string, string> = {};
+    configs.forEach(c => { liquidNames[c.key] = c.name; });
+
+    // Группируем замены по типу компонента
     const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
-        const type = replacement.liquid_type;
+        const type = replacement.component_type;
         if (!acc[type]) {
             acc[type] = [];
         }
@@ -91,11 +83,11 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     };
 
     const handleToggleNotify = async (type: string) => {
-        const field = liquidNotifyMap[type];
-        if (!field || !selectedVehicle) return;
-        const newValue = !(selectedVehicle as unknown as Record<string, boolean>)[field];
+        if (!selectedVehicle) return;
+        const currentVal = selectedVehicle.notify_flags[type] ?? true;
+        const newNotifyFlags = { [type]: !currentVal };
         try {
-            await api.updateNotify(selectedVehicle.id, { [field]: newValue });
+            await api.updateNotify(selectedVehicle.id, newNotifyFlags);
             onReplacementsUpdate();
         } catch {
             alert('Не удалось изменить настройку уведомлений');
@@ -107,13 +99,13 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         setEditForm({
             km_at_replacement: String(replacement.km_at_replacement),
             replacement_date: replacement.replacement_date,
-            liquid_name: replacement.liquid_name
+            component_name: replacement.component_name
         });
     };
 
     const cancelEdit = () => {
         setEditingReplacement(null);
-        setEditForm({ km_at_replacement: '', replacement_date: '', liquid_name: '' });
+        setEditForm({ km_at_replacement: '', replacement_date: '', component_name: '' });
     };
 
     const saveEdit = async () => {
@@ -121,8 +113,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
         const updateData: Record<string, string | number> = {};
 
-        if (editForm.liquid_name !== editingReplacement.liquid_name) {
-            updateData.liquid_name = editForm.liquid_name;
+        if (editForm.component_name !== editingReplacement.component_name) {
+            updateData.component_name = editForm.component_name;
         }
 
         if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) {
@@ -161,16 +153,16 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     };
 
     const handleAddReplacement = async () => {
-        if (!newReplacement.liquid_name.trim()) {
-            alert('Введите название жидкости');
+        if (!newReplacement.component_name.trim()) {
+            alert('Введите название компонента');
             return;
         }
 
         try {
             await api.createReplacement(vehicleId, {
-                liquid_type: newReplacement.liquid_type,
-                liquid_name: newReplacement.liquid_name,
-                liquid_price: newReplacement.liquid_price,
+                component_type: newReplacement.component_type,
+                component_name: newReplacement.component_name,
+                component_price: newReplacement.component_price,
                 work_price: newReplacement.work_price,
                 replacement_date: newReplacement.replacement_date,
                 km_at_replacement: newReplacement.km_at_replacement
@@ -178,9 +170,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
             setShowAddForm(false);
             setNewReplacement({
-                liquid_type: 'engine_oil',
-                liquid_name: '',
-                liquid_price: 0,
+                component_type: configs[0]?.key || '',
+                component_name: '',
+                component_price: 0,
                 work_price: 0,
                 replacement_date: new Date().toISOString().split('T')[0],
                 km_at_replacement: selectedVehicle.current_km
@@ -211,7 +203,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                 gap: '8px'
             }}>
                 <span style={{ fontWeight: 'bold' }}>
-                    Замены жидкостей для: {selectedVehicle.brand} {selectedVehicle.model}
+                    Замены для: {selectedVehicle.brand} {selectedVehicle.model}
                 </span>
                 <button
                     onClick={onClose}
@@ -221,7 +213,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                 </button>
             </div>
 
-            {/* Замены жидкостей */}
+            {/* Замены */}
             <div style={{ padding: '10px' }}>
                 {replacements.length === 0 ? (
                     <div style={{ margin: '0 0 15px 0', padding: '12px', backgroundColor: '#fff3cd', borderRadius: '5px', border: '1px solid #ffc107' }}>
@@ -264,7 +256,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                             style={{ cursor: 'pointer', fontSize: '14px', marginLeft: '4px' }}
                                             title="Вкл/Выкл уведомления"
                                         >
-                                            {(selectedVehicle as unknown as Record<string, boolean>)?.[liquidNotifyMap[type]] ? '🔔' : '🔕'}
+                                            {selectedVehicle.notify_flags?.[type] ? '🔔' : '🔕'}
                                         </span>
                                         <span style={{ fontSize: '12px', marginLeft: 'auto' }}>
                                             {grouped[type].length} замен
@@ -291,8 +283,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Название"
-                                                                    value={editForm.liquid_name}
-                                                                    onChange={(e) => setEditForm({ ...editForm, liquid_name: e.target.value })}
+                                                                    value={editForm.component_name}
+                                                                    onChange={(e) => setEditForm({ ...editForm, component_name: e.target.value })}
                                                                     style={{ width: '100%', marginBottom: '8px', padding: '5px', boxSizing: 'border-box' }}
                                                                 />
                                                                 <input
@@ -322,7 +314,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                                                                 {itemStatusStyle.icon}
                                                                             </span>
                                                                         )}
-                                                                        <strong>{r.liquid_name}</strong>
+                                                                        <strong>{r.component_name}</strong>
                                                                         {idx === 0 && (
                                                                             <span style={{ fontSize: '11px', color: itemStatusStyle.borderColor, marginLeft: '8px' }}>
                                                                                 последняя
@@ -366,7 +358,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                                                 <div style={{ fontSize: '12px', color: '#666', textAlign: 'left' }}>
                                                                     📍 {r.km_at_replacement} км | ⏱ Следующая замена: {r.next_replacement_km} км
                                                                 </div>
-                                                                    <div style={{ fontSize: '11px', marginTop: '5px', color: itemStatusStyle.color, textAlign: 'left' }}>
+                                                                <div style={{ fontSize: '11px', marginTop: '5px', color: itemStatusStyle.color, textAlign: 'left' }}>
                                                                     {r.status_message}
                                                                 </div>
                                                             </div>
@@ -412,36 +404,36 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                             <h4 style={{ margin: '0 0 10px 0' }}>Новая замена</h4>
 
                             <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Тип жидкости</label>
+                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Тип</label>
                                 <select
-                                    value={newReplacement.liquid_type}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, liquid_type: e.target.value })}
+                                    value={newReplacement.component_type}
+                                    onChange={(e) => setNewReplacement({ ...newReplacement, component_type: e.target.value })}
                                     style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                                 >
-                                    {liquidTypesList.map(type => (
-                                        <option key={type.value} value={type.value}>{type.label}</option>
+                                    {configs.map(cfg => (
+                                        <option key={cfg.key} value={cfg.key}>{cfg.name}</option>
                                     ))}
                                 </select>
                             </div>
 
                             <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Название жидкости *</label>
+                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Название *</label>
                                 <input
                                     type="text"
                                     placeholder="например: Mobil 1 5W-30"
-                                    value={newReplacement.liquid_name}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, liquid_name: e.target.value })}
+                                    value={newReplacement.component_name}
+                                    onChange={(e) => setNewReplacement({ ...newReplacement, component_name: e.target.value })}
                                     style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                                 />
                             </div>
 
                             <div style={{ marginBottom: '8px' }}>
-                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Цена жидкости (₽)</label>
+                                <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '4px' }}>Цена (₽)</label>
                                 <input
                                     type="number"
                                     placeholder="5000"
-                                    value={newReplacement.liquid_price === 0 ? '' : newReplacement.liquid_price}
-                                    onChange={(e) => setNewReplacement({ ...newReplacement, liquid_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    value={newReplacement.component_price === 0 ? '' : newReplacement.component_price}
+                                    onChange={(e) => setNewReplacement({ ...newReplacement, component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                                     style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                                 />
                             </div>
