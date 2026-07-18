@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { Replacement, Vehicle, ComponentConfig } from '../types';
 import { ProgressBar } from './ProgressBar';
@@ -73,13 +73,13 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     });
   });
 
-  const getProgress = useCallback((type: string): number => {
+  const getProgress = (type: string): number => {
     const interval = selectedVehicle.intervals[type];
     const remaining = selectedVehicle.km_remaining[type];
     if (!interval || remaining === null || remaining === undefined) return 0;
     const used = interval - remaining;
     return Math.min(100, Math.max(0, (used / interval) * 100));
-  }, [selectedVehicle]);
+  };
 
   const toggleGroup = (type: string) => {
     setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
