@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { useToast } from '../context/ToastContext';
 import type { Replacement, Vehicle, ComponentConfig } from '../types';
 import { ProgressBar } from './ProgressBar';
 
@@ -21,6 +22,7 @@ const statusStyles: Record<string, { bg: string; text: string; border: string; i
 };
 
 export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onReplacementsUpdate }: Props) {
+  const { toast } = useToast();
   const [configs, setConfigs] = useState<ComponentConfig[]>([]);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
@@ -92,7 +94,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       await api.updateNotify(selectedVehicle.id, { [type]: !currentVal });
       onReplacementsUpdate();
     } catch {
-      alert('Не удалось изменить настройку уведомлений');
+      toast.error('Не удалось изменить настройку уведомлений');
     }
   };
 
@@ -126,7 +128,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       onReplacementsUpdate();
     } catch (error) {
       console.error('Ошибка при обновлении:', error);
-      alert('Не удалось обновить замену');
+      toast.error('Не удалось обновить замену');
     }
   };
 
@@ -134,16 +136,17 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     if (!confirm('Удалить эту замену?')) return;
     try {
       await api.deleteReplacement(id);
+      toast.success('Замена удалена');
       onReplacementsUpdate();
     } catch (error) {
       console.error('Ошибка при удалении:', error);
-      alert('Не удалось удалить замену');
+      toast.error('Не удалось удалить замену');
     }
   };
 
   const handleAddReplacement = async () => {
     if (!newReplacement.component_name.trim()) {
-      alert('Введите название компонента');
+      toast.error('Введите название компонента');
       return;
     }
     try {
@@ -155,6 +158,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         replacement_date: newReplacement.replacement_date,
         km_at_replacement: newReplacement.km_at_replacement,
       });
+      toast.success('Замена добавлена');
       setShowAddForm(false);
       setNewReplacement({
         component_type: configs[0]?.key || '',
@@ -167,7 +171,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       onReplacementsUpdate();
     } catch (error) {
       console.error('Ошибка при добавлении:', error);
-      alert('Не удалось добавить замену');
+      toast.error('Не удалось добавить замену');
     }
   };
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { VehicleForm } from '../components/VehicleForm';
@@ -13,6 +14,7 @@ export function HomePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -60,8 +62,9 @@ export function HomePage() {
   const handleAddVehicle = async (newVehicle: VehicleFormData) => {
     try {
       await createVehicleMutation.mutateAsync(newVehicle);
+      toast.success('Автомобиль добавлен');
     } catch (error) {
-      if (error instanceof Error) alert(error.message);
+      if (error instanceof Error) toast.error(error.message);
     }
   };
 
@@ -88,26 +91,28 @@ export function HomePage() {
       if (selectedId === id) setSelectedId(null);
     } catch (error) {
       console.error('Ошибка при жестком удалении:', error);
-      alert('Не удалось удалить автомобиль');
+      toast.error('Не удалось удалить автомобиль');
     }
   };
 
   const handleRestoreVehicle = async (id: number) => {
     try {
       await api.restoreVehicle(id);
+      toast.success('Автомобиль восстановлен');
       invalidateVehicles();
     } catch (error) {
       console.error('Ошибка при восстановлении:', error);
-      alert('Не удалось восстановить автомобиль');
+      toast.error('Не удалось восстановить автомобиль');
     }
   };
 
   const handleUpdateKm = async (vehicleId: number, newKm: number) => {
     try {
       await updateKmMutation.mutateAsync({ vehicleId, newKm });
+      toast.success('Пробег обновлён');
     } catch (error) {
       console.error('Ошибка при обновлении пробега:', error);
-      alert('Не удалось обновить пробег');
+      toast.error('Не удалось обновить пробег');
     }
   };
 
@@ -244,7 +249,7 @@ export function HomePage() {
               if (selectedId === id) setSelectedId(null);
             } catch (error) {
               console.error('Ошибка при удалении:', error);
-              alert('Не удалось удалить автомобиль');
+              toast.error('Не удалось удалить автомобиль');
             }
           }}
         />
