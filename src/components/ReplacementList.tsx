@@ -41,6 +41,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     component_name: '',
   });
 
+  const today = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     api.getComponentConfigs().then(data => {
       setConfigs(data.configs);
@@ -271,6 +273,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                 />
                                 <input
                                   type="date"
+                                  max={today}
                                   value={editForm.replacement_date}
                                   onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
                                   className="md3-field"
@@ -409,6 +412,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                     <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
                     <input
                       type="date"
+                      max={today}
                       value={newReplacement.replacement_date}
                       onChange={(e) => setNewReplacement({ ...newReplacement, replacement_date: e.target.value })}
                       className="md3-field"
