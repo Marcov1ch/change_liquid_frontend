@@ -129,8 +129,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       setEditingReplacement(null);
       onReplacementsUpdate();
     } catch (error) {
-      console.error('Ошибка при обновлении:', error);
-      toast.error('Не удалось обновить замену');
+      toast.error(error instanceof Error ? error.message : 'Не удалось обновить замену');
     }
   };
 
@@ -172,8 +171,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       });
       onReplacementsUpdate();
     } catch (error) {
-      console.error('Ошибка при добавлении:', error);
-      toast.error('Не удалось добавить замену');
+      toast.error(error instanceof Error ? error.message : 'Не удалось добавить замену');
     }
   };
 
@@ -285,13 +283,18 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                               </div>
                             ) : (
                               <>
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    {idx === 0 && <span className="text-label-md">{itemStyle.icon}</span>}
-                                    <span className="text-label-lg text-surface-on">{r.component_name}</span>
-                                    {idx === 0 && <span className="md3-badge bg-primary-container text-primary-on-container">последняя</span>}
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {idx === 0 && <span className="text-label-md">{itemStyle.icon}</span>}
+                                  <span className="text-label-lg text-surface-on">{r.component_name}</span>
+                                  {idx === 0 && <span className="md3-badge bg-primary-container text-primary-on-container">последняя</span>}
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-2">
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
+                                    <span>📅 {r.replacement_date}</span>
+                                    <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
+                                    <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
                                   </div>
-                                  <div className="flex gap-1 shrink-0">
+                                  <div className="flex gap-0">
                                     <button
                                       onClick={() => startEdit(r)}
                                       className="flex items-center justify-center w-8 h-8 rounded-md3-full text-[#7A6100] hover:bg-[#FFF8E1] transition-colors"
@@ -312,11 +315,6 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                       </svg>
                                     </button>
                                   </div>
-                                </div>
-                                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
-                                  <span>📅 {r.replacement_date}</span>
-                                  <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
-                                  <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
                                 </div>
                                 {r.status_message && (
                                   <p className={`mt-1 text-body-sm ${itemStyle.text}`}>{r.status_message}</p>
