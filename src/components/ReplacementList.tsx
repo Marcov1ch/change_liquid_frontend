@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { Replacement, Vehicle, ComponentConfig } from '../types';
+import { ProgressBar } from './ProgressBar';
 
 interface Props {
   replacements: Replacement[];
@@ -71,6 +72,14 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       return new Date(b.replacement_date).getTime() - new Date(a.replacement_date).getTime();
     });
   });
+
+  const getProgress = (type: string): number => {
+    const interval = selectedVehicle.intervals[type];
+    const remaining = selectedVehicle.km_remaining[type];
+    if (!interval || remaining === null || remaining === undefined) return 0;
+    const used = interval - remaining;
+    return Math.min(100, Math.max(0, (used / interval) * 100));
+  };
 
   const toggleGroup = (type: string) => {
     setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
@@ -224,6 +233,10 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                     </button>
                     <span className="text-label-sm opacity-70">{grouped[type].length} {grouped[type].length === 1 ? 'замена' : 'замен'}</span>
                   </button>
+
+                  <div className="px-4 pb-2">
+                    <ProgressBar value={getProgress(type)} status={status} />
+                  </div>
 
                   {isOpen && (
                     <div className="flex flex-col gap-2 p-3">
