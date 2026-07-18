@@ -134,7 +134,10 @@ export function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-body-md text-outline hidden sm:block">{user?.username}</span>
+            <span className="text-body-md text-outline">
+              <span className="sm:hidden font-bold">{user?.username?.[0]?.toUpperCase()}</span>
+              <span className="hidden sm:inline">{user?.username}</span>
+            </span>
             <button
               onClick={() => navigate('/profile')}
               className="md3-btn-tonal !py-2 !px-4 !rounded-md3-sm text-label-sm"
