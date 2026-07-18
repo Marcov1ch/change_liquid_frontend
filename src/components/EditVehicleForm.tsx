@@ -102,8 +102,7 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
       onUpdate();
       onClose();
     } catch (error) {
-      console.error('Ошибка при обновлении:', error);
-      toast.error('Не удалось обновить автомобиль');
+      toast.error(error instanceof Error ? error.message : 'Не удалось обновить автомобиль');
     }
   };
 
