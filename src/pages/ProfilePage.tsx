@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 export function ProfilePage() {
   const { user, updateEmail, changePassword, deleteAccount } = useAuth()
   const navigate = useNavigate()
+  const { toast } = useToast()
 
   const [email, setEmail] = useState(user?.email || '')
   const [emailError, setEmailError] = useState('')
@@ -26,6 +28,7 @@ export function ProfilePage() {
     try {
       await updateEmail(email)
       setEmailSuccess(true)
+      toast.success('Email обновлён')
     } catch (err: unknown) {
       setEmailError(err instanceof Error ? err.message : 'Failed to update email')
     } finally {
@@ -50,6 +53,7 @@ export function ProfilePage() {
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
+      toast.success('Пароль изменён')
     } catch (err: unknown) {
       setPasswordError(err instanceof Error ? err.message : 'Failed to change password')
     } finally {
@@ -63,7 +67,7 @@ export function ProfilePage() {
       await deleteAccount()
       navigate('/login', { replace: true })
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to delete account')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete account')
     }
   }
 

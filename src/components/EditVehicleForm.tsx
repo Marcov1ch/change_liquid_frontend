@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
+import { useToast } from '../context/ToastContext';
 import type { Vehicle, ComponentConfig } from '../types';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }: Props) {
+  const { toast } = useToast();
   const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
   const [models, setModels] = useState<{ value: string; label: string }[]>([]);
   const [configs, setConfigs] = useState<ComponentConfig[]>([]);
@@ -84,7 +86,7 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
     e.preventDefault();
 
     if (!validatePlateNumber(formData.plate_number)) {
-      alert('Пожалуйста, исправьте ошибки в форме');
+      toast.error('Пожалуйста, исправьте ошибки в форме');
       return;
     }
 
@@ -96,11 +98,12 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
         intervals,
         notify_flags: notifyFlags,
       });
+      toast.success('Автомобиль обновлён');
       onUpdate();
       onClose();
     } catch (error) {
       console.error('Ошибка при обновлении:', error);
-      alert('Не удалось обновить автомобиль');
+      toast.error('Не удалось обновить автомобиль');
     }
   };
 
@@ -109,10 +112,11 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
     if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
     try {
       await onDelete(vehicle.id);
+      toast.success('Автомобиль удалён');
       onClose();
     } catch (error) {
       console.error('Ошибка при удалении:', error);
-      alert('Не удалось удалить автомобиль');
+      toast.error('Не удалось удалить автомобиль');
     }
   };
 

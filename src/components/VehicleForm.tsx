@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
+import { useToast } from '../context/ToastContext';
 import type { VehicleFormData, ComponentConfig } from '../types';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
+  const { toast } = useToast();
   const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
   const [models, setModels] = useState<{ value: string; label: string }[]>([]);
   const [configs, setConfigs] = useState<ComponentConfig[]>([]);
@@ -80,7 +82,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validatePlateNumber(formData.plate_number)) {
-      alert('Пожалуйста, исправьте ошибки в форме');
+      toast.error('Пожалуйста, исправьте ошибки в форме');
       return;
     }
 

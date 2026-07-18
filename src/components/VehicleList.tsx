@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useToast } from '../context/ToastContext';
 import type { Vehicle } from '../types';
 
 interface Props {
@@ -27,13 +28,14 @@ export function VehicleList({
   onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, showArchived,
   statusIcons, getVehicleStatus,
 }: Props) {
+  const { toast } = useToast();
   const [editingKm, setEditingKm] = useState<number | null>(null);
   const [newKmValue, setNewKmValue] = useState<string>('');
 
   const handleUpdateKm = async (vehicleId: number, currentKm: number) => {
     const newKm = parseInt(newKmValue);
     if (isNaN(newKm) || newKm <= currentKm) {
-      alert('Пробег должен быть больше текущего');
+      toast.error('Пробег должен быть больше текущего');
       return;
     }
     try {
