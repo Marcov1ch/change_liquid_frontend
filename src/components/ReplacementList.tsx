@@ -293,6 +293,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                     <span>📅 {r.replacement_date}</span>
                                     <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
                                     <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
+                                    {itemStatus === 'overdue' && selectedVehicle?.km_remaining[r.component_type] != null && selectedVehicle.km_remaining[r.component_type]! < 0 && (
+                                      <span className="inline-flex items-center gap-1"><span style={{color: '#FFC107', fontSize: '16px', lineHeight: '1'}}>⚠️</span> Просрочено на {Math.abs(selectedVehicle.km_remaining[r.component_type]!).toLocaleString()} км</span>
+                                    )}
                                   </div>
                                   <div className="flex gap-0">
                                     <button
