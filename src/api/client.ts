@@ -186,8 +186,8 @@ export const api = {
     getModels: (brand: string) =>
         authFetch(`${API_BASE}/enums/models/${brand}`).then(res => handleResponse<{ models: { value: string; label: string }[] }>(res)),
 
-    getLiquids: () =>
-        authFetch(`${API_BASE}/enums/liquids`).then(res => handleResponse<{ liquids: { value: string; label: string }[] }>(res)),
+    getComponents: () =>
+        authFetch(`${API_BASE}/enums/components`).then(res => handleResponse<{ components: { value: string; label: string }[] }>(res)),
 
     getComponentConfigs: () =>
         authFetch(`${API_BASE}/enums/component-configs`).then(res => handleResponse<{ configs: ComponentConfig[] }>(res)),
