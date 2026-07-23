@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import { validatePlateNumber } from '../utils/plateValidation';
 import type { VehicleFormData, ComponentConfig } from '../types';
 
 interface Props {
@@ -50,25 +51,16 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
     }
   }, [formData.brand]);
 
-  const validatePlateNumber = (value: string) => {
-    const allowedLetters = 'АВЕІКМНОРСТУХ';
-    const rfPattern = new RegExp(`^[${allowedLetters}]\\d{3}[${allowedLetters}]{2}\\d{2,3}$`);
-    const byCurrentPattern = new RegExp(`^\\d{4}[${allowedLetters}]{2}\\d$`);
-    const byOldPattern = new RegExp(`^\\d{4}[${allowedLetters}]{2}$`);
-    const cleaned = value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
-
-    if (!rfPattern.test(cleaned) && !byCurrentPattern.test(cleaned) && !byOldPattern.test(cleaned) && cleaned !== '') {
-      setPlateError('Некорректный формат госномера. Допустимые форматы: А123АА178 (РФ) или 1234AB7 (РБ)');
-      return false;
-    }
-    setPlateError('');
-    return true;
+  const handleValidatePlate = (value: string) => {
+    const error = validatePlateNumber(value);
+    setPlateError(error || '');
+    return !error;
   };
 
   const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
     setFormData({ ...formData, plate_number: value });
-    validatePlateNumber(value);
+    handleValidatePlate(value);
   };
 
   const handleIntervalChange = (key: string, value: number) => {
@@ -81,7 +73,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validatePlateNumber(formData.plate_number)) {
+    if (!handleValidatePlate(formData.plate_number)) {
       toast.error('Пожалуйста, исправьте ошибки в форме');
       return;
     }

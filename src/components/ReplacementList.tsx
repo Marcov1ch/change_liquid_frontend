@@ -60,8 +60,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
   if (!vehicleId || !selectedVehicle) return null;
 
-  const liquidNames: Record<string, string> = {};
-  configs.forEach(c => { liquidNames[c.key] = c.name; });
+  const componentNames: Record<string, string> = {};
+  configs.forEach(c => { componentNames[c.key] = c.name; });
 
   const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
     const type = replacement.component_type;
@@ -227,7 +227,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                       <polygon points="8 5 19 12 8 19 8 5" />
                     </svg>
                     <span>{sStyle.icon}</span>
-                    <span className="text-label-lg flex-1">{liquidNames[type] || type}</span>
+                    <span className="text-label-lg flex-1">{componentNames[type] || type}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleToggleNotify(type); }}
                       className="text-label-lg hover:opacity-70 transition-opacity"
