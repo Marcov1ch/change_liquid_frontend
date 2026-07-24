@@ -128,6 +128,16 @@ export function useGpsTracker(onError?: (message: string) => void) {
         onError?.(message);
     }, [resetState, onError]);
 
+    const requestPosition = useCallback((): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+                () => resolve(),
+                (error) => reject(error),
+                { enableHighAccuracy: true, timeout: 15000 }
+            );
+        });
+    }, []);
+
     const setupWatch = useCallback((initialPoint?: GpsPoint | null) => {
         if (!navigator.geolocation) {
             throw new Error('Геолокация не поддерживается вашим браузером');
@@ -169,12 +179,7 @@ export function useGpsTracker(onError?: (message: string) => void) {
             throw new Error('Геолокация не поддерживается вашим браузером');
         }
 
-        if ('permissions' in navigator) {
-            const status = await navigator.permissions.query({ name: 'geolocation' });
-            if (status.state === 'denied') {
-                throw new Error('Геолокация отключена. Включите её в настройках браузера');
-            }
-        }
+        await requestPosition();
 
         distanceRef.current = 0;
         startRef.current = Date.now();
@@ -188,7 +193,7 @@ export function useGpsTracker(onError?: (message: string) => void) {
         }, 1000);
 
         setupWatch();
-    }, [stopTracking, setupWatch]);
+    }, [stopTracking, setupWatch, requestPosition]);
 
     // Восстанавливаем трекинг из sessionStorage при загрузке страницы (один раз)
     useEffect(() => {
