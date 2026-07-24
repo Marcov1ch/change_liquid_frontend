@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 const EARTH_RADIUS_KM = 6371;
 const MIN_ACCURACY_M = 100;
+const STORAGE_KEY = 'gps_tracking';
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -18,6 +19,13 @@ interface GpsPoint {
     lng: number;
 }
 
+interface PersistedTracking {
+    vehicleId: number;
+    startTimestamp: number;
+    distanceKm: number;
+    lastPoint: GpsPoint | null;
+}
+
 export interface TrackingState {
     isTracking: boolean;
     vehicleId: number | null;
@@ -25,12 +33,36 @@ export interface TrackingState {
     distanceKm: number;
 }
 
+function saveTracking(data: PersistedTracking) {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadTracking(): PersistedTracking | null {
+    try {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+function clearTracking() {
+    sessionStorage.removeItem(STORAGE_KEY);
+}
+
 export function useGpsTracker() {
-    const [state, setState] = useState<TrackingState>({
-        isTracking: false,
-        vehicleId: null,
-        elapsed: 0,
-        distanceKm: 0,
+    const [state, setState] = useState<TrackingState>(() => {
+        const saved = loadTracking();
+        if (saved) {
+            return {
+                isTracking: true,
+                vehicleId: saved.vehicleId,
+                elapsed: Math.floor((Date.now() - saved.startTimestamp) / 1000),
+                distanceKm: saved.distanceKm,
+            };
+        }
+        return { isTracking: false, vehicleId: null, elapsed: 0, distanceKm: 0 };
     });
 
     const watchIdRef = useRef<number | null>(null);
@@ -58,34 +90,30 @@ export function useGpsTracker() {
 
     const stopTracking = useCallback((): TrackingState | null => {
         clearTimers();
+        clearTracking();
         const final = { ...stateRef.current };
         setState(prev => ({ ...prev, isTracking: false }));
         distanceRef.current = 0;
         return final.isTracking ? final : null;
     }, [clearTimers]);
 
-    useEffect(() => {
-        return () => clearTimers();
-    }, [clearTimers]);
+    const persistPoint = useCallback((point: GpsPoint) => {
+        saveTracking({
+            vehicleId: stateRef.current.vehicleId!,
+            startTimestamp: startRef.current,
+            distanceKm: distanceRef.current,
+            lastPoint: point,
+        });
+    }, []);
 
-    const startTracking = useCallback((vehicleId: number) => {
-        if (stateRef.current.isTracking) {
-            stopTracking();
-        }
-
+    const setupWatch = useCallback((initialPoint?: GpsPoint | null) => {
         if (!navigator.geolocation) {
             throw new Error('Геолокация не поддерживается вашим браузером');
         }
 
-        distanceRef.current = 0;
-        startRef.current = Date.now();
-
-        setState({ isTracking: true, vehicleId, elapsed: 0, distanceKm: 0 });
-
-        timerRef.current = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
-            setState(prev => ({ ...prev, elapsed }));
-        }, 1000);
+        if (initialPoint) {
+            lastPointRef.current = initialPoint;
+        }
 
         watchIdRef.current = navigator.geolocation.watchPosition(
             (pos) => {
@@ -103,11 +131,52 @@ export function useGpsTracker() {
                     }
                 }
                 lastPointRef.current = point;
+                persistPoint(point);
             },
             () => {},
             { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
         );
-    }, [stopTracking]);
+    }, [persistPoint]);
+
+    const startTracking = useCallback((vehicleId: number) => {
+        if (stateRef.current.isTracking) {
+            stopTracking();
+        }
+
+        distanceRef.current = 0;
+        startRef.current = Date.now();
+
+        saveTracking({ vehicleId, startTimestamp: startRef.current, distanceKm: 0, lastPoint: null });
+        setState({ isTracking: true, vehicleId, elapsed: 0, distanceKm: 0 });
+
+        timerRef.current = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
+            setState(prev => ({ ...prev, elapsed }));
+        }, 1000);
+
+        setupWatch();
+    }, [stopTracking, setupWatch]);
+
+    // Восстанавливаем трекинг из sessionStorage при загрузке страницы (один раз)
+    useEffect(() => {
+        const saved = loadTracking();
+        if (saved && state.isTracking && watchIdRef.current === null) {
+            startRef.current = saved.startTimestamp;
+            distanceRef.current = saved.distanceKm;
+
+            timerRef.current = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
+                setState(prev => ({ ...prev, elapsed }));
+            }, 1000);
+
+            setupWatch(saved.lastPoint);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        return () => clearTimers();
+    }, [clearTimers]);
 
     return {
         ...state,
