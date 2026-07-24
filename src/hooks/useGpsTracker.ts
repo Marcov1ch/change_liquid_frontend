@@ -51,7 +51,16 @@ function clearTracking() {
     sessionStorage.removeItem(STORAGE_KEY);
 }
 
-export function useGpsTracker() {
+function gpsErrorMessage(code: number): string {
+    switch (code) {
+        case 1: return 'Геолокация отключена. Включите её в настройках браузера';
+        case 2: return 'GPS-сигнал недоступен';
+        case 3: return 'Время ожидания GPS истекло. Попробуйте снова';
+        default: return 'Ошибка геолокации';
+    }
+}
+
+export function useGpsTracker(onError?: (message: string) => void) {
     const [state, setState] = useState<TrackingState>(() => {
         const saved = loadTracking();
         if (saved) {
@@ -88,6 +97,13 @@ export function useGpsTracker() {
         lastPointRef.current = null;
     }, []);
 
+    const resetState = useCallback(() => {
+        clearTimers();
+        clearTracking();
+        setState({ isTracking: false, vehicleId: null, elapsed: 0, distanceKm: 0 });
+        distanceRef.current = 0;
+    }, [clearTimers]);
+
     const stopTracking = useCallback((): TrackingState | null => {
         clearTimers();
         clearTracking();
@@ -105,6 +121,12 @@ export function useGpsTracker() {
             lastPoint: point,
         });
     }, []);
+
+    const handleError = useCallback((error: GeolocationPositionError) => {
+        const message = gpsErrorMessage(error.code);
+        resetState();
+        onError?.(message);
+    }, [resetState, onError]);
 
     const setupWatch = useCallback((initialPoint?: GpsPoint | null) => {
         if (!navigator.geolocation) {
@@ -133,14 +155,25 @@ export function useGpsTracker() {
                 lastPointRef.current = point;
                 persistPoint(point);
             },
-            () => {},
+            handleError,
             { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
         );
-    }, [persistPoint]);
+    }, [persistPoint, handleError]);
 
-    const startTracking = useCallback((vehicleId: number) => {
+    const startTracking = useCallback(async (vehicleId: number) => {
         if (stateRef.current.isTracking) {
             stopTracking();
+        }
+
+        if (!navigator.geolocation) {
+            throw new Error('Геолокация не поддерживается вашим браузером');
+        }
+
+        if ('permissions' in navigator) {
+            const status = await navigator.permissions.query({ name: 'geolocation' });
+            if (status.state === 'denied') {
+                throw new Error('Геолокация отключена. Включите её в настройках браузера');
+            }
         }
 
         distanceRef.current = 0;

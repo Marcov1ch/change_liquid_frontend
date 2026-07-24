@@ -22,7 +22,7 @@ export function HomePage() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
-  const gps = useGpsTracker();
+  const gps = useGpsTracker((message) => toast.error(message));
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
@@ -119,9 +119,9 @@ export function HomePage() {
     }
   };
 
-  const handleStartTrip = (vehicleId: number) => {
+  const handleStartTrip = async (vehicleId: number) => {
     try {
-      gps.startTracking(vehicleId);
+      await gps.startTracking(vehicleId);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Не удалось запустить GPS');
     }
