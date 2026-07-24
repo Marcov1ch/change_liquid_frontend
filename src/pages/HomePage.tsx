@@ -8,6 +8,8 @@ import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
+import { TrackingBar } from '../components/TrackingBar';
+import { useGpsTracker } from '../hooks/useGpsTracker';
 import type { Vehicle, VehicleFormData } from '../types';
 
 export function HomePage() {
@@ -20,6 +22,7 @@ export function HomePage() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const gps = useGpsTracker();
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles'],
@@ -114,6 +117,25 @@ export function HomePage() {
       console.error('Ошибка при обновлении пробега:', error);
       toast.error('Не удалось обновить пробег');
     }
+  };
+
+  const handleStartTrip = (vehicleId: number) => {
+    try {
+      gps.startTracking(vehicleId);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Не удалось запустить GPS');
+    }
+  };
+
+  const handleStopTrip = () => {
+    const result = gps.stopTracking();
+    if (!result || !result.vehicleId) return;
+
+    const vehicle = vehicles.find(v => v.id === result.vehicleId);
+    if (!vehicle) return;
+
+    const newKm = Math.round(vehicle.current_km + result.distanceKm);
+    handleUpdateKm(result.vehicleId, newKm);
   };
 
   const getVehicleStatus = (vehicle: Vehicle) => vehicle.vehicle_status || 'unknown';
@@ -214,6 +236,8 @@ export function HomePage() {
           onHardDeleteVehicle={handleHardDeleteVehicle}
           onRestoreVehicle={handleRestoreVehicle}
           onUpdateKm={handleUpdateKm}
+          onStartTrip={handleStartTrip}
+          trackingVehicleId={gps.isTracking ? gps.vehicleId : null}
           showArchived={showArchived}
           statusIcons={statusIcons}
           getVehicleStatus={getVehicleStatus}
@@ -252,6 +276,11 @@ export function HomePage() {
               toast.error('Не удалось удалить автомобиль');
             }
           }}
+        />
+
+        <TrackingBar
+          tracking={gps}
+          onStop={handleStopTrip}
         />
       </main>
     </div>

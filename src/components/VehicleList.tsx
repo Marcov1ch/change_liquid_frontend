@@ -10,6 +10,8 @@ interface Props {
   onHardDeleteVehicle: (id: number) => void;
   onRestoreVehicle: (id: number) => void;
   onUpdateKm: (vehicleId: number, newKm: number) => Promise<void>;
+  onStartTrip: (vehicleId: number) => void;
+  trackingVehicleId: number | null;
   showArchived: boolean;
   statusIcons: Record<string, string>;
   getVehicleStatus: (vehicle: Vehicle) => string;
@@ -25,7 +27,8 @@ const statusColors: Record<string, string> = {
 
 export function VehicleList({
   vehicles, selectedId, onSelect, onEditVehicle,
-  onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, showArchived,
+  onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, onStartTrip,
+  trackingVehicleId, showArchived,
   statusIcons, getVehicleStatus,
 }: Props) {
   const { toast } = useToast();
@@ -111,6 +114,30 @@ export function VehicleList({
                       </svg>
                       <span className="hidden sm:inline">Настройки</span>
                     </button>
+
+                    {trackingVehicleId === vehicle.id ? (
+                      <button
+                        disabled
+                        className="md3-btn-primary !px-3 !py-2 !rounded-md3-sm text-label-sm animate-pulse"
+                        aria-label="Трекинг активен"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        <span className="hidden sm:inline">Трекинг...</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onStartTrip(vehicle.id)}
+                        className="md3-btn-tonal !px-3 !py-2 !rounded-md3-sm text-label-sm"
+                        aria-label="Начать поездку"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        <span className="hidden sm:inline">Поездка</span>
+                      </button>
+                    )}
 
                     {editingKm === vehicle.id ? (
                       <div className="flex items-center gap-2">
