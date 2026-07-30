@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import type { Replacement, Vehicle } from '../types';
@@ -62,7 +62,8 @@ export function TireSection({ replacements, vehicleId, selectedVehicle, onReplac
     if (!latestTire?.next_change_date || !latestTire?.replacement_date) return 0;
     const start = new Date(latestTire.replacement_date).getTime();
     const end = new Date(latestTire.next_change_date).getTime();
-    const now = Date.now();
+    const nowRef = useRef(Date.now());
+    const now = nowRef.current;
     const total = end - start;
     const elapsed = now - start;
     if (total <= 0) return 100;
