@@ -43,8 +43,6 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     next_change_date: '',
   });
 
-  const [now] = useState(() => Date.now());
-
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -94,13 +92,14 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   const getDateProgress = (type: string): number => {
     const items = grouped[type];
     const latest = items?.[0];
-    if (!latest?.next_change_date || !latest?.replacement_date) return 0;
+    if (!latest?.next_change_date || !latest?.replacement_date || latest.days_remaining == null) return 0;
     const start = new Date(latest.replacement_date).getTime();
     const end = new Date(latest.next_change_date).getTime();
-    const total = end - start;
-    const elapsed = now - start;
-    if (total <= 0) return 100;
-    return Math.min(100, Math.max(0, (elapsed / total) * 100));
+    const totalMs = end - start;
+    if (totalMs <= 0) return 100;
+    const totalDays = Math.round(totalMs / 86400000);
+    const elapsedDays = totalDays - latest.days_remaining;
+    return Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100));
   };
 
   const toggleGroup = (type: string) => {
