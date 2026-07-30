@@ -2,11 +2,10 @@ import { useState, type ReactNode } from 'react';
 
 interface Props {
     title: string;
-    defaultOpen?: boolean;
     children: ReactNode;
 }
 
-export function Spoiler({ title, defaultOpen = true, children }: Props) {
+export function Spoiler({ title, children }: Props) {
     const [open, setOpen] = useState(false);
 
     return (
