@@ -34,12 +34,16 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     work_price: 0,
     replacement_date: new Date().toISOString().split('T')[0],
     km_at_replacement: selectedVehicle?.current_km || 0,
+    next_change_date: '',
   });
   const [editForm, setEditForm] = useState({
     km_at_replacement: '',
     replacement_date: '',
     component_name: '',
+    next_change_date: '',
   });
+
+  const [now] = useState(() => Date.now());
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -63,7 +67,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   const componentNames: Record<string, string> = {};
   configs.forEach(c => { componentNames[c.key] = c.name; });
 
-  const fluidReplacements = replacements.filter(r => r.component_type !== 'tire_change');
+  const fluidReplacements = replacements;
 
   const grouped = fluidReplacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
     const type = replacement.component_type;
@@ -87,6 +91,18 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     return Math.min(100, Math.max(0, (used / interval) * 100));
   };
 
+  const getDateProgress = (type: string): number => {
+    const items = grouped[type];
+    const latest = items?.[0];
+    if (!latest?.next_change_date || !latest?.replacement_date) return 0;
+    const start = new Date(latest.replacement_date).getTime();
+    const end = new Date(latest.next_change_date).getTime();
+    const total = end - start;
+    const elapsed = now - start;
+    if (total <= 0) return 100;
+    return Math.min(100, Math.max(0, (elapsed / total) * 100));
+  };
+
   const toggleGroup = (type: string) => {
     setOpenGroups(prev => ({ ...prev, [type]: !prev[type] }));
   };
@@ -108,12 +124,13 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       km_at_replacement: String(replacement.km_at_replacement),
       replacement_date: replacement.replacement_date,
       component_name: replacement.component_name,
+      next_change_date: replacement.next_change_date || '',
     });
   };
 
   const cancelEdit = () => {
     setEditingReplacement(null);
-    setEditForm({ km_at_replacement: '', replacement_date: '', component_name: '' });
+    setEditForm({ km_at_replacement: '', replacement_date: '', component_name: '', next_change_date: '' });
   };
 
   const saveEdit = async () => {
@@ -121,7 +138,11 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
     const updateData: Record<string, string | number> = {};
     if (editForm.component_name !== editingReplacement.component_name) updateData.component_name = editForm.component_name;
-    if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
+    if (editingReplacement.component_type === 'tire_change') {
+      if (editForm.next_change_date !== (editingReplacement.next_change_date || '')) updateData.next_change_date = editForm.next_change_date;
+    } else {
+      if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
+    }
     if (editForm.replacement_date !== editingReplacement.replacement_date) updateData.replacement_date = editForm.replacement_date;
 
     if (Object.keys(updateData).length === 0) { setEditingReplacement(null); return; }
@@ -152,15 +173,27 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       toast.error('Введите название компонента');
       return;
     }
+    if (newReplacement.component_type === 'tire_change' && !newReplacement.next_change_date) {
+      toast.error('Укажите дату следующей замены');
+      return;
+    }
     try {
-      await api.createReplacement(vehicleId, {
+      const payload: Record<string, string | number> = {
         component_type: newReplacement.component_type,
         component_name: newReplacement.component_name,
-        component_price: newReplacement.component_price,
-        work_price: newReplacement.work_price,
         replacement_date: newReplacement.replacement_date,
-        km_at_replacement: newReplacement.km_at_replacement,
-      });
+      };
+      if (newReplacement.component_type === 'tire_change') {
+        payload.km_at_replacement = 0;
+        payload.component_price = 0;
+        payload.work_price = 0;
+        payload.next_change_date = newReplacement.next_change_date;
+      } else {
+        payload.km_at_replacement = newReplacement.km_at_replacement;
+        payload.component_price = newReplacement.component_price;
+        payload.work_price = newReplacement.work_price;
+      }
+      await api.createReplacement(vehicleId, payload);
       toast.success('Замена добавлена');
       setShowAddForm(false);
       setNewReplacement({
@@ -170,6 +203,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         work_price: 0,
         replacement_date: new Date().toISOString().split('T')[0],
         km_at_replacement: selectedVehicle.current_km,
+        next_change_date: '',
       });
       onReplacementsUpdate();
     } catch (error) {
@@ -229,7 +263,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                       <polygon points="8 5 19 12 8 19 8 5" />
                     </svg>
                     <span>{sStyle.icon}</span>
-                    <span className="text-label-lg flex-1">{componentNames[type] || type}</span>
+                    <span className="text-label-lg flex-1">{type === 'tire_change' ? 'Шины' : (componentNames[type] || type)}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleToggleNotify(type); }}
                       className="text-label-lg hover:opacity-70 transition-opacity"
@@ -241,7 +275,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                   </button>
 
                   <div className="px-4 pb-2">
-                    <ProgressBar value={getProgress(type)} status={status} />
+                    <ProgressBar value={type === 'tire_change' ? getDateProgress(type) : getProgress(type)} status={status} />
                   </div>
 
                   {isOpen && (
@@ -264,20 +298,40 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                   onChange={(e) => setEditForm({ ...editForm, component_name: e.target.value })}
                                   className="md3-field"
                                 />
-                                <input
-                                  type="number"
-                                  placeholder="Пробег"
-                                  value={editForm.km_at_replacement}
-                                  onChange={(e) => setEditForm({ ...editForm, km_at_replacement: e.target.value })}
-                                  className="md3-field"
-                                />
-                                <input
-                                  type="date"
-                                  max={today}
-                                  value={editForm.replacement_date}
-                                  onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
-                                  className="md3-field"
-                                />
+                                {editingReplacement?.component_type === 'tire_change' ? (
+                                  <>
+                                    <input
+                                      type="date"
+                                      max={today}
+                                      value={editForm.replacement_date}
+                                      onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
+                                      className="md3-field"
+                                    />
+                                    <input
+                                      type="date"
+                                      value={editForm.next_change_date}
+                                      onChange={(e) => setEditForm({ ...editForm, next_change_date: e.target.value })}
+                                      className="md3-field"
+                                    />
+                                  </>
+                                ) : (
+                                  <>
+                                    <input
+                                      type="number"
+                                      placeholder="Пробег"
+                                      value={editForm.km_at_replacement}
+                                      onChange={(e) => setEditForm({ ...editForm, km_at_replacement: e.target.value })}
+                                      className="md3-field"
+                                    />
+                                    <input
+                                      type="date"
+                                      max={today}
+                                      value={editForm.replacement_date}
+                                      onChange={(e) => setEditForm({ ...editForm, replacement_date: e.target.value })}
+                                      className="md3-field"
+                                    />
+                                  </>
+                                )}
                                 <div className="flex gap-2">
                                   <button onClick={saveEdit} className="md3-btn-primary !py-2 !px-4 !rounded-md3-sm text-label-sm flex-1">Сохранить</button>
                                   <button onClick={cancelEdit} className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm">Отмена</button>
@@ -291,14 +345,27 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                                   {idx === 0 && <span className="md3-badge bg-primary-container text-primary-on-container">последняя</span>}
                                 </div>
                                 <div className="mt-2 flex items-center justify-between gap-2">
-                                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
-                                    <span>📅 {r.replacement_date}</span>
-                                    <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
-                                    <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
-                                    {itemStatus === 'overdue' && selectedVehicle?.km_remaining[r.component_type] != null && selectedVehicle.km_remaining[r.component_type]! < 0 && (
-                                      <span className="inline-flex items-center gap-1"><span style={{color: '#FFC107', fontSize: '16px', lineHeight: '1'}}>⚠️</span> Просрочено на {Math.abs(selectedVehicle.km_remaining[r.component_type]!).toLocaleString()} км</span>
-                                    )}
-                                  </div>
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
+                                  <span>📅 {r.replacement_date}</span>
+                                  {r.component_type === 'tire_change' ? (
+                                    <>
+                                      {r.next_change_date && <span>⏱ До: {r.next_change_date}</span>}
+                                      {r.days_remaining != null && (
+                                        <span className={r.days_remaining <= 5 ? 'text-error font-semibold' : ''}>
+                                          ⏳ {r.days_remaining} дн.
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
+                                      <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
+                                      {itemStatus === 'overdue' && selectedVehicle?.km_remaining[r.component_type] != null && selectedVehicle.km_remaining[r.component_type]! < 0 && (
+                                        <span className="inline-flex items-center gap-1"><span style={{color: '#FFC107', fontSize: '16px', lineHeight: '1'}}>⚠️</span> Просрочено на {Math.abs(selectedVehicle.km_remaining[r.component_type]!).toLocaleString()} км</span>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
                                   <div className="flex gap-0">
                                     <button
                                       onClick={() => startEdit(r)}
@@ -363,6 +430,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                     {configs.map(cfg => (
                       <option key={cfg.key} value={cfg.key}>{cfg.name}</option>
                     ))}
+                    <option value="tire_change">Шины</option>
                   </select>
                 </div>
 
@@ -370,61 +438,89 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                   <label className="block text-label-md text-surface-on-variant mb-1">Название *</label>
                   <input
                     type="text"
-                    placeholder="например: Mobil 1 5W-30"
+                    placeholder={newReplacement.component_type === 'tire_change' ? 'например: Зимняя резина Michelin' : 'например: Mobil 1 5W-30'}
                     value={newReplacement.component_name}
                     onChange={(e) => setNewReplacement({ ...newReplacement, component_name: e.target.value })}
                     className="md3-field"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
-                    <input
-                      type="number"
-                      placeholder="5000"
-                      value={newReplacement.component_price === 0 ? '' : newReplacement.component_price}
-                      onChange={(e) => setNewReplacement({ ...newReplacement, component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                      className="md3-field"
-                    />
+                {newReplacement.component_type === 'tire_change' ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
+                      <input
+                        type="date"
+                        max={today}
+                        value={newReplacement.replacement_date}
+                        onChange={(e) => setNewReplacement({ ...newReplacement, replacement_date: e.target.value })}
+                        className="md3-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-md text-surface-on-variant mb-1">Дата след. замены *</label>
+                      <input
+                        type="date"
+                        value={newReplacement.next_change_date}
+                        onChange={(e) => setNewReplacement({ ...newReplacement, next_change_date: e.target.value })}
+                        className="md3-field"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
-                    <input
-                      type="number"
-                      placeholder="1500"
-                      value={newReplacement.work_price === 0 ? '' : newReplacement.work_price}
-                      onChange={(e) => setNewReplacement({ ...newReplacement, work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                      className="md3-field"
-                    />
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
+                      <input
+                        type="number"
+                        placeholder="5000"
+                        value={newReplacement.component_price === 0 ? '' : newReplacement.component_price}
+                        onChange={(e) => setNewReplacement({ ...newReplacement, component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                        className="md3-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
+                      <input
+                        type="number"
+                        placeholder="1500"
+                        value={newReplacement.work_price === 0 ? '' : newReplacement.work_price}
+                        onChange={(e) => setNewReplacement({ ...newReplacement, work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                        className="md3-field"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
-                    <input
-                      type="number"
-                      placeholder={String(selectedVehicle?.current_km || 0)}
-                      value={newReplacement.km_at_replacement === 0 ? '' : newReplacement.km_at_replacement}
-                      onChange={(e) => setNewReplacement({ ...newReplacement, km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                      className="md3-field"
-                    />
+                {newReplacement.component_type !== 'tire_change' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
+                      <input
+                        type="number"
+                        placeholder={String(selectedVehicle?.current_km || 0)}
+                        value={newReplacement.km_at_replacement === 0 ? '' : newReplacement.km_at_replacement}
+                        onChange={(e) => setNewReplacement({ ...newReplacement, km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                        className="md3-field"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
+                      <input
+                        type="date"
+                        max={today}
+                        value={newReplacement.replacement_date}
+                        onChange={(e) => setNewReplacement({ ...newReplacement, replacement_date: e.target.value })}
+                        className="md3-field"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
-                    <input
-                      type="date"
-                      max={today}
-                      value={newReplacement.replacement_date}
-                      onChange={(e) => setNewReplacement({ ...newReplacement, replacement_date: e.target.value })}
-                      className="md3-field"
-                    />
-                  </div>
-                </div>
+                )}
 
                 <div className="p-3 rounded-md3-sm bg-surface-variant/50 text-body-sm text-outline">
-                  💡 Поля с ценой можно оставить пустыми
+                  {newReplacement.component_type === 'tire_change'
+                    ? '💡 Укажите дату окончания хранения шин — за 5 дней до неё придёт уведомление.'
+                    : '💡 Поля с ценой можно оставить пустыми'}
                 </div>
 
                 <div className="flex gap-3 pt-1">

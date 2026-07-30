@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
-import { TireSection } from '../components/TireSection';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
 import { TrackingBar } from '../components/TrackingBar';
@@ -253,14 +252,6 @@ export function HomePage() {
               onClose={() => setSelectedId(null)}
               onReplacementsUpdate={handleReplacementsUpdate}
             />
-            <div className="mt-4">
-              <TireSection
-                replacements={replacements}
-                vehicleId={selectedId}
-                selectedVehicle={selectedVehicle}
-                onReplacementsUpdate={handleReplacementsUpdate}
-              />
-            </div>
           </div>
         )}
 
