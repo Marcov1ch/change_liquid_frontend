@@ -157,7 +157,7 @@ export function useGpsTracker(onError?: (message: string) => void) {
                         lastPointRef.current.lat, lastPointRef.current.lng,
                         point.lat, point.lng
                     );
-                    if (delta < 5) {
+                    if (delta < 5 && delta > 0.025) {
                         distanceRef.current += delta;
                         setState(prev => ({ ...prev, distanceKm: distanceRef.current }));
                     }
