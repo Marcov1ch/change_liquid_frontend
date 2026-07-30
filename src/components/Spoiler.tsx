@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function Spoiler({ title, defaultOpen = true, children }: Props) {
-    const [open, setOpen] = useState(defaultOpen);
+    const [open, setOpen] = useState(false);
 
     return (
         <div className="border-b border-outline-variant">
