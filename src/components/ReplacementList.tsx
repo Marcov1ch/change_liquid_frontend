@@ -77,7 +77,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   Object.keys(grouped).forEach(type => {
     grouped[type].sort((a, b) => {
       if (b.km_at_replacement !== a.km_at_replacement) return b.km_at_replacement - a.km_at_replacement;
-      return new Date(b.replacement_date).getTime() - new Date(a.replacement_date).getTime();
+      const dateDiff = new Date(b.replacement_date).getTime() - new Date(a.replacement_date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return (b.id || 0) - (a.id || 0);
     });
   });
 
