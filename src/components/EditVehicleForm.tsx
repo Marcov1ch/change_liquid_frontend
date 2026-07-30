@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import { Spoiler } from './Spoiler';
 import { validatePlateNumber } from '../utils/plateValidation';
 import type { Vehicle, ComponentConfig } from '../types';
 
@@ -181,50 +182,46 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
           </div>
         </div>
 
-        <hr className="md3-divider" />
+        <Spoiler title="Интервалы замен (км)">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3">
+            {configs.map(cfg => (
+              <div key={cfg.key}>
+                <label className="block text-label-md text-surface-on-variant mb-1">{cfg.name}</label>
+                <input
+                  type="number"
+                  value={intervals[cfg.key] ?? cfg.default_interval}
+                  onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
+                  className="md3-field"
+                />
+              </div>
+            ))}
+          </div>
+        </Spoiler>
 
-        <h4 className="text-title-sm text-surface-on m-0">Интервалы замен (км)</h4>
-
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-          {configs.map(cfg => (
-            <div key={cfg.key}>
-              <label className="block text-label-md text-surface-on-variant mb-1">{cfg.name}</label>
-              <input
-                type="number"
-                value={intervals[cfg.key] ?? cfg.default_interval}
-                onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
-                className="md3-field"
-              />
-            </div>
-          ))}
-        </div>
-
-        <hr className="md3-divider" />
-
-        <h4 className="text-title-sm text-surface-on m-0">Уведомления</h4>
-
-        <div className="flex flex-col gap-2">
-          {configs.map(cfg => (
-            <label key={cfg.key} className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
+        <Spoiler title="Уведомления">
+          <div className="flex flex-col gap-2 pt-3">
+            {configs.map(cfg => (
+              <label key={cfg.key} className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={notifyFlags[cfg.key] ?? true}
+                  onChange={(e) => handleNotifyChange(cfg.key, e.target.checked)}
+                  className="w-5 h-5 rounded-md3-xs accent-primary"
+                />
+                <span className="text-body-md text-surface-on">{cfg.name}</span>
+              </label>
+            ))}
+            <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
               <input
                 type="checkbox"
-                checked={notifyFlags[cfg.key] ?? true}
-                onChange={(e) => handleNotifyChange(cfg.key, e.target.checked)}
+                checked={notifyFlags['tire_change'] ?? true}
+                onChange={(e) => handleNotifyChange('tire_change', e.target.checked)}
                 className="w-5 h-5 rounded-md3-xs accent-primary"
               />
-              <span className="text-body-md text-surface-on">{cfg.name}</span>
+              <span className="text-body-md text-surface-on">Шины</span>
             </label>
-          ))}
-          <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-            <input
-              type="checkbox"
-              checked={notifyFlags['tire_change'] ?? true}
-              onChange={(e) => handleNotifyChange('tire_change', e.target.checked)}
-              className="w-5 h-5 rounded-md3-xs accent-primary"
-            />
-            <span className="text-body-md text-surface-on">Шины</span>
-          </label>
-        </div>
+          </div>
+        </Spoiler>
 
         <hr className="md3-divider" />
 
