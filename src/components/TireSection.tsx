@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import type { Replacement, Vehicle } from '../types';
@@ -28,9 +28,12 @@ export function TireSection({ replacements, vehicleId, selectedVehicle, onReplac
     next_change_date: '',
     component_name: '',
   });
+
+  const [now] = useState(() => Date.now());
+
   const [newReplacement, setNewReplacement] = useState({
     component_name: '',
-    replacement_date: new Date().toISOString().split('T')[0],
+    replacement_date: new Date(now).toISOString().split('T')[0],
     next_change_date: '',
   });
 
@@ -62,8 +65,6 @@ export function TireSection({ replacements, vehicleId, selectedVehicle, onReplac
     if (!latestTire?.next_change_date || !latestTire?.replacement_date) return 0;
     const start = new Date(latestTire.replacement_date).getTime();
     const end = new Date(latestTire.next_change_date).getTime();
-    const nowRef = useRef(Date.now());
-    const now = nowRef.current;
     const total = end - start;
     const elapsed = now - start;
     if (total <= 0) return 100;
@@ -139,7 +140,7 @@ export function TireSection({ replacements, vehicleId, selectedVehicle, onReplac
       setShowAddForm(false);
       setNewReplacement({
         component_name: '',
-        replacement_date: new Date().toISOString().split('T')[0],
+        replacement_date: new Date(now).toISOString().split('T')[0],
         next_change_date: '',
       });
       onReplacementsUpdate();
