@@ -63,7 +63,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   const componentNames: Record<string, string> = {};
   configs.forEach(c => { componentNames[c.key] = c.name; });
 
-  const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
+  const fluidReplacements = replacements.filter(r => r.component_type !== 'tire_change');
+
+  const grouped = fluidReplacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
     const type = replacement.component_type;
     if (!acc[type]) acc[type] = [];
     acc[type].push(replacement);
@@ -198,7 +200,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       </div>
 
       <div className="p-4">
-        {replacements.length === 0 ? (
+        {fluidReplacements.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-10 text-center">
             <div className="w-12 h-12 rounded-full bg-[#FFF8E1] flex items-center justify-center">
               <span className="text-xl">📋</span>
