@@ -215,6 +215,15 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
               <span className="text-body-md text-surface-on">{cfg.name}</span>
             </label>
           ))}
+          <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
+            <input
+              type="checkbox"
+              checked={notifyFlags['tire_change'] ?? true}
+              onChange={(e) => handleNotifyChange('tire_change', e.target.checked)}
+              className="w-5 h-5 rounded-md3-xs accent-primary"
+            />
+            <span className="text-body-md text-surface-on">Шины</span>
+          </label>
         </div>
 
         <hr className="md3-divider" />
