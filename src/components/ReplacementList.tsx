@@ -439,7 +439,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                   <label className="block text-label-md text-surface-on-variant mb-1">Название *</label>
                   <input
                     type="text"
-                    placeholder={newReplacement.component_type === 'tire_change' ? 'например: Зимняя резина Michelin' : 'например: Mobil 1 5W-30'}
+                    placeholder={newReplacement.component_type === 'tire_change' ? 'например: Зимняя резина Michelin / № Договора хранения' : `например: ${configs.find(c => c.key === newReplacement.component_type)?.example ?? 'Mobil 1 5W-30'}`}
                     value={newReplacement.component_name}
                     onChange={(e) => setNewReplacement({ ...newReplacement, component_name: e.target.value })}
                     className="md3-field"

@@ -39,6 +39,7 @@ export interface Brand {
 export interface ComponentConfig {
     key: string;
     name: string;
+    example: string;
     default_interval: number;
 }
 
