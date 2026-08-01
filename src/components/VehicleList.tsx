@@ -17,12 +17,12 @@ interface Props {
   getVehicleStatus: (vehicle: Vehicle) => string;
 }
 
-const statusColors: Record<string, string> = {
-  overdue: 'bg-error-container text-error-on-container border-l-error',
-  critical: 'bg-[#FFF0E6] text-[#7A2D00] border-l-[#E06900]',
-  warning: 'bg-[#FFF8E1] text-[#7A6100] border-l-[#FFC107]',
-  good: 'bg-[#E6F7E6] text-[#1B5E1B] border-l-[#28A745]',
-  unknown: 'bg-surface-variant/50 text-surface-on-variant border-l-outline',
+const statusBg: Record<string, string> = {
+  overdue: 'bg-error-container',
+  critical: 'bg-[#FFF0E6]',
+  warning: 'bg-[#FFF8E1]',
+  good: 'bg-[#E6F7E6]',
+  unknown: 'bg-surface-variant/50',
 };
 
 export function VehicleList({
@@ -87,7 +87,7 @@ export function VehicleList({
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(vehicle.id); }}
                 aria-label={`Выбрать ${vehicle.brand} ${vehicle.model}`}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 ${statusColors[status]?.split(' ')[0] || 'bg-surface-variant'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 ${statusBg[status] || 'bg-surface-variant'}`}>
                   <span role="img" aria-label={status}>{icon}</span>
                 </div>
                 <div className="min-w-0">
