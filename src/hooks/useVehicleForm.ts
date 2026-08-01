@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
-import { api } from '../api/client';
 import { validatePlateNumber } from '../utils/plateValidation';
-import type { ComponentConfig, Vehicle } from '../types';
+import { useBrands, useComponentConfigs, useModels } from './useEnums';
+import type { Vehicle } from '../types';
 
 const YEAR_MIN = 1960;
 
@@ -10,9 +10,6 @@ interface UseVehicleFormOptions {
 }
 
 export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
-    const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
-    const [models, setModels] = useState<{ value: string; label: string }[]>([]);
-    const [configs, setConfigs] = useState<ComponentConfig[]>([]);
     const [plateError, setPlateError] = useState('');
     const [yearError, setYearError] = useState('');
     const [intervals, setIntervals] = useState<Record<string, number>>({});
@@ -25,29 +22,13 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         current_km: 0,
     });
 
-    useEffect(() => {
-        api.getBrands().then(data => setBrands(data.brands));
-        api.getComponentConfigs().then(data => {
-            const cfgMap: Record<string, number> = {};
-            const notifyMap: Record<string, boolean> = {};
-            data.configs.forEach(c => {
-                cfgMap[c.key] = c.default_interval;
-                notifyMap[c.key] = true;
-            });
-            notifyMap['tire_change'] = true;
-            setConfigs(data.configs);
-            setIntervals(prev => ({ ...cfgMap, ...prev }));
-            setNotifyFlags(prev => ({ ...notifyMap, ...prev }));
-        });
-    }, []);
+    const { data: brandsData } = useBrands();
+    const { data: configsData } = useComponentConfigs();
+    const { data: modelsData } = useModels(formData.brand);
 
-    useEffect(() => {
-        if (formData.brand) {
-            api.getModels(formData.brand).then(data => setModels(data.models));
-        } else {
-            setModels([]);
-        }
-    }, [formData.brand]);
+    const brands = brandsData?.brands ?? [];
+    const models = modelsData?.models ?? [];
+    const configs = configsData?.configs ?? [];
 
     useEffect(() => {
         if (vehicle) {
@@ -62,6 +43,19 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
             setNotifyFlags(vehicle.notify_flags || {});
         }
     }, [vehicle]);
+
+    useEffect(() => {
+        if (!configsData) return;
+        const cfgMap: Record<string, number> = {};
+        const notifyMap: Record<string, boolean> = {};
+        configsData.configs.forEach(c => {
+            cfgMap[c.key] = c.default_interval;
+            notifyMap[c.key] = true;
+        });
+        notifyMap['tire_change'] = true;
+        setIntervals(prev => ({ ...cfgMap, ...prev }));
+        setNotifyFlags(prev => ({ ...notifyMap, ...prev }));
+    }, [configsData]);
 
     const handlePlateChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();

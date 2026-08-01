@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import type { Replacement, Vehicle, ComponentConfig } from '../types';
+import { useComponentConfigs } from '../hooks/useEnums';
+import type { Replacement, Vehicle } from '../types';
 import { ProgressBar } from './ProgressBar';
 
 interface Props {
@@ -23,7 +24,8 @@ const statusStyles: Record<string, { bg: string; text: string; border: string; i
 
 export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onReplacementsUpdate }: Props) {
   const { toast } = useToast();
-  const [configs, setConfigs] = useState<ComponentConfig[]>([]);
+  const { data: configsData } = useComponentConfigs();
+  const configs = configsData?.configs ?? [];
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -46,19 +48,10 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    api.getComponentConfigs().then(data => {
-      setConfigs(data.configs);
-      if (data.configs.length > 0) {
-        setNewReplacement(prev => prev.component_type ? prev : { ...prev, component_type: data.configs[0].key });
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    if (selectedVehicle && configs.length > 0) {
-      setNewReplacement(prev => prev.component_type ? prev : { ...prev, component_type: configs[0].key });
+    if (configsData?.configs.length) {
+      setNewReplacement(prev => prev.component_type ? prev : { ...prev, component_type: configsData.configs[0].key });
     }
-  }, [selectedVehicle, configs]);
+  }, [configsData, selectedVehicle]);
 
   if (!vehicleId || !selectedVehicle) return null;
 
