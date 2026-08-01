@@ -210,11 +210,11 @@ export const api = {
         authFetch(`${AUTH_BASE}/me`, { method: 'DELETE' })
             .then(res => handleResponse<{ detail: string }>(res)),
 
-    forgotPassword: (email: string) =>
+    forgotPassword: (username: string, email: string) =>
         fetch(`${AUTH_BASE}/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ username, email }),
         }).then(res => handleResponse<{ detail: string }>(res)),
 
     resetPassword: (token: string, new_password: string) =>

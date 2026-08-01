@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { api } from '../api/client'
 
 export function ForgotPasswordPage() {
   const [username, setUsername] = useState('')
@@ -13,13 +14,7 @@ export function ForgotPasswordPage() {
     setError('')
     setSubmitting(true)
     try {
-      const res = await fetch('/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Ошибка')
+      await api.forgotPassword(username, email)
       setSent(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка')
