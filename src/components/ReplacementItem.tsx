@@ -1,4 +1,4 @@
-import type { Replacement, Vehicle } from '../types';
+import type { Replacement } from '../types';
 
 export interface ReplacementEditForm {
     km_at_replacement: string;
@@ -10,12 +10,10 @@ export interface ReplacementEditForm {
 interface Props {
     replacement: Replacement;
     isFirst: boolean;
-    itemStatus: string;
     itemStyle: { bg: string; text: string; border: string; icon: string };
     editing: boolean;
     editForm: ReplacementEditForm;
     today: string;
-    selectedVehicle: Vehicle | undefined;
     onEditFormChange: (partial: Partial<ReplacementEditForm>) => void;
     onStartEdit: () => void;
     onCancelEdit: () => void;
@@ -23,15 +21,32 @@ interface Props {
     onDelete: () => void;
 }
 
+function statusLabel(
+    status: string | undefined,
+    kmRemaining: number | undefined,
+    daysRemaining: number | null | undefined,
+    isTire: boolean,
+): string | null {
+    if (isTire) {
+        if (daysRemaining == null) return null;
+        if (daysRemaining < 0) return `Просрочено на ${-daysRemaining} дн.`;
+        if (daysRemaining <= 5) return `Скоро замена: осталось ${daysRemaining} дн.`;
+        return null;
+    }
+    if (status === 'replaced') return 'Заменено';
+    if (kmRemaining == null) return null;
+    if (status === 'overdue') return `Просрочено на ${Math.abs(kmRemaining).toLocaleString()} км`;
+    if (status === 'critical' || status === 'warning') return `Осталось ${kmRemaining.toLocaleString()} км`;
+    return null;
+}
+
 export function ReplacementItem({
     replacement: r,
     isFirst,
-    itemStatus,
     itemStyle,
     editing,
     editForm,
     today,
-    selectedVehicle,
     onEditFormChange,
     onStartEdit,
     onCancelEdit,
@@ -39,6 +54,7 @@ export function ReplacementItem({
     onDelete,
 }: Props) {
     const isTire = r.component_type === 'tire_change';
+    const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isTire);
 
     return (
         <div className={`p-3 rounded-md3-sm border-l-4 ${itemStyle.border} bg-surface transition-shadow duration-200 hover:shadow-md3-1`}>
@@ -113,9 +129,6 @@ export function ReplacementItem({
                                 <>
                                     <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
                                     <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
-                                    {itemStatus === 'overdue' && selectedVehicle?.km_remaining?.[r.component_type] != null && selectedVehicle.km_remaining[r.component_type]! < 0 && (
-                                        <span className="inline-flex items-center gap-1"><span style={{ color: '#FFC107', fontSize: '16px', lineHeight: '1' }}>⚠️</span> Просрочено на {Math.abs(selectedVehicle.km_remaining[r.component_type]!).toLocaleString()} км</span>
-                                    )}
                                 </>
                             )}
                         </div>
@@ -141,8 +154,8 @@ export function ReplacementItem({
                             </button>
                         </div>
                     </div>
-                    {r.status_message && (
-                        <p className={`mt-1 text-body-sm ${itemStyle.text}`}>{r.status_message}</p>
+                    {label && (
+                        <p className={`mt-1 text-body-sm ${itemStyle.text}`}>{label}</p>
                     )}
                 </>
             )}

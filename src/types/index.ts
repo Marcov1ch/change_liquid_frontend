@@ -23,10 +23,10 @@ export interface Replacement {
     replacement_date: string;
     interval_km: number;
     next_replacement_km?: number;
+    km_remaining?: number;
     next_change_date?: string | null;
     days_remaining?: number | null;
     status?: string;
-    status_message?: string;
 }
 
 export interface ComponentConfig {

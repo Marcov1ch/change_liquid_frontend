@@ -282,12 +282,10 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                             key={r.id}
                             replacement={r}
                             isFirst={idx === 0}
-                            itemStatus={itemStatus}
                             itemStyle={itemStyle}
                             editing={editingReplacement?.id === r.id}
                             editForm={editForm}
                             today={today}
-                            selectedVehicle={selectedVehicle}
                             onEditFormChange={(partial) => setEditForm(prev => ({ ...prev, ...partial }))}
                             onStartEdit={() => startEdit(r)}
                             onCancelEdit={cancelEdit}
