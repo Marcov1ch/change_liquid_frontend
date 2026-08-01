@@ -93,8 +93,7 @@ export function HomePage() {
       invalidateVehicles();
       if (selectedId === id) setSelectedId(null);
     } catch (error) {
-      console.error('Ошибка при жестком удалении:', error);
-      toast.error('Не удалось удалить автомобиль');
+      toast.error(error instanceof Error ? error.message : 'Не удалось удалить автомобиль');
     }
   };
 
@@ -104,8 +103,7 @@ export function HomePage() {
       toast.success('Автомобиль восстановлен');
       invalidateVehicles();
     } catch (error) {
-      console.error('Ошибка при восстановлении:', error);
-      toast.error('Не удалось восстановить автомобиль');
+      toast.error(error instanceof Error ? error.message : 'Не удалось восстановить автомобиль');
     }
   };
 
@@ -114,8 +112,7 @@ export function HomePage() {
       await updateKmMutation.mutateAsync({ vehicleId, newKm });
       toast.success('Пробег обновлён');
     } catch (error) {
-      console.error('Ошибка при обновлении пробега:', error);
-      toast.error('Не удалось обновить пробег');
+      toast.error(error instanceof Error ? error.message : 'Не удалось обновить пробег');
     }
   };
 
@@ -272,8 +269,7 @@ export function HomePage() {
               invalidateVehicles();
               if (selectedId === id) setSelectedId(null);
             } catch (error) {
-              console.error('Ошибка при удалении:', error);
-              toast.error('Не удалось удалить автомобиль');
+              toast.error(error instanceof Error ? error.message : 'Не удалось удалить автомобиль');
             }
           }}
         />

@@ -23,8 +23,8 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
             <label className="block text-label-lg text-surface-on mb-2">Год выпуска</label>
             <input
                 type="number"
-                value={formData.year}
-                onChange={(e) => { setFormData(prev => ({ ...prev, year: parseInt(e.target.value) })); setYearError(''); }}
+                value={Number.isFinite(formData.year) ? formData.year : ''}
+                onChange={(e) => { setFormData(prev => ({ ...prev, year: e.target.valueAsNumber })); setYearError(''); }}
                 required
                 className={`md3-field ${yearError ? 'md3-field-error' : ''}`}
             />
@@ -37,8 +37,8 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
             <label className="block text-label-lg text-surface-on mb-2">Пробег (км)</label>
             <input
                 type="number"
-                value={formData.current_km}
-                onChange={(e) => setFormData(prev => ({ ...prev, current_km: parseInt(e.target.value) }))}
+                value={Number.isFinite(formData.current_km) ? formData.current_km : ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, current_km: Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0 }))}
                 required
                 className="md3-field"
             />
@@ -126,7 +126,7 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
                     value={formData.plate_number}
                     onChange={handlePlateChange}
                     required
-                    placeholder="А123АА178 или 1234AB7"
+                    placeholder="А123АА178 или 1234АВ7"
                     className={`md3-field ${plateError ? 'md3-field-error' : ''}`}
                 />
                 {plateError && <p className="mt-1 text-body-sm text-error">{plateError}</p>}

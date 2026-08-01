@@ -77,8 +77,9 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         if (plateErr) return false;
 
         const currentYear = new Date().getFullYear();
-        if (formData.year > currentYear || formData.year < YEAR_MIN) {
-            setYearError(`Год выпуска должен быть от ${YEAR_MIN} до ${currentYear}`);
+        const maxYear = currentYear + 1;
+        if (!Number.isFinite(formData.year) || formData.year > maxYear || formData.year < YEAR_MIN) {
+            setYearError(`Год выпуска должен быть от ${YEAR_MIN} до ${maxYear}`);
             return false;
         }
         setYearError('');

@@ -94,7 +94,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     return res.json()
 }
 
-import type { Vehicle, Replacement, VehicleFormData, ComponentConfig } from '../types';
+import type { Vehicle, Replacement, VehicleFormData, ComponentConfig, User } from '../types';
 
 export const api = {
     login: (username: string, password: string) =>
@@ -109,10 +109,10 @@ export const api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password }),
-        }).then(res => handleResponse<{ id: number; username: string; email: string; is_active: boolean; created_at: string }>(res)),
+        }).then(res => handleResponse<User>(res)),
 
     getMe: () =>
-        authFetch(`${AUTH_BASE}/me`).then(res => handleResponse<{ id: number; username: string; email: string; is_active: boolean; created_at: string }>(res)),
+        authFetch(`${AUTH_BASE}/me`).then(res => handleResponse<User>(res)),
 
     getAllVehicles: () =>
         authFetch(`${API_BASE}/vehicles?include_archived=true`).then(res => handleResponse<Vehicle[]>(res)),
@@ -139,10 +139,10 @@ export const api = {
         }).then(res => handleResponse<Vehicle>(res)),
 
     deleteVehicle: (vehicleId: number) =>
-        authFetch(`${API_BASE}/vehicles/${vehicleId}`, { method: 'DELETE' }).then(res => handleResponse<{ detail: string }>(res)),
+        authFetch(`${API_BASE}/vehicles/${vehicleId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
 
     hardDeleteVehicle: (vehicleId: number) =>
-        authFetch(`${API_BASE}/vehicles/${vehicleId}/hard`, { method: 'DELETE' }).then(res => handleResponse<{ detail: string }>(res)),
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/hard`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
 
     restoreVehicle: (vehicleId: number) =>
         authFetch(`${API_BASE}/vehicles/${vehicleId}/restore`, { method: 'PATCH' }).then(res => handleResponse<Vehicle>(res)),
@@ -162,7 +162,7 @@ export const api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ replacements: [data] }),
-        }).then(res => handleResponse<Replacement>(res)),
+        }).then(res => handleResponse<Replacement[]>(res)),
 
     updateReplacement: (replacementId: number, data: Record<string, string | number | undefined>) =>
         authFetch(`${API_BASE}/replacements/${replacementId}`, {
@@ -172,7 +172,7 @@ export const api = {
         }).then(res => handleResponse<Replacement>(res)),
 
     deleteReplacement: (replacementId: number) =>
-        authFetch(`${API_BASE}/replacements/${replacementId}`, { method: 'DELETE' }).then(res => handleResponse<{ detail: string }>(res)),
+        authFetch(`${API_BASE}/replacements/${replacementId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
 
     getBrands: () =>
         authFetch(`${API_BASE}/enums/brands`).then(res => handleResponse<{ brands: { value: string; label: string }[] }>(res)),
@@ -191,7 +191,7 @@ export const api = {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
-        }).then(res => handleResponse<{ detail: string }>(res)),
+        }).then(res => handleResponse<User>(res)),
 
     changePassword: (old_password: string, new_password: string) =>
         authFetch(`${AUTH_BASE}/change-password`, {

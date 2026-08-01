@@ -30,7 +30,7 @@ export function ProfilePage() {
       setEmailSuccess(true)
       toast.success('Email обновлён')
     } catch (err: unknown) {
-      setEmailError(err instanceof Error ? err.message : 'Failed to update email')
+      setEmailError(err instanceof Error ? err.message : 'Не удалось обновить email')
     } finally {
       setEmailSubmitting(false)
     }
@@ -42,7 +42,7 @@ export function ProfilePage() {
     setPasswordSuccess(false)
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match')
+      setPasswordError('Пароли не совпадают')
       return
     }
 
@@ -55,19 +55,19 @@ export function ProfilePage() {
       setConfirmPassword('')
       toast.success('Пароль изменён')
     } catch (err: unknown) {
-      setPasswordError(err instanceof Error ? err.message : 'Failed to change password')
+      setPasswordError(err instanceof Error ? err.message : 'Не удалось изменить пароль')
     } finally {
       setPasswordSubmitting(false)
     }
   }
 
   const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure? Your account and all data will be deactivated.')) return
+    if (!confirm('Удалить аккаунт? Все данные будут удалены безвозвратно.')) return
     try {
       await deleteAccount()
       navigate('/login', { replace: true })
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete account')
+      toast.error(err instanceof Error ? err.message : 'Не удалось удалить аккаунт')
     }
   }
 
@@ -115,23 +115,23 @@ export function ProfilePage() {
                 className="md3-field"
               />
               {emailError && <p className="text-body-sm text-error" role="alert">{emailError}</p>}
-              {emailSuccess && <p className="text-body-sm text-[#1B5E1B]" role="status">Email updated</p>}
+              {emailSuccess && <p className="text-body-sm text-[#1B5E1B]" role="status">Email обновлён</p>}
               <button
                 type="submit"
                 disabled={emailSubmitting}
                 className="md3-btn-primary self-start"
               >
-                {emailSubmitting ? 'Saving...' : 'Save'}
+                {emailSubmitting ? 'Сохранение...' : 'Сохранить'}
               </button>
             </form>
           </div>
 
           {/* Password */}
           <div className="md3-card p-6">
-            <h2 className="text-title-md text-surface-on mb-4">Change password</h2>
+            <h2 className="text-title-md text-surface-on mb-4">Смена пароля</h2>
             <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
               <div>
-                <label htmlFor="old-password" className="block text-label-lg text-surface-on mb-1">Current password</label>
+                <label htmlFor="old-password" className="block text-label-lg text-surface-on mb-1">Текущий пароль</label>
                 <input
                   id="old-password"
                   type="password"
@@ -142,7 +142,7 @@ export function ProfilePage() {
                 />
               </div>
               <div>
-                <label htmlFor="new-password" className="block text-label-lg text-surface-on mb-1">New password</label>
+                <label htmlFor="new-password" className="block text-label-lg text-surface-on mb-1">Новый пароль</label>
                 <input
                   id="new-password"
                   type="password"
@@ -153,7 +153,7 @@ export function ProfilePage() {
                 />
               </div>
               <div>
-                <label htmlFor="confirm-password" className="block text-label-lg text-surface-on mb-1">Confirm new password</label>
+                <label htmlFor="confirm-password" className="block text-label-lg text-surface-on mb-1">Подтвердите пароль</label>
                 <input
                   id="confirm-password"
                   type="password"
@@ -164,21 +164,21 @@ export function ProfilePage() {
                 />
               </div>
               {passwordError && <p className="text-body-sm text-error" role="alert">{passwordError}</p>}
-              {passwordSuccess && <p className="text-body-sm text-[#1B5E1B]" role="status">Password changed</p>}
+              {passwordSuccess && <p className="text-body-sm text-[#1B5E1B]" role="status">Пароль изменён</p>}
               <button
                 type="submit"
                 disabled={passwordSubmitting}
                 className="md3-btn-primary self-start"
               >
-                {passwordSubmitting ? 'Changing...' : 'Change password'}
+                {passwordSubmitting ? 'Сохранение...' : 'Изменить пароль'}
               </button>
             </form>
           </div>
 
-          {/* Delete account */}
+          {/* Удаление аккаунта */}
           <div className="md3-card p-6 border-l-4 border-l-error">
-            <h2 className="text-title-md text-error mb-2">Delete account</h2>
-            <p className="text-body-md text-outline mb-4">This action cannot be undone.</p>
+            <h2 className="text-title-md text-error mb-2">Удаление аккаунта</h2>
+            <p className="text-body-md text-outline mb-4">Это действие необратимо.</p>
             <button
               onClick={handleDeleteAccount}
               className="md3-btn-danger"
@@ -186,7 +186,7 @@ export function ProfilePage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
               </svg>
-              Delete account
+              Удалить аккаунт
             </button>
           </div>
         </div>

@@ -44,14 +44,9 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
   const handleDelete = async () => {
     if (!vehicle) return;
     if (!confirm('Удалить автомобиль? (можно будет восстановить)')) return;
-    try {
-      await onDelete(vehicle.id);
-      toast.success('Автомобиль удалён');
-      onClose();
-    } catch (error) {
-      console.error('Ошибка при удалении:', error);
-      toast.error('Не удалось удалить автомобиль');
-    }
+    await onDelete(vehicle.id);
+    toast.success('Автомобиль удалён');
+    onClose();
   };
 
   return (
