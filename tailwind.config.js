@@ -45,7 +45,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Google Sans"', '"Roboto"', 'system-ui', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       fontSize: {
         'headline-lg': ['32px', { lineHeight: '40px', fontWeight: '700' }],
