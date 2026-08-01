@@ -31,11 +31,6 @@ export interface Replacement {
     status_message?: string;
 }
 
-export interface Brand {
-    value: string;
-    label: string;
-}
-
 export interface ComponentConfig {
     key: string;
     name: string;
@@ -59,21 +54,4 @@ export interface User {
     email: string;
     is_active: boolean;
     created_at: string;
-}
-
-export interface AuthResponse {
-    access_token: string;
-    refresh_token: string;
-    token_type: string;
-}
-
-export interface LoginCredentials {
-    username: string;
-    password: string;
-}
-
-export interface RegisterData {
-    username: string;
-    email: string;
-    password: string;
 }

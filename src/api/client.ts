@@ -117,12 +117,6 @@ export const api = {
     getAllVehicles: () =>
         authFetch(`${API_BASE}/vehicles?include_archived=true`).then(res => handleResponse<Vehicle[]>(res)),
 
-    getVehicles: () =>
-        authFetch(`${API_BASE}/vehicles`).then(res => handleResponse<Vehicle[]>(res)),
-
-    getVehicle: (id: number) =>
-        authFetch(`${API_BASE}/vehicles/${id}`).then(res => handleResponse<Vehicle>(res)),
-
     createVehicle: (data: VehicleFormData) =>
         authFetch(`${API_BASE}/vehicles`, {
             method: 'POST',
@@ -215,13 +209,6 @@ export const api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email }),
-        }).then(res => handleResponse<{ detail: string }>(res)),
-
-    resetPassword: (token: string, new_password: string) =>
-        fetch(`${AUTH_BASE}/reset-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, new_password }),
         }).then(res => handleResponse<{ detail: string }>(res)),
 }
 
