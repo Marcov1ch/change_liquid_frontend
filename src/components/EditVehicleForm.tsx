@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import { Spoiler } from './Spoiler';
-import { validatePlateNumber } from '../utils/plateValidation';
-import type { Vehicle, ComponentConfig } from '../types';
+import { VehicleFields } from './VehicleFields';
+import { useVehicleForm } from '../hooks/useVehicleForm';
+import type { Vehicle } from '../types';
 
 interface Props {
   isOpen: boolean;
@@ -16,69 +15,12 @@ interface Props {
 
 export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }: Props) {
   const { toast } = useToast();
-  const [brands, setBrands] = useState<{ value: string; label: string }[]>([]);
-  const [models, setModels] = useState<{ value: string; label: string }[]>([]);
-  const [configs, setConfigs] = useState<ComponentConfig[]>([]);
-  const [plateError, setPlateError] = useState('');
-  const [formData, setFormData] = useState({
-    brand: '',
-    model: '',
-    plate_number: '',
-    year: new Date().getFullYear(),
-    current_km: 0,
-  });
-  const [intervals, setIntervals] = useState<Record<string, number>>({});
-  const [notifyFlags, setNotifyFlags] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    api.getBrands().then(data => setBrands(data.brands));
-    api.getComponentConfigs().then(data => setConfigs(data.configs));
-  }, []);
-
-  useEffect(() => {
-    if (vehicle) {
-      setFormData({
-        brand: vehicle.brand || '',
-        model: vehicle.model || '',
-        plate_number: vehicle.plate_number || '',
-        year: vehicle.year || new Date().getFullYear(),
-        current_km: vehicle.current_km || 0,
-      });
-      setIntervals(vehicle.intervals || {});
-      setNotifyFlags(vehicle.notify_flags || {});
-    }
-  }, [vehicle]);
-
-  useEffect(() => {
-    if (formData.brand) {
-      api.getModels(formData.brand).then(data => setModels(data.models));
-    }
-  }, [formData.brand]);
-
-  const handleValidatePlate = (value: string) => {
-    const error = validatePlateNumber(value);
-    setPlateError(error || '');
-    return !error;
-  };
-
-  const handlePlateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
-    setFormData({ ...formData, plate_number: value });
-    handleValidatePlate(value);
-  };
-
-  const handleIntervalChange = (key: string, value: number) => {
-    setIntervals(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleNotifyChange = (key: string, checked: boolean) => {
-    setNotifyFlags(prev => ({ ...prev, [key]: checked }));
-  };
+  const form = useVehicleForm({ vehicle });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!handleValidatePlate(formData.plate_number)) {
+    if (!form.validateForm()) {
       toast.error('Пожалуйста, исправьте ошибки в форме');
       return;
     }
@@ -87,9 +29,9 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
 
     try {
       await api.updateVehicle(vehicle.id, {
-        ...formData,
-        intervals,
-        notify_flags: notifyFlags,
+        ...form.formData,
+        intervals: form.intervals,
+        notify_flags: form.notifyFlags,
       });
       toast.success('Автомобиль обновлён');
       onUpdate();
@@ -115,113 +57,7 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Настройки">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div>
-          <label className="block text-label-lg text-surface-on mb-2">Марка</label>
-          <select
-            value={formData.brand}
-            onChange={(e) => setFormData({ ...formData, brand: e.target.value, model: '' })}
-            required
-            className="md3-select"
-          >
-            <option value="">Выберите марку</option>
-            {brands.map(brand => (
-              <option key={brand.value} value={brand.value}>{brand.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-label-lg text-surface-on mb-2">Модель</label>
-          <select
-            value={formData.model}
-            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-            required
-            disabled={!formData.brand}
-            className="md3-select disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="">{formData.brand ? 'Выберите модель' : 'Сначала выберите марку'}</option>
-            {models.map(model => (
-              <option key={model.value} value={model.value}>{model.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-label-lg text-surface-on mb-2">Госномер</label>
-          <input
-            type="text"
-            value={formData.plate_number}
-            onChange={handlePlateChange}
-            required
-            placeholder="А123АА178 или 1234AB7"
-            className={`md3-field ${plateError ? 'md3-field-error' : ''}`}
-          />
-          {plateError && <p className="mt-1 text-body-sm text-error">{plateError}</p>}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-label-lg text-surface-on mb-2">Год выпуска</label>
-            <input
-              type="number"
-              value={formData.year}
-              onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-              required
-              className="md3-field"
-            />
-          </div>
-          <div>
-            <label className="block text-label-lg text-surface-on mb-2">Пробег (км)</label>
-            <input
-              type="number"
-              value={formData.current_km}
-              onChange={(e) => setFormData({ ...formData, current_km: parseInt(e.target.value) })}
-              required
-              className="md3-field"
-            />
-          </div>
-        </div>
-
-        <Spoiler title="Интервалы замен (км)">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3">
-            {configs.map(cfg => (
-              <div key={cfg.key}>
-                <label className="block text-label-md text-surface-on-variant mb-1">{cfg.name}</label>
-                <input
-                  type="number"
-                  value={intervals[cfg.key] ?? cfg.default_interval}
-                  onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
-                  className="md3-field"
-                />
-              </div>
-            ))}
-          </div>
-        </Spoiler>
-
-        <Spoiler title="Уведомления">
-          <div className="flex flex-col gap-2 pt-3">
-            {configs.map(cfg => (
-              <label key={cfg.key} className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={notifyFlags[cfg.key] ?? true}
-                  onChange={(e) => handleNotifyChange(cfg.key, e.target.checked)}
-                  className="w-5 h-5 rounded-md3-xs accent-primary"
-                />
-                <span className="text-body-md text-surface-on">{cfg.name}</span>
-              </label>
-            ))}
-            <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-              <input
-                type="checkbox"
-                checked={notifyFlags['tire_change'] ?? true}
-                onChange={(e) => handleNotifyChange('tire_change', e.target.checked)}
-                className="w-5 h-5 rounded-md3-xs accent-primary"
-              />
-              <span className="text-body-md text-surface-on">Шины</span>
-            </label>
-          </div>
-        </Spoiler>
+        <VehicleFields form={form} collapsible yearKmInline />
 
         <hr className="md3-divider" />
 
