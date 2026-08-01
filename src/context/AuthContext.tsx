@@ -54,6 +54,7 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
     }, [logout])
 
     const login = async (username: string, password: string) => {
+        queryClient.clear()
         const res = await api.login(username, password)
         setTokens(res.access_token, res.refresh_token)
         const me = await api.getMe()
@@ -79,6 +80,7 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
         await api.deleteAccount()
         clearTokens()
         setUser(null)
+        queryClient.clear()
     }
 
     return (
