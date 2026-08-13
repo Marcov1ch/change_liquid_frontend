@@ -8,6 +8,7 @@ export interface Vehicle {
     is_active: boolean;
     intervals: Record<string, number>;
     notify_flags: Record<string, boolean>;
+    interval_months: Record<string, number | null>;
     km_remaining: Record<string, number | null>;
     vehicle_status?: string;
 }
@@ -34,6 +35,7 @@ export interface ComponentConfig {
     name: string;
     example: string;
     default_interval: number;
+    default_interval_months?: number | null;
 }
 
 export interface VehicleFormData {
@@ -44,6 +46,7 @@ export interface VehicleFormData {
     current_km: number;
     intervals: Record<string, number>;
     notify_flags: Record<string, boolean>;
+    interval_months: Record<string, number | null>;
 }
 
 export interface User {

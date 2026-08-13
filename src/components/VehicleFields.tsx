@@ -12,10 +12,10 @@ interface Props {
 export function VehicleFields({ form, collapsible = false, yearKmInline = false }: Props) {
     const {
         formData, setFormData, setYearError,
-        intervals, notifyFlags,
+        intervals, notifyFlags, intervalMonths,
         plateError, yearError,
         brands, models, configs,
-        handlePlateChange, handleIntervalChange, handleNotifyChange,
+        handlePlateChange, handleIntervalChange, handleIntervalMonthsChange, handleNotifyChange,
     } = form;
 
     const yearInput = (
@@ -46,16 +46,30 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
     );
 
     const intervalsSection = (
-        <div className={collapsible ? 'grid grid-cols-2 gap-x-4 gap-y-3 pt-3' : 'flex flex-col gap-4'}>
+        <div className={collapsible ? 'flex flex-col gap-4 pt-3' : 'flex flex-col gap-4'}>
             {configs.map(cfg => (
-                <div key={cfg.key}>
-                    <label className="block text-label-md text-surface-on-variant mb-1">{cfg.name}</label>
-                    <input
-                        type="number"
-                        value={intervals[cfg.key] ?? cfg.default_interval}
-                        onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
-                        className="md3-field"
-                    />
+                <div key={cfg.key} className="flex items-center gap-3">
+                    <label className="block text-body-md text-surface-on-variant flex-1">{cfg.name}</label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="number"
+                            title="Интервал замены (км)"
+                            value={intervals[cfg.key] ?? cfg.default_interval}
+                            onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
+                            className="md3-field !w-24"
+                        />
+                        <input
+                            type="number"
+                            title="Интервал замены (месяцев)"
+                            placeholder="мес"
+                            value={intervalMonths[cfg.key] ?? ''}
+                            onChange={(e) => handleIntervalMonthsChange(
+                                cfg.key,
+                                e.target.value === '' ? null : parseInt(e.target.value),
+                            )}
+                            className="md3-field !w-20"
+                        />
+                    </div>
                 </div>
             ))}
         </div>
@@ -146,13 +160,14 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
 
             {collapsible ? (
                 <>
-                    <Spoiler title="Интервалы замен (км)">{intervalsSection}</Spoiler>
+                    <Spoiler title="Интервалы замен (км / мес)">{intervalsSection}</Spoiler>
                     <Spoiler title="Уведомления">{notificationsList}</Spoiler>
                 </>
             ) : (
                 <>
                     <hr className="md3-divider" />
-                    <h4 className="text-title-sm text-surface-on m-0">Интервалы замен (км)</h4>
+                    <h4 className="text-title-sm text-surface-on m-0">Интервалы замен (км / мес)</h4>
+                    <p className="text-body-sm text-outline mb-2">Первое поле — пробег (км), второе — срок в месяцах. Дата следующей замены считается от даты замены.</p>
                     {intervalsSection}
                     <hr className="md3-divider" />
                     <h4 className="text-title-sm text-surface-on m-0">Уведомления</h4>

@@ -32,6 +32,7 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
         ...form.formData,
         intervals: form.intervals,
         notify_flags: form.notifyFlags,
+        interval_months: form.intervalMonths,
       });
       toast.success('Автомобиль обновлён');
       onUpdate();
