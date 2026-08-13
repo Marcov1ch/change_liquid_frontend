@@ -14,6 +14,7 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
     const [yearError, setYearError] = useState('');
     const [intervals, setIntervals] = useState<Record<string, number>>({});
     const [notifyFlags, setNotifyFlags] = useState<Record<string, boolean>>({});
+    const [intervalMonths, setIntervalMonths] = useState<Record<string, number | null>>({});
     const [formData, setFormData] = useState({
         brand: '',
         model: '',
@@ -41,20 +42,24 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
             });
             setIntervals(vehicle.intervals || {});
             setNotifyFlags(vehicle.notify_flags || {});
+            setIntervalMonths(vehicle.interval_months || {});
         }
     }, [vehicle]);
 
     useEffect(() => {
         if (!configsData) return;
         const cfgMap: Record<string, number> = {};
+        const monthMap: Record<string, number | null> = {};
         const notifyMap: Record<string, boolean> = {};
         configsData.configs.forEach(c => {
             cfgMap[c.key] = c.default_interval;
+            monthMap[c.key] = c.default_interval_months ?? null;
             notifyMap[c.key] = true;
         });
         notifyMap['tire_change'] = true;
         setIntervals(prev => ({ ...cfgMap, ...prev }));
         setNotifyFlags(prev => ({ ...notifyMap, ...prev }));
+        setIntervalMonths(prev => ({ ...monthMap, ...prev }));
     }, [configsData]);
 
     const handlePlateChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +70,10 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
 
     const handleIntervalChange = (key: string, value: number) => {
         setIntervals(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleIntervalMonthsChange = (key: string, value: number | null) => {
+        setIntervalMonths(prev => ({ ...prev, [key]: value }));
     };
 
     const handleNotifyChange = (key: string, checked: boolean) => {
@@ -94,6 +103,9 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
             year: new Date().getFullYear(),
             current_km: 0,
         });
+        setIntervals({});
+        setNotifyFlags({});
+        setIntervalMonths({});
         setPlateError('');
         setYearError('');
     }, []);
@@ -104,6 +116,8 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         setYearError,
         intervals,
         setIntervals,
+        intervalMonths,
+        setIntervalMonths,
         notifyFlags,
         setNotifyFlags,
         plateError,
@@ -113,6 +127,7 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         configs,
         handlePlateChange,
         handleIntervalChange,
+        handleIntervalMonthsChange,
         handleNotifyChange,
         validateForm,
         resetForm,

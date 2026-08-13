@@ -26,6 +26,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
         ...form.formData,
         intervals: form.intervals,
         notify_flags: form.notifyFlags,
+        interval_months: form.intervalMonths,
       });
       form.resetForm();
     } catch {

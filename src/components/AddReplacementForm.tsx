@@ -128,7 +128,7 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                 <div className="p-3 rounded-md3-sm bg-surface-variant/50 text-body-sm text-outline">
                     {isTire
                         ? '💡 Укажите дату окончания хранения шин — за 5 дней до неё придёт уведомление.'
-                        : '💡 Поля с ценой можно оставить пустыми'}
+                        : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
                 </div>
 
                 <div className="flex gap-3 pt-1">

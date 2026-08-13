@@ -56,6 +56,15 @@ export function ReplacementItem({
     const isTire = r.component_type === 'tire_change';
     const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isTire);
 
+    let dateReminder: string | null = null;
+    if (!isTire && r.next_change_date && r.days_remaining != null) {
+        if (r.days_remaining < 0) {
+            dateReminder = `⏳ Просрочено по дате на ${-r.days_remaining} дн.`;
+        } else if (r.days_remaining <= 5) {
+            dateReminder = `⏳ Замена по дате через ${r.days_remaining} дн.`;
+        }
+    }
+
     return (
         <div className={`p-3 rounded-md3-sm border-l-4 ${itemStyle.border} bg-surface transition-shadow duration-200 hover:shadow-md3-1`}>
             {editing ? (
@@ -128,7 +137,10 @@ export function ReplacementItem({
                             ) : (
                                 <>
                                     <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
-                                    <span>⏱ Следующая: {r.next_replacement_km?.toLocaleString()} км</span>
+                                    {r.next_replacement_km != null && (
+                                        <span>⏱ Следующая: {r.next_replacement_km.toLocaleString()} км</span>
+                                    )}
+                                    {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
                                 </>
                             )}
                         </div>
@@ -156,6 +168,9 @@ export function ReplacementItem({
                     </div>
                     {label && (
                         <p className={`mt-1 text-body-sm ${itemStyle.text}`}>{label}</p>
+                    )}
+                    {dateReminder && (
+                        <p className="mt-1 text-body-sm text-[#7A6100]">{dateReminder}</p>
                     )}
                 </>
             )}
