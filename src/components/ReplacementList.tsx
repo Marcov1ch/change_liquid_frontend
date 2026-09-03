@@ -76,6 +76,14 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     });
   });
 
+  const getMileageUsed = (type: string): number | null => {
+    if (type === 'tire_change') return null;
+    const items = grouped[type];
+    const latest = items?.[0];
+    if (!latest) return null;
+    return Math.max(0, selectedVehicle.current_km - latest.km_at_replacement);
+  };
+
   const getProgress = (type: string): number => {
     const interval = selectedVehicle.intervals[type];
     const remaining = selectedVehicle.km_remaining[type];
@@ -269,6 +277,11 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
                   <div className="px-4 pb-2">
                     <ProgressBar value={type === 'tire_change' ? getDateProgress(type) : getProgress(type)} status={status} />
+                    {getMileageUsed(type) !== null && (
+                      <span className="text-label-sm text-outline mt-1 block">
+                        {getMileageUsed(type)!.toLocaleString()} км
+                      </span>
+                    )}
                   </div>
 
                   {isOpen && (
