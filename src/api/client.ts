@@ -94,7 +94,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     return res.json()
 }
 
-import type { Vehicle, Replacement, VehicleFormData, ComponentConfig, User } from '../types';
+import type { Vehicle, Replacement, VehicleFormData, ComponentConfig, User, RimSize, TireSize } from '../types';
 
 export const api = {
     login: (username: string, password: string) =>
@@ -152,6 +152,13 @@ export const api = {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ notify_flags: data }),
+        }).then(res => handleResponse<Vehicle>(res)),
+
+    updateVehicleSizes: (vehicleId: number, data: { rims: RimSize[]; tires: TireSize[] }) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/sizes`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
         }).then(res => handleResponse<Vehicle>(res)),
 
     getReplacements: (vehicleId: number) =>

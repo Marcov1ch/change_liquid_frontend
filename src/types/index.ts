@@ -1,3 +1,17 @@
+export interface RimSize {
+    diameter: number | null;
+    pcd: string;
+    et_from: number | null;
+    et_to: number | null;
+    width_from: number | null;
+    width_to: number | null;
+}
+
+export interface TireSize {
+    size: string;
+    label: string | null;
+}
+
 export interface Vehicle {
     id: number;
     brand: string;
@@ -11,6 +25,8 @@ export interface Vehicle {
     interval_months: Record<string, number | null>;
     km_remaining: Record<string, number | null>;
     vehicle_status?: string;
+    rims: RimSize[];
+    tires: TireSize[];
 }
 
 export interface Replacement {

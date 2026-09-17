@@ -23,8 +23,9 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
             <label className="block text-label-lg text-surface-on mb-2">Год выпуска</label>
             <input
                 type="number"
-                value={Number.isFinite(formData.year) ? formData.year : ''}
-                onChange={(e) => { setFormData(prev => ({ ...prev, year: e.target.valueAsNumber })); setYearError(''); }}
+                value={formData.year === 0 ? '' : formData.year}
+                onChange={(e) => { setFormData(prev => ({ ...prev, year: e.target.value === '' ? 0 : e.target.valueAsNumber })); setYearError(''); }}
+                placeholder={String(new Date().getFullYear())}
                 required
                 className={`md3-field ${yearError ? 'md3-field-error' : ''}`}
             />
@@ -37,8 +38,9 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
             <label className="block text-label-lg text-surface-on mb-2">Пробег (км)</label>
             <input
                 type="number"
-                value={Number.isFinite(formData.current_km) ? formData.current_km : ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, current_km: Number.isFinite(e.target.valueAsNumber) ? e.target.valueAsNumber : 0 }))}
+                value={formData.current_km === 0 ? '' : formData.current_km}
+                onChange={(e) => setFormData(prev => ({ ...prev, current_km: e.target.value === '' ? 0 : e.target.valueAsNumber }))}
+                placeholder="0"
                 required
                 className="md3-field"
             />
