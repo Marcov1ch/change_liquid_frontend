@@ -2,8 +2,10 @@ import { Modal } from './Modal';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { VehicleFields } from './VehicleFields';
+import { VehicleSizesFields } from './VehicleSizesFields';
 import { useVehicleForm } from '../hooks/useVehicleForm';
-import type { Vehicle } from '../types';
+import type { RimSize, TireSize, Vehicle } from '../types';
+import { useEffect, useState } from 'react';
 
 interface Props {
   isOpen: boolean;
@@ -16,6 +18,13 @@ interface Props {
 export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }: Props) {
   const { toast } = useToast();
   const form = useVehicleForm({ vehicle });
+  const [rims, setRims] = useState<RimSize[]>([]);
+  const [tires, setTires] = useState<TireSize[]>([]);
+
+  useEffect(() => {
+    setRims(vehicle?.rims ?? []);
+    setTires(vehicle?.tires ?? []);
+  }, [vehicle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +42,13 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
         intervals: form.intervals,
         notify_flags: form.notifyFlags,
         interval_months: form.intervalMonths,
+      });
+      await api.updateVehicleSizes(vehicle.id, {
+        rims: rims.map(r => ({
+          ...r,
+          pcd: r.pcd?.trim() || '',
+        })),
+        tires: tires.map(t => ({ size: t.size.trim(), label: t.label?.trim() || null })),
       });
       toast.success('Автомобиль обновлён');
       onUpdate();
@@ -55,7 +71,12 @@ export function EditVehicleForm({ isOpen, onClose, vehicle, onUpdate, onDelete }
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <VehicleFields form={form} collapsible yearKmInline />
 
-        <hr className="md3-divider" />
+        <VehicleSizesFields
+          rims={rims}
+          tires={tires}
+          onRimsChange={setRims}
+          onTiresChange={setTires}
+        />
 
         <div className="flex flex-col gap-3">
           <button

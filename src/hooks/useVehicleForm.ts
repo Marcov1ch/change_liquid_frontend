@@ -19,7 +19,7 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         brand: '',
         model: '',
         plate_number: '',
-        year: new Date().getFullYear(),
+        year: 0,
         current_km: 0,
     });
 
