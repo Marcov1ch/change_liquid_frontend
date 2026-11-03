@@ -95,8 +95,11 @@ export function VehicleList({
                     {vehicle.brand} {vehicle.model}
                   </p>
                   <p className="text-body-sm text-outline truncate">
-                    {vehicle.current_km.toLocaleString()} км · {vehicle.plate_number}
+                    {vehicle.plate_number}
                     {status === 'unknown' && <span className="text-error ml-1">*</span>}
+                  </p>
+                  <p className="text-body-sm text-outline truncate">
+                    {vehicle.current_km.toLocaleString()} км
                   </p>
                 </div>
               </div>
