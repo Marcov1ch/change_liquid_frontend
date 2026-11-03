@@ -47,6 +47,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     replacement_date: '',
     component_name: '',
     next_change_date: '',
+    component_price: '',
+    work_price: '',
   });
 
   const { data: shareLink } = useQuery({
@@ -87,10 +89,10 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   });
 
   const getMileageUsed = (type: string): number | null => {
-    if (type === 'tire_change') return null;
     const items = grouped[type];
     const latest = items?.[0];
     if (!latest) return null;
+    if (type === 'tire_change' && latest.km_traveled != null) return latest.km_traveled;
     return Math.max(0, selectedVehicle.current_km - latest.km_at_replacement);
   };
 
@@ -137,12 +139,21 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       replacement_date: replacement.replacement_date,
       component_name: replacement.component_name,
       next_change_date: replacement.next_change_date || '',
+      component_price: replacement.component_price != null ? String(replacement.component_price) : '',
+      work_price: replacement.work_price != null ? String(replacement.work_price) : '',
     });
   };
 
   const cancelEdit = () => {
     setEditingReplacement(null);
-    setEditForm({ km_at_replacement: '', replacement_date: '', component_name: '', next_change_date: '' });
+    setEditForm({
+      km_at_replacement: '',
+      replacement_date: '',
+      component_name: '',
+      next_change_date: '',
+      component_price: '',
+      work_price: '',
+    });
   };
 
   const saveEdit = async () => {
@@ -150,10 +161,13 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
     const updateData: Record<string, string | number> = {};
     if (editForm.component_name !== editingReplacement.component_name) updateData.component_name = editForm.component_name;
+    if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
     if (editingReplacement.component_type === 'tire_change') {
       if (editForm.next_change_date !== (editingReplacement.next_change_date || '')) updateData.next_change_date = editForm.next_change_date;
-    } else {
-      if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
+      const componentPrice = editForm.component_price === '' ? 0 : parseInt(editForm.component_price);
+      if (componentPrice !== (editingReplacement.component_price ?? 0)) updateData.component_price = componentPrice;
+      const workPrice = editForm.work_price === '' ? 0 : parseInt(editForm.work_price);
+      if (workPrice !== (editingReplacement.work_price ?? 0)) updateData.work_price = workPrice;
     }
     if (editForm.replacement_date !== editingReplacement.replacement_date) updateData.replacement_date = editForm.replacement_date;
 
@@ -195,9 +209,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         replacement_date: newReplacement.replacement_date,
       };
       if (newReplacement.component_type === 'tire_change') {
-        payload.km_at_replacement = 0;
-        payload.component_price = 0;
-        payload.work_price = 0;
+        payload.km_at_replacement = newReplacement.km_at_replacement;
+        payload.component_price = newReplacement.component_price;
+        payload.work_price = newReplacement.work_price;
         payload.next_change_date = newReplacement.next_change_date;
       } else {
         payload.km_at_replacement = newReplacement.km_at_replacement;

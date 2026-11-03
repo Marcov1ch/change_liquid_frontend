@@ -41,6 +41,7 @@ export interface Replacement {
     interval_km: number;
     next_replacement_km?: number;
     km_remaining?: number;
+    km_traveled?: number | null;
     next_change_date?: string | null;
     days_remaining?: number | null;
     status?: string;

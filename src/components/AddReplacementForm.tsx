@@ -54,16 +54,29 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                 </div>
 
                 {isTire ? (
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
-                            <input
-                                type="date"
-                                max={today}
-                                value={value.replacement_date}
-                                onChange={(e) => onChange({ replacement_date: e.target.value })}
-                                className="md3-field"
-                            />
+                    <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег при установке (км)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder={String(selectedVehicle?.current_km || 0)}
+                                    value={value.km_at_replacement === 0 ? '' : value.km_at_replacement}
+                                    onChange={(e) => onChange({ km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
+                                <input
+                                    type="date"
+                                    max={today}
+                                    value={value.replacement_date}
+                                    onChange={(e) => onChange({ replacement_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
                         </div>
                         <div>
                             <label className="block text-label-md text-surface-on-variant mb-1">Дата след. замены *</label>
@@ -73,6 +86,30 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                                 onChange={(e) => onChange({ next_change_date: e.target.value })}
                                 className="md3-field"
                             />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Стоимость шин (₽)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="5000"
+                                    value={value.component_price === 0 ? '' : value.component_price}
+                                    onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="1500"
+                                    value={value.work_price === 0 ? '' : value.work_price}
+                                    onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    className="md3-field"
+                                />
+                            </div>
                         </div>
                     </div>
                 ) : (
@@ -127,7 +164,7 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
 
                 <div className="p-3 rounded-md3-sm bg-surface-variant/50 text-body-sm text-outline">
                     {isTire
-                        ? '💡 Укажите дату окончания хранения шин — за 5 дней до неё придёт уведомление.'
+                        ? '💡 Укажите пробег при установке шин — система будет считать, сколько км они проехали. Стоимость шин и работ можно заполнить по желанию. За 5 дней до даты следующей замены придёт уведомление.'
                         : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
                 </div>
 
