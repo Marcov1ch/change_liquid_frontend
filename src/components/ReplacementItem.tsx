@@ -5,6 +5,8 @@ export interface ReplacementEditForm {
     replacement_date: string;
     component_name: string;
     next_change_date: string;
+    component_price: string;
+    work_price: string;
 }
 
 interface Props {
@@ -69,45 +71,96 @@ export function ReplacementItem({
         <div className={`p-3 rounded-md3-sm border-l-4 ${itemStyle.border} bg-surface transition-shadow duration-200 hover:shadow-md3-1`}>
             {editing ? (
                 <div className="flex flex-col gap-3">
-                    <input
-                        type="text"
-                        placeholder="Название"
-                        value={editForm.component_name}
-                        onChange={(e) => onEditFormChange({ component_name: e.target.value })}
-                        className="md3-field"
-                    />
+                    <div>
+                        <label className="block text-label-md text-surface-on-variant mb-1">Название</label>
+                        <input
+                            type="text"
+                            placeholder="Название"
+                            value={editForm.component_name}
+                            onChange={(e) => onEditFormChange({ component_name: e.target.value })}
+                            className="md3-field"
+                        />
+                    </div>
                     {isTire ? (
                         <>
-                            <input
-                                type="date"
-                                max={today}
-                                value={editForm.replacement_date}
-                                onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
-                                className="md3-field"
-                            />
-                            <input
-                                type="date"
-                                value={editForm.next_change_date}
-                                onChange={(e) => onEditFormChange({ next_change_date: e.target.value })}
-                                className="md3-field"
-                            />
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег при установке (км)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="Пробег"
+                                    value={editForm.km_at_replacement}
+                                    onChange={(e) => onEditFormChange({ km_at_replacement: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
+                                <input
+                                    type="date"
+                                    max={today}
+                                    value={editForm.replacement_date}
+                                    onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата следующей замены</label>
+                                <input
+                                    type="date"
+                                    value={editForm.next_change_date}
+                                    onChange={(e) => onEditFormChange({ next_change_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-label-md text-surface-on-variant mb-1">Стоимость шин (₽)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="5000"
+                                        value={editForm.component_price}
+                                        onChange={(e) => onEditFormChange({ component_price: e.target.value })}
+                                        className="md3-field"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="1500"
+                                        value={editForm.work_price}
+                                        onChange={(e) => onEditFormChange({ work_price: e.target.value })}
+                                        className="md3-field"
+                                    />
+                                </div>
+                            </div>
                         </>
                     ) : (
                         <>
-                            <input
-                                type="number"
-                                placeholder="Пробег"
-                                value={editForm.km_at_replacement}
-                                onChange={(e) => onEditFormChange({ km_at_replacement: e.target.value })}
-                                className="md3-field"
-                            />
-                            <input
-                                type="date"
-                                max={today}
-                                value={editForm.replacement_date}
-                                onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
-                                className="md3-field"
-                            />
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="Пробег"
+                                    value={editForm.km_at_replacement}
+                                    onChange={(e) => onEditFormChange({ km_at_replacement: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
+                                <input
+                                    type="date"
+                                    max={today}
+                                    value={editForm.replacement_date}
+                                    onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
                         </>
                     )}
                     <div className="flex gap-2">
@@ -127,6 +180,16 @@ export function ReplacementItem({
                             <span>📅 {r.replacement_date}</span>
                             {isTire ? (
                                 <>
+                                    <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
+                                    {r.km_traveled != null && (
+                                        <span>🛣 Пройдено: {r.km_traveled.toLocaleString()} км</span>
+                                    )}
+                                    {r.component_price != null && r.component_price > 0 && (
+                                        <span>🧾 Шины: {r.component_price.toLocaleString()} ₽</span>
+                                    )}
+                                    {r.work_price != null && r.work_price > 0 && (
+                                        <span>🔧 Работы: {r.work_price.toLocaleString()} ₽</span>
+                                    )}
                                     {r.next_change_date && <span>⏱ До: {r.next_change_date}</span>}
                                     {r.days_remaining != null && (
                                         <span className={r.days_remaining <= 5 ? 'text-error font-semibold' : ''}>

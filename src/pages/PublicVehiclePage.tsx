@@ -50,6 +50,7 @@ export function PublicVehiclePage() {
     const componentNames = useMemo(() => {
         const names: Record<string, string> = {};
         configsData?.configs.forEach(config => { names[config.key] = config.name; });
+        names.tire_change = 'Шины';
         return names;
     }, [configsData]);
 
@@ -175,6 +176,9 @@ export function PublicVehiclePage() {
                                                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
                                                                 <span>📅 {replacement.replacement_date}</span>
                                                                 <span>📍 {replacement.km_at_replacement.toLocaleString()} км</span>
+                                                                {replacement.component_type === 'tire_change' && replacement.km_traveled != null && (
+                                                                    <span>🛣 Пройдено: {replacement.km_traveled.toLocaleString()} км</span>
+                                                                )}
                                                                 <span>🧾 {formatMoney(replacement.component_price)}</span>
                                                                 <span>🔧 {formatMoney(replacement.work_price)}</span>
                                                                 {replacement.next_change_date && (
