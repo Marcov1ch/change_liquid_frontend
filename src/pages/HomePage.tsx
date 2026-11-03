@@ -8,6 +8,7 @@ import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
+import { ShareVehicleDialog } from '../components/ShareVehicleDialog';
 import { TrackingBar } from '../components/TrackingBar';
 import { useGpsTracker } from '../hooks/useGpsTracker';
 import type { Vehicle, VehicleFormData } from '../types';
@@ -21,6 +22,7 @@ export function HomePage() {
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [shareVehicle, setShareVehicle] = useState<Vehicle | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const gps = useGpsTracker((message) => toast.error(message));
 
@@ -247,6 +249,7 @@ export function HomePage() {
               vehicleId={selectedId}
               selectedVehicle={selectedVehicle}
               onClose={() => setSelectedId(null)}
+              onShare={() => selectedVehicle && setShareVehicle(selectedVehicle)}
               onReplacementsUpdate={handleReplacementsUpdate}
             />
           </div>
@@ -272,6 +275,11 @@ export function HomePage() {
               toast.error(error instanceof Error ? error.message : 'Не удалось удалить автомобиль');
             }
           }}
+        />
+
+        <ShareVehicleDialog
+          vehicle={shareVehicle}
+          onClose={() => setShareVehicle(null)}
         />
 
         <TrackingBar

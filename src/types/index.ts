@@ -46,6 +46,26 @@ export interface Replacement {
     status?: string;
 }
 
+export interface ShareLink {
+    enabled: boolean;
+    token: string | null;
+    share_url: string | null;
+    register_url: string;
+}
+
+export type PublicReplacement = Omit<Replacement, 'vehicle_id'>;
+
+export interface PublicVehicle {
+    brand: string;
+    model: string;
+    plate_number: string;
+    year: number;
+    current_km: number;
+    vehicle_status: string;
+    replacements: PublicReplacement[];
+    register_url: string;
+}
+
 export interface ComponentConfig {
     key: string;
     name: string;
