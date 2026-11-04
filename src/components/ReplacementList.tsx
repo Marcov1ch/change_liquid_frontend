@@ -88,14 +88,6 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     });
   });
 
-  const getMileageUsed = (type: string): number | null => {
-    const items = grouped[type];
-    const latest = items?.[0];
-    if (!latest) return null;
-    if (type === 'tire_change' && latest.km_traveled != null) return latest.km_traveled;
-    return Math.max(0, selectedVehicle.current_km - latest.km_at_replacement);
-  };
-
   const getProgress = (type: string): number => {
     const interval = selectedVehicle.intervals[type];
     const remaining = selectedVehicle.km_remaining[type];
@@ -164,11 +156,11 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
     if (editingReplacement.component_type === 'tire_change') {
       if (editForm.next_change_date !== (editingReplacement.next_change_date || '')) updateData.next_change_date = editForm.next_change_date;
-      const componentPrice = editForm.component_price === '' ? 0 : parseInt(editForm.component_price);
-      if (componentPrice !== (editingReplacement.component_price ?? 0)) updateData.component_price = componentPrice;
-      const workPrice = editForm.work_price === '' ? 0 : parseInt(editForm.work_price);
-      if (workPrice !== (editingReplacement.work_price ?? 0)) updateData.work_price = workPrice;
     }
+    const componentPrice = editForm.component_price === '' ? 0 : parseInt(editForm.component_price);
+    if (componentPrice !== (editingReplacement.component_price ?? 0)) updateData.component_price = componentPrice;
+    const workPrice = editForm.work_price === '' ? 0 : parseInt(editForm.work_price);
+    if (workPrice !== (editingReplacement.work_price ?? 0)) updateData.work_price = workPrice;
     if (editForm.replacement_date !== editingReplacement.replacement_date) updateData.replacement_date = editForm.replacement_date;
 
     if (Object.keys(updateData).length === 0) { setEditingReplacement(null); return; }
@@ -321,11 +313,6 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
                   <div className="px-4 pb-2">
                     <ProgressBar value={type === 'tire_change' ? getDateProgress(type) : getProgress(type)} status={status} />
-                    {getMileageUsed(type) !== null && (
-                      <span className="text-label-sm text-outline mt-1 block">
-                        {getMileageUsed(type)!.toLocaleString()} км
-                      </span>
-                    )}
                   </div>
 
                   {isOpen && (
@@ -333,6 +320,10 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                       {grouped[type].map((r, idx) => {
                         const itemStatus = r.status || 'unknown';
                         const itemStyle = statusStyles[itemStatus] || statusStyles.unknown;
+                        const endKm = idx === 0 ? selectedVehicle.current_km : grouped[type][idx - 1].km_at_replacement;
+                        const kmTraveled = type === 'tire_change' && r.km_traveled != null
+                          ? r.km_traveled
+                          : Math.max(0, endKm - r.km_at_replacement);
 
                         return (
                           <ReplacementItem
@@ -343,6 +334,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                             editing={editingReplacement?.id === r.id}
                             editForm={editForm}
                             today={today}
+                            kmTraveled={kmTraveled}
                             onEditFormChange={(partial) => setEditForm(prev => ({ ...prev, ...partial }))}
                             onStartEdit={() => startEdit(r)}
                             onCancelEdit={cancelEdit}
