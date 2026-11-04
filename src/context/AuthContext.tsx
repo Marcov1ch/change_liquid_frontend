@@ -8,9 +8,10 @@ interface AuthContextType {
     user: User | null
     loading: boolean
     login: (username: string, password: string) => Promise<void>
-    register: (username: string, email: string, password: string) => Promise<void>
+    register: (username: string, email: string, password: string) => Promise<User>
     logout: () => void
     updateEmail: (email: string) => Promise<void>
+    resendVerification: () => Promise<void>
     changePassword: (old_password: string, new_password: string) => Promise<void>
     deleteAccount: () => Promise<void>
     isAuthenticated: boolean
@@ -62,14 +63,18 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
     }
 
     const register = async (username: string, email: string, password: string) => {
-        await api.register(username, email, password)
+        const created = await api.register(username, email, password)
         await login(username, password)
+        return created
     }
 
     const updateEmail = async (email: string) => {
-        await api.updateEmail(email)
-        const me = await api.getMe()
-        setUser(me)
+        const updated = await api.updateEmail(email)
+        setUser(updated)
+    }
+
+    const resendVerification = async () => {
+        await api.resendVerification()
     }
 
     const changePassword = async (old_password: string, new_password: string) => {
@@ -84,7 +89,7 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmail, changePassword, deleteAccount, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmail, resendVerification, changePassword, deleteAccount, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     )

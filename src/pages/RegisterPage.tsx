@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import { buildResendCooldownKey, startResendCooldown } from '../utils/resendCooldown'
 
 export function RegisterPage() {
   const [username, setUsername] = useState('')
@@ -10,6 +12,7 @@ export function RegisterPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const { register } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: FormEvent) => {
@@ -23,7 +26,9 @@ export function RegisterPage() {
 
     setSubmitting(true)
     try {
-      await register(username, email, password)
+      const created = await register(username, email, password)
+      startResendCooldown(buildResendCooldownKey(created.id, created.email))
+      toast.info('Проверьте почту и подтвердите email')
       navigate('/', { replace: true })
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка регистрации')

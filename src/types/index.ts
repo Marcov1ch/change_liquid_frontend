@@ -90,6 +90,7 @@ export interface User {
     id: number;
     username: string;
     email: string;
+    email_verified: boolean;
     is_active: boolean;
     created_at: string;
 }
