@@ -5,6 +5,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { PublicVehiclePage } from './pages/PublicVehiclePage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
@@ -16,6 +17,7 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/share/:token" element={<PublicVehiclePage />} />
                 <Route
                     path="/"

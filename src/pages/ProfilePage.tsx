@@ -1,17 +1,34 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
+import {
+  buildResendCooldownKey,
+  getRemainingSeconds,
+  readResendCooldown,
+  RESEND_COOLDOWN_SECONDS,
+  startResendCooldown,
+} from '../utils/resendCooldown'
 
 export function ProfilePage() {
-  const { user, updateEmail, changePassword, deleteAccount } = useAuth()
+  const { user, updateEmail, resendVerification, changePassword, deleteAccount } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+
+  const resendCooldownKey = user ? buildResendCooldownKey(user.id, user.email) : ''
+  const [resendAvailableAt, setResendAvailableAt] = useState(
+    () => resendCooldownKey ? readResendCooldown(resendCooldownKey) : 0,
+  )
+  const [clock, setClock] = useState(() => Date.now())
+  const resendSecondsLeft = getRemainingSeconds(resendAvailableAt, clock)
 
   const [email, setEmail] = useState(user?.email || '')
   const [emailError, setEmailError] = useState('')
   const [emailSubmitting, setEmailSubmitting] = useState(false)
   const [emailSuccess, setEmailSuccess] = useState(false)
+  const [resendSubmitting, setResendSubmitting] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
 
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -19,6 +36,29 @@ export function ProfilePage() {
   const [passwordError, setPasswordError] = useState('')
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
+
+  useEffect(() => {
+    setResendAvailableAt(resendCooldownKey ? readResendCooldown(resendCooldownKey) : 0)
+    setClock(Date.now())
+  }, [resendCooldownKey])
+
+  useEffect(() => {
+    if (resendAvailableAt <= Date.now()) return
+
+    const id = setInterval(() => {
+      const current = Date.now()
+      setClock(current)
+      if (current >= resendAvailableAt) clearInterval(id)
+    }, 1000)
+
+    return () => clearInterval(id)
+  }, [resendAvailableAt])
+
+  const applyCooldown = (key: string, seconds: number = RESEND_COOLDOWN_SECONDS) => {
+    if (!key) return
+    setResendAvailableAt(startResendCooldown(key, seconds))
+    setClock(Date.now())
+  }
 
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -28,11 +68,33 @@ export function ProfilePage() {
     try {
       await updateEmail(email)
       setEmailSuccess(true)
-      toast.success('Email обновлён')
+      setResendSuccess(false)
+      if (user) {
+        applyCooldown(buildResendCooldownKey(user.id, email))
+      }
+      toast.success('Email обновлён. Проверьте почту.')
     } catch (err: unknown) {
       setEmailError(err instanceof Error ? err.message : 'Не удалось обновить email')
     } finally {
       setEmailSubmitting(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    setResendSubmitting(true)
+    setResendSuccess(false)
+    try {
+      await resendVerification()
+      setResendSuccess(true)
+      applyCooldown(resendCooldownKey)
+      toast.success('Письмо с подтверждением отправлено')
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 429) {
+        applyCooldown(resendCooldownKey, err.retryAfter ?? RESEND_COOLDOWN_SECONDS)
+      }
+      toast.error(err instanceof Error ? err.message : 'Не удалось отправить письмо')
+    } finally {
+      setResendSubmitting(false)
     }
   }
 
@@ -99,6 +161,11 @@ export function ProfilePage() {
               <div>
                 <p className="text-title-md text-surface-on">{user?.username}</p>
                 <p className="text-body-md text-outline">{user?.email}</p>
+                {user && (
+                  <span className={`inline-block mt-1 text-label-sm ${user.email_verified ? 'text-[#1B5E1B]' : 'text-[#7A6100]'}`}>
+                    {user.email_verified ? 'Email подтверждён' : 'Email не подтверждён'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -115,7 +182,11 @@ export function ProfilePage() {
                 className="md3-field"
               />
               {emailError && <p className="text-body-sm text-error" role="alert">{emailError}</p>}
-              {emailSuccess && <p className="text-body-sm text-[#1B5E1B]" role="status">Email обновлён</p>}
+              {emailSuccess && (
+                <p className="text-body-sm text-[#1B5E1B]" role="status">
+                  Email обновлён. Подтвердите новый адрес по ссылке из письма.
+                </p>
+              )}
               <button
                 type="submit"
                 disabled={emailSubmitting}
@@ -124,6 +195,30 @@ export function ProfilePage() {
                 {emailSubmitting ? 'Сохранение...' : 'Сохранить'}
               </button>
             </form>
+
+            {user && !user.email_verified && (
+              <div className="mt-4 pt-4 border-t border-outline-variant flex flex-col gap-2">
+                <p className="text-body-md text-outline m-0">
+                  Email не подтверждён. Пока адрес не подтверждён, восстановление пароля и уведомления не отправляются.
+                </p>
+                {resendSuccess && (
+                  <p className="text-body-sm text-[#1B5E1B]" role="status">Письмо отправлено повторно.</p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendSubmitting || resendSecondsLeft > 0}
+                  className="md3-btn-text self-start"
+                  aria-live="polite"
+                >
+                  {resendSubmitting
+                    ? 'Отправка...'
+                    : resendSecondsLeft > 0
+                      ? `Отправить повторно через ${resendSecondsLeft} с`
+                      : 'Отправить письмо повторно'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Password */}

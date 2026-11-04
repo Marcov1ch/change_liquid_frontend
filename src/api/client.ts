@@ -86,10 +86,32 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
     return res
 }
 
+export class ApiError extends Error {
+    status: number
+    retryAfter: number | null
+
+    constructor(message: string, status: number, retryAfter: number | null) {
+        super(message)
+        this.name = 'ApiError'
+        this.status = status
+        this.retryAfter = retryAfter
+    }
+}
+
+function parseRetryAfter(value: string | null): number | null {
+    if (!value) return null
+    const seconds = Number(value)
+    return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : null
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.detail || `Request failed with status ${res.status}`)
+        throw new ApiError(
+            body.detail || `Request failed with status ${res.status}`,
+            res.status,
+            parseRetryAfter(res.headers.get('Retry-After')),
+        )
     }
     return res.json()
 }
@@ -202,6 +224,18 @@ export const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
         }).then(res => handleResponse<User>(res)),
+
+    verifyEmail: (token: string) =>
+        fetch(`${AUTH_BASE}/verify-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+        }).then(res => handleResponse<{ detail: string }>(res)),
+
+    resendVerification: () =>
+        authFetch(`${AUTH_BASE}/resend-verification`, {
+            method: 'POST',
+        }).then(res => handleResponse<{ detail: string }>(res)),
 
     changePassword: (old_password: string, new_password: string) =>
         authFetch(`${AUTH_BASE}/change-password`, {
