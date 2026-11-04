@@ -16,6 +16,7 @@ interface Props {
     editing: boolean;
     editForm: ReplacementEditForm;
     today: string;
+    kmTraveled: number;
     onEditFormChange: (partial: Partial<ReplacementEditForm>) => void;
     onStartEdit: () => void;
     onCancelEdit: () => void;
@@ -49,6 +50,7 @@ export function ReplacementItem({
     editing,
     editForm,
     today,
+    kmTraveled,
     onEditFormChange,
     onStartEdit,
     onCancelEdit,
@@ -113,30 +115,6 @@ export function ReplacementItem({
                                     className="md3-field"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-label-md text-surface-on-variant mb-1">Стоимость шин (₽)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        placeholder="5000"
-                                        value={editForm.component_price}
-                                        onChange={(e) => onEditFormChange({ component_price: e.target.value })}
-                                        className="md3-field"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        placeholder="1500"
-                                        value={editForm.work_price}
-                                        onChange={(e) => onEditFormChange({ work_price: e.target.value })}
-                                        className="md3-field"
-                                    />
-                                </div>
-                            </div>
                         </>
                     ) : (
                         <>
@@ -163,6 +141,32 @@ export function ReplacementItem({
                             </div>
                         </>
                     )}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-label-md text-surface-on-variant mb-1">
+                                {isTire ? 'Стоимость шин (₽)' : 'Цена (₽)'}
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="5000"
+                                value={editForm.component_price}
+                                onChange={(e) => onEditFormChange({ component_price: e.target.value })}
+                                className="md3-field"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="1500"
+                                value={editForm.work_price}
+                                onChange={(e) => onEditFormChange({ work_price: e.target.value })}
+                                className="md3-field"
+                            />
+                        </div>
+                    </div>
                     <div className="flex gap-2">
                         <button onClick={onSaveEdit} className="md3-btn-primary !py-2 !px-4 !rounded-md3-sm text-label-sm flex-1">Сохранить</button>
                         <button onClick={onCancelEdit} className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm">Отмена</button>
@@ -181,9 +185,7 @@ export function ReplacementItem({
                             {isTire ? (
                                 <>
                                     <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
-                                    {r.km_traveled != null && (
-                                        <span>🛣 Пройдено: {r.km_traveled.toLocaleString()} км</span>
-                                    )}
+                                    <span>🛣 Пройдено: {kmTraveled.toLocaleString()} км</span>
                                     {r.component_price != null && r.component_price > 0 && (
                                         <span>🧾 Шины: {r.component_price.toLocaleString()} ₽</span>
                                     )}
@@ -200,6 +202,13 @@ export function ReplacementItem({
                             ) : (
                                 <>
                                     <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
+                                    <span>🛣 Пройдено: {kmTraveled.toLocaleString()} км</span>
+                                    {r.component_price != null && r.component_price > 0 && (
+                                        <span>🧾 Цена: {r.component_price.toLocaleString()} ₽</span>
+                                    )}
+                                    {r.work_price != null && r.work_price > 0 && (
+                                        <span>🔧 Работы: {r.work_price.toLocaleString()} ₽</span>
+                                    )}
                                     {r.next_replacement_km != null && (
                                         <span>⏱ Следующая: {r.next_replacement_km.toLocaleString()} км</span>
                                     )}
