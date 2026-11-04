@@ -192,7 +192,7 @@ export function ReplacementItem({
                                     {r.work_price != null && r.work_price > 0 && (
                                         <span>🔧 Работы: {r.work_price.toLocaleString()} ₽</span>
                                     )}
-                                    {r.next_change_date && <span>⏱ До: {r.next_change_date}</span>}
+                                    {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
                                     {r.days_remaining != null && (
                                         <span className={r.days_remaining <= 5 ? 'text-error font-semibold' : ''}>
                                             ⏳ {r.days_remaining} дн.

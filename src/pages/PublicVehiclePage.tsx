@@ -182,7 +182,7 @@ export function PublicVehiclePage() {
                                                                 <span>🧾 {formatMoney(replacement.component_price)}</span>
                                                                 <span>🔧 {formatMoney(replacement.work_price)}</span>
                                                                 {replacement.next_change_date && (
-                                                                    <span>⏱ До: {replacement.next_change_date}</span>
+                                                                    <span>📅 До: {replacement.next_change_date}</span>
                                                                 )}
                                                             </div>
                                                             {note && (
