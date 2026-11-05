@@ -4,6 +4,7 @@ import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { useComponentConfigs } from '../hooks/useEnums';
 import type { Replacement, Vehicle } from '../types';
+import { isDateBasedComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
 import { ProgressBar } from './ProgressBar';
 import { AddReplacementForm, type NewReplacementData } from './AddReplacementForm';
 import { ReplacementItem, type ReplacementEditForm } from './ReplacementItem';
@@ -71,6 +72,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
 
   const componentNames: Record<string, string> = {};
   configs.forEach(c => { componentNames[c.key] = c.name; });
+  Object.assign(componentNames, REPLACEMENT_TYPE_LABELS);
 
   const grouped = replacements.reduce<Record<string, Replacement[]>>((acc, replacement) => {
     const type = replacement.component_type;
@@ -151,16 +153,28 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   const saveEdit = async () => {
     if (!editingReplacement) return;
 
+    const isDateBased = isDateBasedComponent(editingReplacement.component_type);
+    const isInsurance = editingReplacement.component_type === 'insurance';
+
+    if (isDateBased && !editForm.next_change_date) {
+      toast.error('Укажите дату следующей замены');
+      return;
+    }
+
     const updateData: Record<string, string | number> = {};
     if (editForm.component_name !== editingReplacement.component_name) updateData.component_name = editForm.component_name;
-    if (parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
-    if (editingReplacement.component_type === 'tire_change') {
+    if (!isInsurance && parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) {
+      updateData.km_at_replacement = parseInt(editForm.km_at_replacement);
+    }
+    if (isDateBased) {
       if (editForm.next_change_date !== (editingReplacement.next_change_date || '')) updateData.next_change_date = editForm.next_change_date;
     }
     const componentPrice = editForm.component_price === '' ? 0 : parseInt(editForm.component_price);
     if (componentPrice !== (editingReplacement.component_price ?? 0)) updateData.component_price = componentPrice;
-    const workPrice = editForm.work_price === '' ? 0 : parseInt(editForm.work_price);
-    if (workPrice !== (editingReplacement.work_price ?? 0)) updateData.work_price = workPrice;
+    if (!isInsurance) {
+      const workPrice = editForm.work_price === '' ? 0 : parseInt(editForm.work_price);
+      if (workPrice !== (editingReplacement.work_price ?? 0)) updateData.work_price = workPrice;
+    }
     if (editForm.replacement_date !== editingReplacement.replacement_date) updateData.replacement_date = editForm.replacement_date;
 
     if (Object.keys(updateData).length === 0) { setEditingReplacement(null); return; }
@@ -190,7 +204,10 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       toast.error('Введите название компонента');
       return;
     }
-    if (newReplacement.component_type === 'tire_change' && !newReplacement.next_change_date) {
+    const isDateBased = isDateBasedComponent(newReplacement.component_type);
+    const isInsurance = newReplacement.component_type === 'insurance';
+
+    if (isDateBased && !newReplacement.next_change_date) {
       toast.error('Укажите дату следующей замены');
       return;
     }
@@ -199,15 +216,17 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         component_type: newReplacement.component_type,
         component_name: newReplacement.component_name,
         replacement_date: newReplacement.replacement_date,
+        component_price: newReplacement.component_price,
       };
-      if (newReplacement.component_type === 'tire_change') {
+      if (isInsurance) {
+        payload.km_at_replacement = 0;
+        payload.next_change_date = newReplacement.next_change_date;
+      } else if (isDateBased) {
         payload.km_at_replacement = newReplacement.km_at_replacement;
-        payload.component_price = newReplacement.component_price;
         payload.work_price = newReplacement.work_price;
         payload.next_change_date = newReplacement.next_change_date;
       } else {
         payload.km_at_replacement = newReplacement.km_at_replacement;
-        payload.component_price = newReplacement.component_price;
         payload.work_price = newReplacement.work_price;
       }
       await api.createReplacement(vehicleId, payload);
@@ -300,7 +319,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                       <polygon points="8 5 19 12 8 19 8 5" />
                     </svg>
                     <span>{sStyle.icon}</span>
-                    <span className="text-label-lg flex-1">{type === 'tire_change' ? 'Шины' : (componentNames[type] || type)}</span>
+                    <span className="text-label-lg flex-1">{componentNames[type] || type}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleToggleNotify(type); }}
                       className="text-label-lg hover:opacity-70 transition-opacity"
@@ -312,7 +331,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                   </button>
 
                   <div className="px-4 pb-2">
-                    <ProgressBar value={type === 'tire_change' ? getDateProgress(type) : getProgress(type)} status={status} />
+                    <ProgressBar value={isDateBasedComponent(type) ? getDateProgress(type) : getProgress(type)} status={status} />
                   </div>
 
                   {isOpen && (
@@ -323,7 +342,9 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                         const endKm = idx === 0 ? selectedVehicle.current_km : grouped[type][idx - 1].km_at_replacement;
                         const kmTraveled = type === 'tire_change' && r.km_traveled != null
                           ? r.km_traveled
-                          : Math.max(0, endKm - r.km_at_replacement);
+                          : type === 'insurance'
+                            ? 0
+                            : Math.max(0, endKm - r.km_at_replacement);
 
                         return (
                           <ReplacementItem

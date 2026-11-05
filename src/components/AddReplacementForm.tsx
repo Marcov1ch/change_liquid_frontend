@@ -22,6 +22,13 @@ interface Props {
 
 export function AddReplacementForm({ configs, today, selectedVehicle, value, onChange, onSubmit, onCancel }: Props) {
     const isTire = value.component_type === 'tire_change';
+    const isInsurance = value.component_type === 'insurance';
+
+    const namePlaceholder = isTire
+        ? 'например: Зимняя резина Michelin / № Договора хранения'
+        : isInsurance
+            ? 'например: ОСАГО / Ингосстрах, № полиса'
+            : `например: ${configs.find(c => c.key === value.component_type)?.example ?? 'Mobil 1 5W-30'}`;
 
     return (
         <div className="md3-elevated p-4">
@@ -39,6 +46,7 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                             <option key={cfg.key} value={cfg.key}>{cfg.name}</option>
                         ))}
                         <option value="tire_change">Шины</option>
+                        <option value="insurance">Страховка</option>
                     </select>
                 </div>
 
@@ -46,14 +54,49 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                     <label className="block text-label-md text-surface-on-variant mb-1">Название *</label>
                     <input
                         type="text"
-                        placeholder={isTire ? 'например: Зимняя резина Michelin / № Договора хранения' : `например: ${configs.find(c => c.key === value.component_type)?.example ?? 'Mobil 1 5W-30'}`}
+                        placeholder={namePlaceholder}
                         value={value.component_name}
                         onChange={(e) => onChange({ component_name: e.target.value })}
                         className="md3-field"
                     />
                 </div>
 
-                {isTire ? (
+                {isInsurance ? (
+                    <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата начала</label>
+                                <input
+                                    type="date"
+                                    max={today}
+                                    value={value.replacement_date}
+                                    onChange={(e) => onChange({ replacement_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата окончания *</label>
+                                <input
+                                    type="date"
+                                    value={value.next_change_date}
+                                    onChange={(e) => onChange({ next_change_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-label-md text-surface-on-variant mb-1">Стоимость страховки (₽)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="12000"
+                                value={value.component_price === 0 ? '' : value.component_price}
+                                onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                className="md3-field"
+                            />
+                        </div>
+                    </div>
+                ) : isTire ? (
                     <div className="flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -113,59 +156,60 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
-                            <input
-                                type="number"
-                                placeholder="5000"
-                                value={value.component_price === 0 ? '' : value.component_price}
-                                onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                className="md3-field"
-                            />
+                    <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
+                                <input
+                                    type="number"
+                                    placeholder="5000"
+                                    value={value.component_price === 0 ? '' : value.component_price}
+                                    onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
+                                <input
+                                    type="number"
+                                    placeholder="1500"
+                                    value={value.work_price === 0 ? '' : value.work_price}
+                                    onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    className="md3-field"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
-                            <input
-                                type="number"
-                                placeholder="1500"
-                                value={value.work_price === 0 ? '' : value.work_price}
-                                onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                className="md3-field"
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {!isTire && (
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
-                            <input
-                                type="number"
-                                placeholder={String(selectedVehicle?.current_km || 0)}
-                                value={value.km_at_replacement === 0 ? '' : value.km_at_replacement}
-                                onChange={(e) => onChange({ km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                className="md3-field"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
-                            <input
-                                type="date"
-                                max={today}
-                                value={value.replacement_date}
-                                onChange={(e) => onChange({ replacement_date: e.target.value })}
-                                className="md3-field"
-                            />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
+                                <input
+                                    type="number"
+                                    placeholder={String(selectedVehicle?.current_km || 0)}
+                                    value={value.km_at_replacement === 0 ? '' : value.km_at_replacement}
+                                    onChange={(e) => onChange({ km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
+                                <input
+                                    type="date"
+                                    max={today}
+                                    value={value.replacement_date}
+                                    onChange={(e) => onChange({ replacement_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
 
                 <div className="p-3 rounded-md3-sm bg-surface-variant/50 text-body-sm text-outline">
-                    {isTire
-                        ? '💡 Укажите пробег при установке шин — система будет считать, сколько км они проехали. Стоимость шин и работ можно заполнить по желанию. За 5 дней до даты следующей замены придёт уведомление.'
-                        : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
+                    {isInsurance
+                        ? '💡 Укажите дату окончания страховки — за 5 дней до неё придёт уведомление. Пробег и стоимость работ для страховки не используются.'
+                        : isTire
+                            ? '💡 Укажите пробег при установке шин — система будет считать, сколько км они проехали. Стоимость шин и работ можно заполнить по желанию. За 5 дней до даты следующей замены придёт уведомление.'
+                            : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
                 </div>
 
                 <div className="flex gap-3 pt-1">

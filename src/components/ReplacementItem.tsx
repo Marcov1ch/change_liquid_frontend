@@ -1,4 +1,5 @@
 import type { Replacement } from '../types';
+import { isDateBasedComponent } from '../utils/replacementTypes';
 
 export interface ReplacementEditForm {
     km_at_replacement: string;
@@ -28,9 +29,9 @@ function statusLabel(
     status: string | undefined,
     kmRemaining: number | undefined,
     daysRemaining: number | null | undefined,
-    isTire: boolean,
+    isDateBased: boolean,
 ): string | null {
-    if (isTire) {
+    if (isDateBased) {
         if (daysRemaining == null) return null;
         if (daysRemaining < 0) return `Просрочено на ${-daysRemaining} дн.`;
         if (daysRemaining <= 5) return `Скоро замена: осталось ${daysRemaining} дн.`;
@@ -58,10 +59,12 @@ export function ReplacementItem({
     onDelete,
 }: Props) {
     const isTire = r.component_type === 'tire_change';
-    const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isTire);
+    const isInsurance = r.component_type === 'insurance';
+    const isDateBased = isDateBasedComponent(r.component_type);
+    const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isDateBased);
 
     let dateReminder: string | null = null;
-    if (!isTire && r.next_change_date && r.days_remaining != null) {
+    if (!isDateBased && r.next_change_date && r.days_remaining != null) {
         if (r.days_remaining < 0) {
             dateReminder = `⏳ Просрочено по дате на ${-r.days_remaining} дн.`;
         } else if (r.days_remaining <= 5) {
@@ -83,7 +86,29 @@ export function ReplacementItem({
                             className="md3-field"
                         />
                     </div>
-                    {isTire ? (
+                    {isInsurance ? (
+                        <>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата начала</label>
+                                <input
+                                    type="date"
+                                    max={today}
+                                    value={editForm.replacement_date}
+                                    onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Дата окончания</label>
+                                <input
+                                    type="date"
+                                    value={editForm.next_change_date}
+                                    onChange={(e) => onEditFormChange({ next_change_date: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                        </>
+                    ) : isTire ? (
                         <>
                             <div>
                                 <label className="block text-label-md text-surface-on-variant mb-1">Пробег при установке (км)</label>
@@ -141,32 +166,46 @@ export function ReplacementItem({
                             </div>
                         </>
                     )}
-                    <div className="grid grid-cols-2 gap-3">
+                    {isInsurance ? (
                         <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">
-                                {isTire ? 'Стоимость шин (₽)' : 'Цена (₽)'}
-                            </label>
+                            <label className="block text-label-md text-surface-on-variant mb-1">Стоимость страховки (₽)</label>
                             <input
                                 type="number"
                                 min="0"
-                                placeholder="5000"
+                                placeholder="12000"
                                 value={editForm.component_price}
                                 onChange={(e) => onEditFormChange({ component_price: e.target.value })}
                                 className="md3-field"
                             />
                         </div>
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder="1500"
-                                value={editForm.work_price}
-                                onChange={(e) => onEditFormChange({ work_price: e.target.value })}
-                                className="md3-field"
-                            />
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">
+                                    {isTire ? 'Стоимость шин (₽)' : 'Цена (₽)'}
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="5000"
+                                    value={editForm.component_price}
+                                    onChange={(e) => onEditFormChange({ component_price: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="1500"
+                                    value={editForm.work_price}
+                                    onChange={(e) => onEditFormChange({ work_price: e.target.value })}
+                                    className="md3-field"
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
                     <div className="flex gap-2">
                         <button onClick={onSaveEdit} className="md3-btn-primary !py-2 !px-4 !rounded-md3-sm text-label-sm flex-1">Сохранить</button>
                         <button onClick={onCancelEdit} className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm">Отмена</button>
@@ -182,7 +221,19 @@ export function ReplacementItem({
                     <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
                             <span>📅 {r.replacement_date}</span>
-                            {isTire ? (
+                            {isInsurance ? (
+                                <>
+                                    {r.component_price != null && r.component_price > 0 && (
+                                        <span>🧾 Страховка: {r.component_price.toLocaleString()} ₽</span>
+                                    )}
+                                    {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
+                                    {r.days_remaining != null && (
+                                        <span className={r.days_remaining <= 5 ? 'text-error font-semibold' : ''}>
+                                            ⏳ {r.days_remaining} дн.
+                                        </span>
+                                    )}
+                                </>
+                            ) : isTire ? (
                                 <>
                                     <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
                                     <span>🛣 Пройдено: {kmTraveled.toLocaleString()} км</span>
