@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { PublicReplacement } from '../types';
+import { isDateBasedComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
 
 const statusStyles: Record<string, { bg: string; text: string; border: string; icon: string; label: string }> = {
     good: { bg: 'bg-[#E6F7E6]', text: 'text-[#1B5E1B]', border: 'border-l-[#28A745]', icon: '🟢', label: 'В порядке' },
@@ -18,7 +19,7 @@ function formatMoney(value: number | null): string {
 }
 
 function replacementNote(replacement: PublicReplacement): string | null {
-    if (replacement.component_type === 'tire_change') {
+    if (isDateBasedComponent(replacement.component_type)) {
         if (replacement.days_remaining == null) return null;
         if (replacement.days_remaining < 0) return `Просрочено на ${-replacement.days_remaining} дн.`;
         if (replacement.days_remaining <= 5) return `Замена через ${replacement.days_remaining} дн.`;
@@ -50,7 +51,7 @@ export function PublicVehiclePage() {
     const componentNames = useMemo(() => {
         const names: Record<string, string> = {};
         configsData?.configs.forEach(config => { names[config.key] = config.name; });
-        names.tire_change = 'Шины';
+        Object.assign(names, REPLACEMENT_TYPE_LABELS);
         return names;
     }, [configsData]);
 
@@ -175,14 +176,25 @@ export function PublicVehiclePage() {
                                                             </div>
                                                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
                                                                 <span>📅 {replacement.replacement_date}</span>
-                                                                <span>📍 {replacement.km_at_replacement.toLocaleString()} км</span>
-                                                                {replacement.component_type === 'tire_change' && replacement.km_traveled != null && (
-                                                                    <span>🛣 Пройдено: {replacement.km_traveled.toLocaleString()} км</span>
-                                                                )}
-                                                                <span>🧾 {formatMoney(replacement.component_price)}</span>
-                                                                <span>🔧 {formatMoney(replacement.work_price)}</span>
-                                                                {replacement.next_change_date && (
-                                                                    <span>📅 До: {replacement.next_change_date}</span>
+                                                                {replacement.component_type === 'insurance' ? (
+                                                                    <>
+                                                                        <span>🧾 Страховка: {formatMoney(replacement.component_price)}</span>
+                                                                        {replacement.next_change_date && (
+                                                                            <span>📅 До: {replacement.next_change_date}</span>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <span>📍 {replacement.km_at_replacement.toLocaleString()} км</span>
+                                                                        {replacement.component_type === 'tire_change' && replacement.km_traveled != null && (
+                                                                            <span>🛣 Пройдено: {replacement.km_traveled.toLocaleString()} км</span>
+                                                                        )}
+                                                                        <span>🧾 {formatMoney(replacement.component_price)}</span>
+                                                                        <span>🔧 {formatMoney(replacement.work_price)}</span>
+                                                                        {replacement.next_change_date && (
+                                                                            <span>📅 До: {replacement.next_change_date}</span>
+                                                                        )}
+                                                                    </>
                                                                 )}
                                                             </div>
                                                             {note && (

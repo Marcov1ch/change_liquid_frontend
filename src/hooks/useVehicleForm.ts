@@ -57,6 +57,7 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
             notifyMap[c.key] = true;
         });
         notifyMap['tire_change'] = true;
+        notifyMap['insurance'] = true;
         setIntervals(prev => ({ ...cfgMap, ...prev }));
         setNotifyFlags(prev => ({ ...notifyMap, ...prev }));
         setIntervalMonths(prev => ({ ...monthMap, ...prev }));
