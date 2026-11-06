@@ -58,6 +58,7 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         });
         notifyMap['tire_change'] = true;
         notifyMap['insurance'] = true;
+        notifyMap['parking_monthly'] = true;
         setIntervals(prev => ({ ...cfgMap, ...prev }));
         setNotifyFlags(prev => ({ ...notifyMap, ...prev }));
         setIntervalMonths(prev => ({ ...monthMap, ...prev }));
