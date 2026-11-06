@@ -1,5 +1,5 @@
 import type { Replacement } from '../types';
-import { isDateBasedComponent } from '../utils/replacementTypes';
+import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent } from '../utils/replacementTypes';
 
 export interface ReplacementEditForm {
     km_at_replacement: string;
@@ -30,11 +30,12 @@ function statusLabel(
     kmRemaining: number | undefined,
     daysRemaining: number | null | undefined,
     isDateBased: boolean,
+    warningDays: number,
 ): string | null {
     if (isDateBased) {
         if (daysRemaining == null) return null;
         if (daysRemaining < 0) return `Просрочено на ${-daysRemaining} дн.`;
-        if (daysRemaining <= 5) return `Скоро замена: осталось ${daysRemaining} дн.`;
+        if (daysRemaining <= warningDays) return `Скоро замена: осталось ${daysRemaining} дн.`;
         return null;
     }
     if (status === 'replaced') return 'Заменено';
@@ -59,15 +60,17 @@ export function ReplacementItem({
     onDelete,
 }: Props) {
     const isTire = r.component_type === 'tire_change';
-    const isInsurance = r.component_type === 'insurance';
+    const isDateOnly = isDateOnlyComponent(r.component_type);
+    const isParking = r.component_type === 'parking_monthly';
     const isDateBased = isDateBasedComponent(r.component_type);
-    const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isDateBased);
+    const warningDays = getDateWarningDays(r.component_type);
+    const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isDateBased, warningDays);
 
     let dateReminder: string | null = null;
     if (!isDateBased && r.next_change_date && r.days_remaining != null) {
         if (r.days_remaining < 0) {
             dateReminder = `⏳ Просрочено по дате на ${-r.days_remaining} дн.`;
-        } else if (r.days_remaining <= 5) {
+        } else if (r.days_remaining <= warningDays) {
             dateReminder = `⏳ Замена по дате через ${r.days_remaining} дн.`;
         }
     }
@@ -86,7 +89,7 @@ export function ReplacementItem({
                             className="md3-field"
                         />
                     </div>
-                    {isInsurance ? (
+                    {isDateOnly ? (
                         <>
                             <div>
                                 <label className="block text-label-md text-surface-on-variant mb-1">Дата начала</label>
@@ -166,13 +169,15 @@ export function ReplacementItem({
                             </div>
                         </>
                     )}
-                    {isInsurance ? (
+                    {isDateOnly ? (
                         <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Стоимость страховки (₽)</label>
+                            <label className="block text-label-md text-surface-on-variant mb-1">
+                                {isParking ? 'Стоимость аренды (₽)' : 'Стоимость страховки (₽)'}
+                            </label>
                             <input
                                 type="number"
                                 min="0"
-                                placeholder="12000"
+                                placeholder={isParking ? '8000' : '12000'}
                                 value={editForm.component_price}
                                 onChange={(e) => onEditFormChange({ component_price: e.target.value })}
                                 className="md3-field"
@@ -221,14 +226,14 @@ export function ReplacementItem({
                     <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
                             <span>📅 {r.replacement_date}</span>
-                            {isInsurance ? (
+                            {isDateOnly ? (
                                 <>
                                     {r.component_price != null && r.component_price > 0 && (
-                                        <span>🧾 Страховка: {r.component_price.toLocaleString()} ₽</span>
+                                        <span>🧾 {isParking ? 'Аренда' : 'Страховка'}: {r.component_price.toLocaleString()} ₽</span>
                                     )}
                                     {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
                                     {r.days_remaining != null && (
-                                        <span className={r.days_remaining <= 5 ? 'text-error font-semibold' : ''}>
+                                        <span className={r.days_remaining <= warningDays ? 'text-error font-semibold' : ''}>
                                             ⏳ {r.days_remaining} дн.
                                         </span>
                                     )}
@@ -245,7 +250,7 @@ export function ReplacementItem({
                                     )}
                                     {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
                                     {r.days_remaining != null && (
-                                        <span className={r.days_remaining <= 5 ? 'text-error font-semibold' : ''}>
+                                        <span className={r.days_remaining <= warningDays ? 'text-error font-semibold' : ''}>
                                             ⏳ {r.days_remaining} дн.
                                         </span>
                                     )}

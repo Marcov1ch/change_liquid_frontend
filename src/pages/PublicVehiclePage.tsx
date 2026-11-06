@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { PublicReplacement } from '../types';
-import { isDateBasedComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
+import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
 
 const statusStyles: Record<string, { bg: string; text: string; border: string; icon: string; label: string }> = {
     good: { bg: 'bg-[#E6F7E6]', text: 'text-[#1B5E1B]', border: 'border-l-[#28A745]', icon: '🟢', label: 'В порядке' },
@@ -22,7 +22,11 @@ function replacementNote(replacement: PublicReplacement): string | null {
     if (isDateBasedComponent(replacement.component_type)) {
         if (replacement.days_remaining == null) return null;
         if (replacement.days_remaining < 0) return `Просрочено на ${-replacement.days_remaining} дн.`;
-        if (replacement.days_remaining <= 5) return `Замена через ${replacement.days_remaining} дн.`;
+        const warningDays = getDateWarningDays(replacement.component_type);
+        if (replacement.days_remaining <= warningDays) {
+            const action = isDateOnlyComponent(replacement.component_type) ? 'Окончание срока' : 'Замена';
+            return `${action} через ${replacement.days_remaining} дн.`;
+        }
         return null;
     }
     if (replacement.status === 'replaced' || replacement.km_remaining == null) return null;
@@ -158,6 +162,8 @@ export function PublicVehiclePage() {
                                                 {items.map((replacement, index) => {
                                                     const style = statusStyles[replacement.status ?? 'unknown'] ?? statusStyles.unknown;
                                                     const note = replacementNote(replacement);
+                                                    const isDateOnly = isDateOnlyComponent(replacement.component_type);
+                                                    const isParking = replacement.component_type === 'parking_monthly';
                                                     return (
                                                         <div
                                                             key={replacement.id}
@@ -176,9 +182,9 @@ export function PublicVehiclePage() {
                                                             </div>
                                                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
                                                                 <span>📅 {replacement.replacement_date}</span>
-                                                                {replacement.component_type === 'insurance' ? (
+                                                                {isDateOnly ? (
                                                                     <>
-                                                                        <span>🧾 Страховка: {formatMoney(replacement.component_price)}</span>
+                                                                        <span>🧾 {isParking ? 'Аренда' : 'Страховка'}: {formatMoney(replacement.component_price)}</span>
                                                                         {replacement.next_change_date && (
                                                                             <span>📅 До: {replacement.next_change_date}</span>
                                                                         )}

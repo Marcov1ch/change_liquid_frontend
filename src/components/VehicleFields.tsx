@@ -108,6 +108,15 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
                 />
                 <span className="text-body-md text-surface-on">Страховка</span>
             </label>
+            <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
+                <input
+                    type="checkbox"
+                    checked={notifyFlags['parking_monthly'] ?? true}
+                    onChange={(e) => handleNotifyChange('parking_monthly', e.target.checked)}
+                    className="w-5 h-5 rounded-md3-xs accent-primary"
+                />
+                <span className="text-body-md text-surface-on">Аренда машиноместа</span>
+            </label>
         </div>
     );
 

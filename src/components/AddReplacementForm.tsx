@@ -1,4 +1,5 @@
 import type { ComponentConfig, Vehicle } from '../types';
+import { isDateOnlyComponent } from '../utils/replacementTypes';
 
 export interface NewReplacementData {
     component_type: string;
@@ -22,13 +23,16 @@ interface Props {
 
 export function AddReplacementForm({ configs, today, selectedVehicle, value, onChange, onSubmit, onCancel }: Props) {
     const isTire = value.component_type === 'tire_change';
-    const isInsurance = value.component_type === 'insurance';
+    const isDateOnly = isDateOnlyComponent(value.component_type);
+    const isParking = value.component_type === 'parking_monthly';
 
     const namePlaceholder = isTire
         ? 'например: Зимняя резина Michelin / № Договора хранения'
-        : isInsurance
-            ? 'например: ОСАГО / Ингосстрах, № полиса'
-            : `например: ${configs.find(c => c.key === value.component_type)?.example ?? 'Mobil 1 5W-30'}`;
+        : isParking
+            ? 'например: Машиноместо № 12 / № договора'
+            : isDateOnly
+                ? 'например: ОСАГО / Ингосстрах, № полиса'
+                : `например: ${configs.find(c => c.key === value.component_type)?.example ?? 'Mobil 1 5W-30'}`;
 
     return (
         <div className="md3-elevated p-4">
@@ -47,6 +51,7 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                         ))}
                         <option value="tire_change">Шины</option>
                         <option value="insurance">Страховка</option>
+                        <option value="parking_monthly">Аренда машиноместа</option>
                     </select>
                 </div>
 
@@ -61,7 +66,7 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                     />
                 </div>
 
-                {isInsurance ? (
+                {isDateOnly ? (
                     <div className="flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -85,11 +90,13 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                             </div>
                         </div>
                         <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">Стоимость страховки (₽)</label>
+                            <label className="block text-label-md text-surface-on-variant mb-1">
+                                {isParking ? 'Стоимость аренды (₽)' : 'Стоимость страховки (₽)'}
+                            </label>
                             <input
                                 type="number"
                                 min="0"
-                                placeholder="12000"
+                                placeholder={isParking ? '8000' : '12000'}
                                 value={value.component_price === 0 ? '' : value.component_price}
                                 onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                                 className="md3-field"
@@ -205,11 +212,13 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                 )}
 
                 <div className="p-3 rounded-md3-sm bg-surface-variant/50 text-body-sm text-outline">
-                    {isInsurance
-                        ? '💡 Укажите дату окончания страховки — за 5 дней до неё придёт уведомление. Пробег и стоимость работ для страховки не используются.'
-                        : isTire
-                            ? '💡 Укажите пробег при установке шин — система будет считать, сколько км они проехали. Стоимость шин и работ можно заполнить по желанию. За 5 дней до даты следующей замены придёт уведомление.'
-                            : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
+                    {isParking
+                        ? '💡 Укажите дату начала и окончания аренды — за 1 день до окончания придёт уведомление.'
+                        : isDateOnly
+                            ? '💡 Укажите дату окончания страховки — за 5 дней до неё придёт уведомление. Пробег и стоимость работ для страховки не используются.'
+                            : isTire
+                                ? '💡 Укажите пробег при установке шин — система будет считать, сколько км они проехали. Стоимость шин и работ можно заполнить по желанию. За 5 дней до даты следующей замены придёт уведомление.'
+                                : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
                 </div>
 
                 <div className="flex gap-3 pt-1">
