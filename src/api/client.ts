@@ -104,11 +104,28 @@ function parseRetryAfter(value: string | null): number | null {
     return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : null
 }
 
+function extractErrorMessage(detail: unknown, status: number): string {
+    if (typeof detail === 'string' && detail) return detail
+    if (Array.isArray(detail)) {
+        const messages = detail
+            .map((item) => {
+                if (typeof item === 'string') return item
+                if (item && typeof item === 'object' && 'msg' in item) {
+                    return String((item as { msg: unknown }).msg)
+                }
+                return ''
+            })
+            .filter(Boolean)
+        if (messages.length) return messages.join('; ')
+    }
+    return `Request failed with status ${status}`
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new ApiError(
-            body.detail || `Request failed with status ${res.status}`,
+            extractErrorMessage(body.detail, res.status),
             res.status,
             parseRetryAfter(res.headers.get('Retry-After')),
         )

@@ -156,8 +156,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     const isDateBased = isDateBasedComponent(editingReplacement.component_type);
     const isDateOnly = isDateOnlyComponent(editingReplacement.component_type);
 
-    if (isDateOnly && !editForm.next_change_date) {
-      toast.error('Укажите дату окончания');
+    if (isDateBased && !editForm.next_change_date) {
+      toast.error(isDateOnly ? 'Укажите дату окончания' : 'Укажите дату следующей замены');
       return;
     }
 
@@ -207,8 +207,8 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     const isDateBased = isDateBasedComponent(newReplacement.component_type);
     const isDateOnly = isDateOnlyComponent(newReplacement.component_type);
 
-    if (isDateOnly && !newReplacement.next_change_date) {
-      toast.error('Укажите дату окончания');
+    if (isDateBased && !newReplacement.next_change_date) {
+      toast.error(isDateOnly ? 'Укажите дату окончания' : 'Укажите дату следующей замены');
       return;
     }
     try {
