@@ -160,6 +160,7 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
                     value={formData.plate_number}
                     onChange={handlePlateChange}
                     required
+                    maxLength={15}
                     placeholder="А123АА178 или 1234АВ7"
                     className={`md3-field ${plateError ? 'md3-field-error' : ''}`}
                 />
