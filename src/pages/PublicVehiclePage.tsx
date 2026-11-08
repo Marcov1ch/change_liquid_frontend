@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
+import { StatisticsPanel } from '../components/StatisticsPanel';
 import type { PublicReplacement } from '../types';
 import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
 import { calcTotalCost } from '../utils/publicTotals';
@@ -165,6 +166,15 @@ export function PublicVehiclePage() {
                                     <p className="text-title-md text-surface-on m-0">{formatMoney(totalCost)}</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="md3-card p-6">
+                            <StatisticsPanel
+                                replacements={vehicle.replacements}
+                                repairs={repairs}
+                                fuelRecords={fuelRecords}
+                                otherExpenses={otherExpenses}
+                            />
                         </div>
 
                         <div className="md3-card p-6">

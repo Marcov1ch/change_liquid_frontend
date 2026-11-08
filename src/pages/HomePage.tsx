@@ -8,6 +8,8 @@ import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
 import { FuelRecordsList } from '../components/FuelRecordsList';
 import { RepairList } from '../components/RepairList';
+import { StatisticsPanel } from '../components/StatisticsPanel';
+import { VehicleCardHeader } from '../components/VehicleCardHeader';
 import { OtherExpensesList } from '../components/OtherExpensesList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
@@ -22,7 +24,7 @@ export function HomePage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'replacements' | 'fuelRecords' | 'repairs' | 'otherExpenses'>('replacements');
+  const [activeTab, setActiveTab] = useState<'replacements' | 'fuelRecords' | 'repairs' | 'otherExpenses' | 'statistics'>('replacements');
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -338,6 +340,18 @@ export function HomePage() {
               >
                 Прочие траты ({otherExpenses.length})
               </button>
+              <button
+                onClick={() => setActiveTab('statistics')}
+                role="tab"
+                aria-selected={activeTab === 'statistics'}
+                className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                  activeTab === 'statistics'
+                    ? 'bg-surface shadow-md3-1 text-primary'
+                    : 'text-surface-on-variant hover:bg-surface-variant/50'
+                }`}
+              >
+                Статистика
+              </button>
             </div>
 
             {activeTab === 'replacements' && (
@@ -384,6 +398,25 @@ export function HomePage() {
                 onShare={() => setShareVehicle(selectedVehicle)}
                 onExpensesUpdate={invalidateOtherExpenses}
               />
+            )}
+
+            {activeTab === 'statistics' && (
+              <div className="md3-card overflow-hidden animate-fade-in">
+                <VehicleCardHeader
+                  vehicle={selectedVehicle}
+                  title={`Статистика: ${selectedVehicle.brand} ${selectedVehicle.model}`}
+                  onClose={handleCloseVehicle}
+                  onShare={() => setShareVehicle(selectedVehicle)}
+                />
+                <div className="p-4">
+                  <StatisticsPanel
+                    replacements={replacements}
+                    repairs={repairs}
+                    fuelRecords={fuelRecords}
+                    otherExpenses={otherExpenses}
+                  />
+                </div>
+              </div>
             )}
           </div>
         )}

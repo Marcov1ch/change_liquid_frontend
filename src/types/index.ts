@@ -128,6 +128,31 @@ export interface PublicVehicle {
     register_url: string;
 }
 
+export interface MonthlyStatistics {
+    month: number;
+    replacements: number;
+    repairs: number;
+    fuel: number;
+    other_expenses: number;
+    total: number;
+}
+
+export interface StatisticsTotals {
+    replacements: number;
+    repairs: number;
+    fuel: number;
+    other_expenses: number;
+    total: number;
+}
+
+export interface VehicleStatistics {
+    year: number;
+    available_years: number[];
+    months: MonthlyStatistics[];
+    totals: StatisticsTotals;
+    max_monthly_total: number;
+}
+
 export interface ComponentConfig {
     key: string;
     name: string;
