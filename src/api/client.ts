@@ -120,7 +120,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 import type {
     Vehicle, Replacement, VehicleFormData, ComponentConfig, User, RimSize, TireSize,
-    ShareLink, PublicVehicle,
+    ShareLink, PublicVehicle, OtherExpense, OtherExpensePayload,
 } from '../types';
 
 export const api = {
@@ -207,6 +207,26 @@ export const api = {
 
     deleteReplacement: (replacementId: number) =>
         authFetch(`${API_BASE}/replacements/${replacementId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
+
+    getOtherExpenses: (vehicleId: number) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/other-expenses`).then(res => handleResponse<OtherExpense[]>(res)),
+
+    createOtherExpense: (vehicleId: number, data: OtherExpensePayload) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/other-expenses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<OtherExpense>(res)),
+
+    updateOtherExpense: (expenseId: number, data: Partial<OtherExpensePayload>) =>
+        authFetch(`${API_BASE}/other-expenses/${expenseId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<OtherExpense>(res)),
+
+    deleteOtherExpense: (expenseId: number) =>
+        authFetch(`${API_BASE}/other-expenses/${expenseId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
 
     getBrands: () =>
         authFetch(`${API_BASE}/enums/brands`).then(res => handleResponse<{ brands: { value: string; label: string }[] }>(res)),

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
+import { OtherExpensesList } from '../components/OtherExpensesList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
 import { ShareVehicleDialog } from '../components/ShareVehicleDialog';
@@ -19,6 +20,7 @@ export function HomePage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'replacements' | 'otherExpenses'>('replacements');
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -37,6 +39,12 @@ export function HomePage() {
     enabled: !!selectedId,
   });
 
+  const { data: otherExpenses = [] } = useQuery({
+    queryKey: ['other-expenses', selectedId],
+    queryFn: () => api.getOtherExpenses(selectedId!),
+    enabled: !!selectedId,
+  });
+
   const selectedVehicle = vehicles.find(v => v.id === selectedId);
 
   const activeVehicles = vehicles.filter(v => v.is_active !== false);
@@ -45,6 +53,19 @@ export function HomePage() {
   const invalidateVehicles = () => queryClient.invalidateQueries({ queryKey: ['vehicles'] });
   const invalidateReplacements = () => {
     if (selectedId) queryClient.invalidateQueries({ queryKey: ['replacements', selectedId] });
+  };
+  const invalidateOtherExpenses = () => {
+    if (selectedId) queryClient.invalidateQueries({ queryKey: ['other-expenses', selectedId] });
+  };
+
+  const handleSelectVehicle = (id: number) => {
+    setSelectedId(id);
+    setActiveTab('replacements');
+  };
+
+  const handleCloseVehicle = () => {
+    setSelectedId(null);
+    setActiveTab('replacements');
   };
 
   const createVehicleMutation = useMutation({
@@ -93,7 +114,7 @@ export function HomePage() {
     try {
       await api.hardDeleteVehicle(id);
       invalidateVehicles();
-      if (selectedId === id) setSelectedId(null);
+      if (selectedId === id) handleCloseVehicle();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Не удалось удалить автомобиль');
     }
@@ -230,7 +251,7 @@ export function HomePage() {
         <VehicleList
           vehicles={showArchived ? archivedVehicles : activeVehicles}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={handleSelectVehicle}
           onEditVehicle={handleEditVehicle}
           onHardDeleteVehicle={handleHardDeleteVehicle}
           onRestoreVehicle={handleRestoreVehicle}
@@ -244,14 +265,52 @@ export function HomePage() {
 
         {selectedVehicle && (
           <div className="mt-6 animate-slide-up">
-            <ReplacementList
-              replacements={replacements}
-              vehicleId={selectedId}
-              selectedVehicle={selectedVehicle}
-              onClose={() => setSelectedId(null)}
-              onShare={() => selectedVehicle && setShareVehicle(selectedVehicle)}
-              onReplacementsUpdate={handleReplacementsUpdate}
-            />
+            <div className="flex gap-2 bg-surface-variant/50 p-1 rounded-md3-md mb-3" role="tablist">
+              <button
+                onClick={() => setActiveTab('replacements')}
+                role="tab"
+                aria-selected={activeTab === 'replacements'}
+                className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                  activeTab === 'replacements'
+                    ? 'bg-surface shadow-md3-1 text-primary'
+                    : 'text-surface-on-variant hover:bg-surface-variant/50'
+                }`}
+              >
+                Замены ({replacements.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('otherExpenses')}
+                role="tab"
+                aria-selected={activeTab === 'otherExpenses'}
+                className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                  activeTab === 'otherExpenses'
+                    ? 'bg-surface shadow-md3-1 text-primary'
+                    : 'text-surface-on-variant hover:bg-surface-variant/50'
+                }`}
+              >
+                Прочие траты ({otherExpenses.length})
+              </button>
+            </div>
+
+            {activeTab === 'replacements' ? (
+              <ReplacementList
+                replacements={replacements}
+                vehicleId={selectedId}
+                selectedVehicle={selectedVehicle}
+                onClose={handleCloseVehicle}
+                onShare={() => setShareVehicle(selectedVehicle)}
+                onReplacementsUpdate={handleReplacementsUpdate}
+              />
+            ) : (
+              <OtherExpensesList
+                expenses={otherExpenses}
+                vehicleId={selectedId}
+                selectedVehicle={selectedVehicle}
+                onClose={handleCloseVehicle}
+                onShare={() => setShareVehicle(selectedVehicle)}
+                onExpensesUpdate={invalidateOtherExpenses}
+              />
+            )}
           </div>
         )}
 
@@ -270,7 +329,7 @@ export function HomePage() {
             try {
               await api.deleteVehicle(id);
               invalidateVehicles();
-              if (selectedId === id) setSelectedId(null);
+              if (selectedId === id) handleCloseVehicle();
             } catch (error) {
               toast.error(error instanceof Error ? error.message : 'Не удалось удалить автомобиль');
             }
