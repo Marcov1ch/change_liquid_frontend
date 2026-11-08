@@ -82,8 +82,8 @@ export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: 
           <label className="block text-label-md text-surface-on-variant mb-1">Литры *</label>
           <input
             type="number"
-            min="0.001"
-            step="0.01"
+            min="0"
+            step="any"
             placeholder="35.5"
             value={liters}
             onChange={(e) => setLiters(e.target.value)}
