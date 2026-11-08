@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { PublicReplacement } from '../types';
 import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
+import { calcTotalCost } from '../utils/publicTotals';
 
 const statusStyles: Record<string, { bg: string; text: string; border: string; icon: string; label: string }> = {
     good: { bg: 'bg-[#E6F7E6]', text: 'text-[#1B5E1B]', border: 'border-l-[#28A745]', icon: '🟢', label: 'В порядке' },
@@ -74,11 +75,10 @@ export function PublicVehiclePage() {
         return result;
     }, [vehicle]);
 
+    const otherExpenses = vehicle?.other_expenses ?? [];
+
     const totalCost = useMemo(() => {
-        return vehicle?.replacements.reduce(
-            (sum, replacement) => sum + (replacement.component_price ?? 0) + (replacement.work_price ?? 0),
-            0,
-        ) ?? 0;
+        return vehicle ? calcTotalCost(vehicle.replacements, vehicle.other_expenses ?? []) : 0;
     }, [vehicle]);
 
     const vehicleStyle = statusStyles[vehicle?.vehicle_status ?? 'unknown'] ?? statusStyles.unknown;
@@ -130,7 +130,7 @@ export function PublicVehiclePage() {
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
                                 <div className="bg-surface-variant/40 rounded-md3-sm p-3">
                                     <p className="text-body-sm text-outline m-0">Пробег</p>
                                     <p className="text-title-md text-surface-on m-0">{vehicle.current_km.toLocaleString()} км</p>
@@ -139,8 +139,12 @@ export function PublicVehiclePage() {
                                     <p className="text-body-sm text-outline m-0">Замен</p>
                                     <p className="text-title-md text-surface-on m-0">{vehicle.replacements.length}</p>
                                 </div>
-                                <div className="bg-surface-variant/40 rounded-md3-sm p-3 col-span-2 sm:col-span-1">
-                                    <p className="text-body-sm text-outline m-0">Стоимость работ и деталей</p>
+                                <div className="bg-surface-variant/40 rounded-md3-sm p-3">
+                                    <p className="text-body-sm text-outline m-0">Прочих трат</p>
+                                    <p className="text-title-md text-surface-on m-0">{otherExpenses.length}</p>
+                                </div>
+                                <div className="bg-surface-variant/40 rounded-md3-sm p-3">
+                                    <p className="text-body-sm text-outline m-0">Общие расходы</p>
                                     <p className="text-title-md text-surface-on m-0">{formatMoney(totalCost)}</p>
                                 </div>
                             </div>
@@ -210,6 +214,31 @@ export function PublicVehiclePage() {
                                                     );
                                                 })}
                                             </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="md3-card p-6">
+                            <h2 className="text-title-md text-surface-on mb-4">Прочие траты</h2>
+
+                            {otherExpenses.length === 0 ? (
+                                <p className="text-body-md text-outline">Прочих трат пока нет.</p>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {otherExpenses.map((expense) => (
+                                        <div
+                                            key={expense.id}
+                                            className="flex items-center justify-between gap-3 p-3 rounded-md3-sm bg-surface border border-outline-variant"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-label-lg text-surface-on m-0 truncate">{expense.name}</p>
+                                                <p className="text-body-sm text-outline m-0">📅 {expense.expense_date}</p>
+                                            </div>
+                                            <span className="text-title-sm text-surface-on shrink-0">
+                                                {formatMoney(expense.amount)}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>

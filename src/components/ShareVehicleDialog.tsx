@@ -85,7 +85,7 @@ export function ShareVehicleDialog({ vehicle, onClose }: Props) {
       ) : (
         <div className="flex flex-col gap-4">
           <p className="text-body-md text-outline m-0">
-            Покажите QR-код или отправьте ссылку - так вы поделитесь историей обслуживания автомобиля{' '}
+            Покажите QR-код или отправьте ссылку - так вы поделитесь историей обслуживания и трат автомобиля{' '}
             <span className="text-surface-on font-semibold">
               {vehicle.brand} {vehicle.model}
             </span>.
@@ -113,7 +113,7 @@ export function ShareVehicleDialog({ vehicle, onClose }: Props) {
               </div>
 
               <p className="text-body-sm text-outline m-0">
-                Любой, у кого есть ссылка, увидит данные автомобиля и историю замен.
+                Любой, у кого есть ссылка, увидит данные автомобиля, историю замен и прочие траты.
                 При обновлении ссылки старый QR-код перестаёт работать.
               </p>
 

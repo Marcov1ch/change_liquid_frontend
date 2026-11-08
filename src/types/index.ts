@@ -47,6 +47,20 @@ export interface Replacement {
     status?: string;
 }
 
+export interface OtherExpense {
+    id: number;
+    vehicle_id: number;
+    name: string;
+    expense_date: string;
+    amount: number;
+}
+
+export interface OtherExpensePayload {
+    name: string;
+    expense_date: string;
+    amount: number;
+}
+
 export interface ShareLink {
     enabled: boolean;
     token: string | null;
@@ -56,6 +70,8 @@ export interface ShareLink {
 
 export type PublicReplacement = Omit<Replacement, 'vehicle_id'>;
 
+export type PublicOtherExpense = Omit<OtherExpense, 'vehicle_id'>;
+
 export interface PublicVehicle {
     brand: string;
     model: string;
@@ -64,6 +80,7 @@ export interface PublicVehicle {
     current_km: number;
     vehicle_status: string;
     replacements: PublicReplacement[];
+    other_expenses: PublicOtherExpense[];
     register_url: string;
 }
 
