@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { api } from '../api/client'
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -23,16 +24,14 @@ export function ResetPasswordPage() {
       setError('Пароль должен быть не менее 6 символов')
       return
     }
+    if (!token) {
+      setError('Отсутствует токен восстановления')
+      return
+    }
 
     setSubmitting(true)
     try {
-      const res = await fetch('/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, new_password: password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.detail || 'Ошибка')
+      await api.resetPassword(token, password)
       setDone(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка')

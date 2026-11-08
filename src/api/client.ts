@@ -1,3 +1,5 @@
+import { extractErrorMessage } from '../utils/apiError'
+
 const API_BASE = '/api/v1'
 const AUTH_BASE = '/auth'
 
@@ -102,23 +104,6 @@ function parseRetryAfter(value: string | null): number | null {
     if (!value) return null
     const seconds = Number(value)
     return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : null
-}
-
-function extractErrorMessage(detail: unknown, status: number): string {
-    if (typeof detail === 'string' && detail) return detail
-    if (Array.isArray(detail)) {
-        const messages = detail
-            .map((item) => {
-                if (typeof item === 'string') return item
-                if (item && typeof item === 'object' && 'msg' in item) {
-                    return String((item as { msg: unknown }).msg)
-                }
-                return ''
-            })
-            .filter(Boolean)
-        if (messages.length) return messages.join('; ')
-    }
-    return `Request failed with status ${status}`
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -270,6 +255,13 @@ export const api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email }),
+        }).then(res => handleResponse<{ detail: string }>(res)),
+
+    resetPassword: (token: string, newPassword: string) =>
+        fetch(`${AUTH_BASE}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, new_password: newPassword }),
         }).then(res => handleResponse<{ detail: string }>(res)),
 
     getShareLink: (vehicleId: number) =>
