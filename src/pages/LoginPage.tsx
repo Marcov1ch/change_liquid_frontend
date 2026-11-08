@@ -40,7 +40,7 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="username" className="block text-label-lg text-surface-on mb-1">Имя пользователя</label>
+              <label htmlFor="username" className="block text-label-lg text-surface-on mb-1">Имя пользователя или email</label>
               <input
                 id="username"
                 type="text"
@@ -48,6 +48,9 @@ export function LoginPage() {
                 onChange={e => setUsername(e.target.value)}
                 required
                 autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="username или email"
                 className="md3-field"
               />
             </div>
