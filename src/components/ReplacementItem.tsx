@@ -1,5 +1,7 @@
-import type { Replacement } from '../types';
+import type { Repair, Replacement } from '../types';
 import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent } from '../utils/replacementTypes';
+
+const REPAIR_PLACEHOLDER_NAME = 'ВНЕСИТЕ ИЗМЕНЕНИЕ';
 
 export interface ReplacementEditForm {
     km_at_replacement: string;
@@ -18,6 +20,7 @@ interface Props {
     editForm: ReplacementEditForm;
     today: string;
     kmTraveled: number;
+    blockedByRepair?: Repair | null;
     onEditFormChange: (partial: Partial<ReplacementEditForm>) => void;
     onStartEdit: () => void;
     onCancelEdit: () => void;
@@ -53,6 +56,7 @@ export function ReplacementItem({
     editForm,
     today,
     kmTraveled,
+    blockedByRepair,
     onEditFormChange,
     onStartEdit,
     onCancelEdit,
@@ -180,6 +184,7 @@ export function ReplacementItem({
                                 placeholder={isParking ? '8000' : '12000'}
                                 value={editForm.component_price}
                                 onChange={(e) => onEditFormChange({ component_price: e.target.value })}
+                                disabled={!!blockedByRepair}
                                 className="md3-field"
                             />
                         </div>
@@ -195,6 +200,7 @@ export function ReplacementItem({
                                     placeholder="5000"
                                     value={editForm.component_price}
                                     onChange={(e) => onEditFormChange({ component_price: e.target.value })}
+                                    disabled={!!blockedByRepair}
                                     className="md3-field"
                                 />
                             </div>
@@ -206,9 +212,16 @@ export function ReplacementItem({
                                     placeholder="1500"
                                     value={editForm.work_price}
                                     onChange={(e) => onEditFormChange({ work_price: e.target.value })}
+                                    disabled={!!blockedByRepair}
                                     className="md3-field"
                                 />
                             </div>
+                        </div>
+                    )}
+                    {blockedByRepair && (
+                        <div className="p-3 rounded-md3-sm bg-error-container text-error text-body-sm" role="alert">
+                            Компонент входит в ремонт от {blockedByRepair.repair_date}.
+                            Стоимость уже учтена в ремонте — поля цены недоступны.
                         </div>
                     )}
                     <div className="flex gap-2">
@@ -222,6 +235,11 @@ export function ReplacementItem({
                         {isFirst && <span className="text-label-md">{itemStyle.icon}</span>}
                         <span className="text-label-lg text-surface-on">{r.component_name}</span>
                         {isFirst && <span className="md3-badge bg-primary-container text-primary-on-container">последняя</span>}
+                        {r.source_repair_id && r.component_name === REPAIR_PLACEHOLDER_NAME && (
+                            <span className="md3-badge bg-surface-variant text-surface-on-variant">
+                                из ремонта
+                            </span>
+                        )}
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
