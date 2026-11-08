@@ -121,6 +121,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 import type {
     Vehicle, Replacement, VehicleFormData, ComponentConfig, User, RimSize, TireSize,
     ShareLink, PublicVehicle, OtherExpense, OtherExpensePayload, Repair, RepairPayload,
+    FuelRecord, FuelRecordPayload,
 } from '../types';
 
 export const api = {
@@ -227,6 +228,26 @@ export const api = {
 
     deleteOtherExpense: (expenseId: number) =>
         authFetch(`${API_BASE}/other-expenses/${expenseId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
+
+    getFuelRecords: (vehicleId: number) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/fuel-records`).then(res => handleResponse<FuelRecord[]>(res)),
+
+    createFuelRecord: (vehicleId: number, data: FuelRecordPayload) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/fuel-records`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<FuelRecord>(res)),
+
+    updateFuelRecord: (recordId: number, data: Partial<FuelRecordPayload>) =>
+        authFetch(`${API_BASE}/fuel-records/${recordId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<FuelRecord>(res)),
+
+    deleteFuelRecord: (recordId: number) =>
+        authFetch(`${API_BASE}/fuel-records/${recordId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
 
     getRepairs: (vehicleId: number) =>
         authFetch(`${API_BASE}/vehicles/${vehicleId}/repairs`).then(res => handleResponse<Repair[]>(res)),

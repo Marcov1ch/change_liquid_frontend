@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
+import { FuelRecordsList } from '../components/FuelRecordsList';
 import { RepairList } from '../components/RepairList';
 import { OtherExpensesList } from '../components/OtherExpensesList';
 import { VehicleForm } from '../components/VehicleForm';
@@ -21,7 +22,7 @@ export function HomePage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'replacements' | 'repairs' | 'otherExpenses'>('replacements');
+  const [activeTab, setActiveTab] = useState<'replacements' | 'fuelRecords' | 'repairs' | 'otherExpenses'>('replacements');
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -37,6 +38,12 @@ export function HomePage() {
   const { data: replacements = [] } = useQuery({
     queryKey: ['replacements', selectedId],
     queryFn: () => api.getReplacements(selectedId!),
+    enabled: !!selectedId,
+  });
+
+  const { data: fuelRecords = [] } = useQuery({
+    queryKey: ['fuel-records', selectedId],
+    queryFn: () => api.getFuelRecords(selectedId!),
     enabled: !!selectedId,
   });
 
@@ -66,6 +73,11 @@ export function HomePage() {
   };
   const handleRepairsUpdate = () => {
     if (selectedId) queryClient.invalidateQueries({ queryKey: ['repairs', selectedId] });
+    invalidateReplacements();
+    invalidateVehicles();
+  };
+  const handleFuelRecordsUpdate = () => {
+    if (selectedId) queryClient.invalidateQueries({ queryKey: ['fuel-records', selectedId] });
     invalidateReplacements();
     invalidateVehicles();
   };
@@ -277,7 +289,7 @@ export function HomePage() {
 
         {selectedVehicle && (
           <div className="mt-6 animate-slide-up">
-            <div className="flex gap-2 bg-surface-variant/50 p-1 rounded-md3-md mb-3" role="tablist">
+            <div className="flex flex-wrap gap-2 bg-surface-variant/50 p-1 rounded-md3-md mb-3" role="tablist">
               <button
                 onClick={() => setActiveTab('replacements')}
                 role="tab"
@@ -289,6 +301,18 @@ export function HomePage() {
                 }`}
               >
                 Замены ({replacements.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('fuelRecords')}
+                role="tab"
+                aria-selected={activeTab === 'fuelRecords'}
+                className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                  activeTab === 'fuelRecords'
+                    ? 'bg-surface shadow-md3-1 text-primary'
+                    : 'text-surface-on-variant hover:bg-surface-variant/50'
+                }`}
+              >
+                Заправки ({fuelRecords.length})
               </button>
               <button
                 onClick={() => setActiveTab('repairs')}
@@ -325,6 +349,17 @@ export function HomePage() {
                 onClose={handleCloseVehicle}
                 onShare={() => setShareVehicle(selectedVehicle)}
                 onReplacementsUpdate={handleReplacementsUpdate}
+              />
+            )}
+
+            {activeTab === 'fuelRecords' && (
+              <FuelRecordsList
+                records={fuelRecords}
+                vehicleId={selectedId}
+                selectedVehicle={selectedVehicle}
+                onClose={handleCloseVehicle}
+                onShare={() => setShareVehicle(selectedVehicle)}
+                onRecordsUpdate={handleFuelRecordsUpdate}
               />
             )}
 
