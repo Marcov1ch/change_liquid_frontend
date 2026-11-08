@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
-import { validatePlateNumber } from '../utils/plateValidation';
+import { MAX_PLATE_LENGTH, validatePlateNumber } from '../utils/plateValidation';
 import { useBrands, useComponentConfigs, useModels } from './useEnums';
 import type { Vehicle } from '../types';
 
@@ -65,7 +65,7 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
     }, [configsData]);
 
     const handlePlateChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
+        const value = e.target.value.toUpperCase().slice(0, MAX_PLATE_LENGTH);
         setFormData(prev => ({ ...prev, plate_number: value }));
         setPlateError(validatePlateNumber(value) || '');
     };
