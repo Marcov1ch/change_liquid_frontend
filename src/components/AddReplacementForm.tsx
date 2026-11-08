@@ -1,4 +1,4 @@
-import type { ComponentConfig, Vehicle } from '../types';
+import type { ComponentConfig, Repair, Vehicle } from '../types';
 import { isDateOnlyComponent } from '../utils/replacementTypes';
 
 export interface NewReplacementData {
@@ -16,12 +16,13 @@ interface Props {
     today: string;
     selectedVehicle: Vehicle | undefined;
     value: NewReplacementData;
+    blockedByRepair?: Repair | null;
     onChange: (partial: Partial<NewReplacementData>) => void;
     onSubmit: () => void;
     onCancel: () => void;
 }
 
-export function AddReplacementForm({ configs, today, selectedVehicle, value, onChange, onSubmit, onCancel }: Props) {
+export function AddReplacementForm({ configs, today, selectedVehicle, value, blockedByRepair, onChange, onSubmit, onCancel }: Props) {
     const isTire = value.component_type === 'tire_change';
     const isDateOnly = isDateOnlyComponent(value.component_type);
     const isParking = value.component_type === 'parking_monthly';
@@ -99,6 +100,7 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                                 placeholder={isParking ? '8000' : '12000'}
                                 value={value.component_price === 0 ? '' : value.component_price}
                                 onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                disabled={!!blockedByRepair}
                                 className="md3-field"
                             />
                         </div>
@@ -143,22 +145,24 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                                 <input
                                     type="number"
                                     min="0"
-                                    placeholder="5000"
-                                    value={value.component_price === 0 ? '' : value.component_price}
-                                    onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    className="md3-field"
-                                />
+                                placeholder="5000"
+                                value={value.component_price === 0 ? '' : value.component_price}
+                                onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                disabled={!!blockedByRepair}
+                                className="md3-field"
+                            />
                             </div>
                             <div>
                                 <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
                                 <input
                                     type="number"
                                     min="0"
-                                    placeholder="1500"
-                                    value={value.work_price === 0 ? '' : value.work_price}
-                                    onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    className="md3-field"
-                                />
+                                placeholder="1500"
+                                value={value.work_price === 0 ? '' : value.work_price}
+                                onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                disabled={!!blockedByRepair}
+                                className="md3-field"
+                            />
                             </div>
                         </div>
                     </div>
@@ -169,21 +173,23 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                                 <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
                                 <input
                                     type="number"
-                                    placeholder="5000"
-                                    value={value.component_price === 0 ? '' : value.component_price}
-                                    onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    className="md3-field"
-                                />
+                                placeholder="5000"
+                                value={value.component_price === 0 ? '' : value.component_price}
+                                onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                disabled={!!blockedByRepair}
+                                className="md3-field"
+                            />
                             </div>
                             <div>
                                 <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
                                 <input
                                     type="number"
-                                    placeholder="1500"
-                                    value={value.work_price === 0 ? '' : value.work_price}
-                                    onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    className="md3-field"
-                                />
+                                placeholder="1500"
+                                value={value.work_price === 0 ? '' : value.work_price}
+                                onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                                disabled={!!blockedByRepair}
+                                className="md3-field"
+                            />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -208,6 +214,13 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, onC
                                 />
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {blockedByRepair && (
+                    <div className="p-3 rounded-md3-sm bg-error-container text-error text-body-sm" role="alert">
+                        На {blockedByRepair.repair_date} этот компонент входит в ремонт.
+                        Стоимость уже учтена в ремонте, поэтому поля цены недоступны.
                     </div>
                 )}
 

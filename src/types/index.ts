@@ -45,6 +45,27 @@ export interface Replacement {
     next_change_date?: string | null;
     days_remaining?: number | null;
     status?: string;
+    source_repair_id?: number | null;
+}
+
+export interface Repair {
+    id: number;
+    vehicle_id: number;
+    repair_date: string;
+    km_at_repair: number;
+    description: string | null;
+    work_cost: number;
+    parts_cost: number;
+    component_types: string[];
+}
+
+export interface RepairPayload {
+    repair_date: string;
+    km_at_repair: number;
+    description: string | null;
+    work_cost: number;
+    parts_cost: number;
+    component_types: string[];
 }
 
 export interface OtherExpense {
@@ -72,6 +93,8 @@ export type PublicReplacement = Omit<Replacement, 'vehicle_id'>;
 
 export type PublicOtherExpense = Omit<OtherExpense, 'vehicle_id'>;
 
+export type PublicRepair = Omit<Repair, 'vehicle_id'>;
+
 export interface PublicVehicle {
     brand: string;
     model: string;
@@ -81,6 +104,7 @@ export interface PublicVehicle {
     vehicle_status: string;
     replacements: PublicReplacement[];
     other_expenses: PublicOtherExpense[];
+    repairs: PublicRepair[];
     register_url: string;
 }
 

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { VehicleList } from '../components/VehicleList';
 import { ReplacementList } from '../components/ReplacementList';
+import { RepairList } from '../components/RepairList';
 import { OtherExpensesList } from '../components/OtherExpensesList';
 import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
@@ -20,7 +21,7 @@ export function HomePage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'replacements' | 'otherExpenses'>('replacements');
+  const [activeTab, setActiveTab] = useState<'replacements' | 'repairs' | 'otherExpenses'>('replacements');
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -36,6 +37,12 @@ export function HomePage() {
   const { data: replacements = [] } = useQuery({
     queryKey: ['replacements', selectedId],
     queryFn: () => api.getReplacements(selectedId!),
+    enabled: !!selectedId,
+  });
+
+  const { data: repairs = [] } = useQuery({
+    queryKey: ['repairs', selectedId],
+    queryFn: () => api.getRepairs(selectedId!),
     enabled: !!selectedId,
   });
 
@@ -56,6 +63,11 @@ export function HomePage() {
   };
   const invalidateOtherExpenses = () => {
     if (selectedId) queryClient.invalidateQueries({ queryKey: ['other-expenses', selectedId] });
+  };
+  const handleRepairsUpdate = () => {
+    if (selectedId) queryClient.invalidateQueries({ queryKey: ['repairs', selectedId] });
+    invalidateReplacements();
+    invalidateVehicles();
   };
 
   const handleSelectVehicle = (id: number) => {
@@ -279,6 +291,18 @@ export function HomePage() {
                 Замены ({replacements.length})
               </button>
               <button
+                onClick={() => setActiveTab('repairs')}
+                role="tab"
+                aria-selected={activeTab === 'repairs'}
+                className={`px-4 py-2 rounded-md3-sm text-label-lg transition-all duration-200 ${
+                  activeTab === 'repairs'
+                    ? 'bg-surface shadow-md3-1 text-primary'
+                    : 'text-surface-on-variant hover:bg-surface-variant/50'
+                }`}
+              >
+                Ремонт или обслуживание ({repairs.length})
+              </button>
+              <button
                 onClick={() => setActiveTab('otherExpenses')}
                 role="tab"
                 aria-selected={activeTab === 'otherExpenses'}
@@ -292,16 +316,31 @@ export function HomePage() {
               </button>
             </div>
 
-            {activeTab === 'replacements' ? (
+            {activeTab === 'replacements' && (
               <ReplacementList
                 replacements={replacements}
+                repairs={repairs}
                 vehicleId={selectedId}
                 selectedVehicle={selectedVehicle}
                 onClose={handleCloseVehicle}
                 onShare={() => setShareVehicle(selectedVehicle)}
                 onReplacementsUpdate={handleReplacementsUpdate}
               />
-            ) : (
+            )}
+
+            {activeTab === 'repairs' && (
+              <RepairList
+                repairs={repairs}
+                replacements={replacements}
+                vehicleId={selectedId}
+                selectedVehicle={selectedVehicle}
+                onClose={handleCloseVehicle}
+                onShare={() => setShareVehicle(selectedVehicle)}
+                onRepairsUpdate={handleRepairsUpdate}
+              />
+            )}
+
+            {activeTab === 'otherExpenses' && (
               <OtherExpensesList
                 expenses={otherExpenses}
                 vehicleId={selectedId}

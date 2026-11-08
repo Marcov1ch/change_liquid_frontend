@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { useComponentConfigs } from '../hooks/useEnums';
-import type { Replacement, Vehicle } from '../types';
+import type { Repair, Replacement, Vehicle } from '../types';
 import { isDateBasedComponent, isDateOnlyComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
+import { findBlockingRepair } from '../utils/repairConflicts';
 import { ProgressBar } from './ProgressBar';
 import { AddReplacementForm, type NewReplacementData } from './AddReplacementForm';
 import { ReplacementItem, type ReplacementEditForm } from './ReplacementItem';
@@ -11,6 +12,7 @@ import { VehicleCardHeader } from './VehicleCardHeader';
 
 interface Props {
   replacements: Replacement[];
+  repairs: Repair[];
   vehicleId: number | null;
   selectedVehicle: Vehicle | undefined;
   onClose: () => void;
@@ -27,7 +29,7 @@ const statusStyles: Record<string, { bg: string; text: string; border: string; i
   replaced: { bg: 'bg-[#F5F5F5]', text: 'text-outline', border: 'border-l-outline-variant', icon: '📌' },
 };
 
-export function ReplacementList({ replacements, vehicleId, selectedVehicle, onClose, onShare, onReplacementsUpdate }: Props) {
+export function ReplacementList({ replacements, repairs, vehicleId, selectedVehicle, onClose, onShare, onReplacementsUpdate }: Props) {
   const { toast } = useToast();
   const { data: configsData } = useComponentConfigs();
   const configs = configsData?.configs ?? [];
@@ -53,6 +55,11 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
   });
 
   const today = new Date().toISOString().split('T')[0];
+  const addBlockingRepair = findBlockingRepair(
+    repairs,
+    newReplacement.replacement_date,
+    newReplacement.component_type,
+  );
 
   useEffect(() => {
     if (configsData?.configs.length) {
@@ -153,6 +160,12 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
       return;
     }
 
+    const blockingRepair = findBlockingRepair(
+      repairs,
+      editForm.replacement_date || editingReplacement.replacement_date,
+      editingReplacement.component_type,
+    );
+
     const updateData: Record<string, string | number> = {};
     if (editForm.component_name !== editingReplacement.component_name) updateData.component_name = editForm.component_name;
     if (!isDateOnly && parseInt(editForm.km_at_replacement) !== editingReplacement.km_at_replacement) {
@@ -161,10 +174,14 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
     if (isDateBased) {
       if (editForm.next_change_date !== (editingReplacement.next_change_date || '')) updateData.next_change_date = editForm.next_change_date;
     }
-    const componentPrice = editForm.component_price === '' ? 0 : parseInt(editForm.component_price);
+    const componentPrice = blockingRepair
+      ? 0
+      : (editForm.component_price === '' ? 0 : parseInt(editForm.component_price));
     if (componentPrice !== (editingReplacement.component_price ?? 0)) updateData.component_price = componentPrice;
     if (!isDateOnly) {
-      const workPrice = editForm.work_price === '' ? 0 : parseInt(editForm.work_price);
+      const workPrice = blockingRepair
+        ? 0
+        : (editForm.work_price === '' ? 0 : parseInt(editForm.work_price));
       if (workPrice !== (editingReplacement.work_price ?? 0)) updateData.work_price = workPrice;
     }
     if (editForm.replacement_date !== editingReplacement.replacement_date) updateData.replacement_date = editForm.replacement_date;
@@ -208,18 +225,18 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
         component_type: newReplacement.component_type,
         component_name: newReplacement.component_name,
         replacement_date: newReplacement.replacement_date,
-        component_price: newReplacement.component_price,
+        component_price: addBlockingRepair ? 0 : newReplacement.component_price,
       };
       if (isDateOnly) {
         payload.km_at_replacement = 0;
         payload.next_change_date = newReplacement.next_change_date;
       } else if (isDateBased) {
         payload.km_at_replacement = newReplacement.km_at_replacement;
-        payload.work_price = newReplacement.work_price;
+        payload.work_price = addBlockingRepair ? 0 : newReplacement.work_price;
         payload.next_change_date = newReplacement.next_change_date;
       } else {
         payload.km_at_replacement = newReplacement.km_at_replacement;
-        payload.work_price = newReplacement.work_price;
+        payload.work_price = addBlockingRepair ? 0 : newReplacement.work_price;
       }
       await api.createReplacement(vehicleId, payload);
       toast.success('Замена добавлена');
@@ -315,6 +332,11 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
                             editForm={editForm}
                             today={today}
                             kmTraveled={kmTraveled}
+                            blockedByRepair={findBlockingRepair(
+                              repairs,
+                              r.replacement_date,
+                              r.component_type,
+                            )}
                             onEditFormChange={(partial) => setEditForm(prev => ({ ...prev, ...partial }))}
                             onStartEdit={() => startEdit(r)}
                             onCancelEdit={cancelEdit}
@@ -348,6 +370,7 @@ export function ReplacementList({ replacements, vehicleId, selectedVehicle, onCl
               today={today}
               selectedVehicle={selectedVehicle}
               value={newReplacement}
+              blockedByRepair={addBlockingRepair}
               onChange={(partial) => setNewReplacement(prev => ({ ...prev, ...partial }))}
               onSubmit={handleAddReplacement}
               onCancel={() => setShowAddForm(false)}
