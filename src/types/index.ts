@@ -48,6 +48,23 @@ export interface Replacement {
     source_repair_id?: number | null;
 }
 
+export interface FuelRecord {
+    id: number;
+    vehicle_id: number;
+    fuel_date: string;
+    km_at_fuel: number;
+    liters: number;
+    total_cost: number;
+    consumption_l_per_100km: number | null;
+}
+
+export interface FuelRecordPayload {
+    fuel_date: string;
+    km_at_fuel: number;
+    liters: number;
+    total_cost: number;
+}
+
 export interface Repair {
     id: number;
     vehicle_id: number;
@@ -93,6 +110,8 @@ export type PublicReplacement = Omit<Replacement, 'vehicle_id'>;
 
 export type PublicOtherExpense = Omit<OtherExpense, 'vehicle_id'>;
 
+export type PublicFuelRecord = Omit<FuelRecord, 'vehicle_id'>;
+
 export type PublicRepair = Omit<Repair, 'vehicle_id'>;
 
 export interface PublicVehicle {
@@ -105,6 +124,7 @@ export interface PublicVehicle {
     replacements: PublicReplacement[];
     other_expenses: PublicOtherExpense[];
     repairs: PublicRepair[];
+    fuel_records: PublicFuelRecord[];
     register_url: string;
 }
 

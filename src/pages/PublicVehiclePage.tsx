@@ -77,12 +77,14 @@ export function PublicVehiclePage() {
 
     const otherExpenses = vehicle?.other_expenses ?? [];
     const repairs = vehicle?.repairs ?? [];
+    const fuelRecords = vehicle?.fuel_records ?? [];
 
     const totalCost = useMemo(() => {
         return vehicle
             ? calcTotalCost(
                 vehicle.replacements,
                 vehicle.repairs ?? [],
+                vehicle.fuel_records ?? [],
                 vehicle.other_expenses ?? [],
             )
             : 0;
@@ -137,7 +139,7 @@ export function PublicVehiclePage() {
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-5">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5">
                                 <div className="bg-surface-variant/40 rounded-md3-sm p-3">
                                     <p className="text-body-sm text-outline m-0">Пробег</p>
                                     <p className="text-title-md text-surface-on m-0">{vehicle.current_km.toLocaleString()} км</p>
@@ -145,6 +147,10 @@ export function PublicVehiclePage() {
                                 <div className="bg-surface-variant/40 rounded-md3-sm p-3">
                                     <p className="text-body-sm text-outline m-0">Замен</p>
                                     <p className="text-title-md text-surface-on m-0">{vehicle.replacements.length}</p>
+                                </div>
+                                <div className="bg-surface-variant/40 rounded-md3-sm p-3">
+                                    <p className="text-body-sm text-outline m-0">Заправок</p>
+                                    <p className="text-title-md text-surface-on m-0">{fuelRecords.length}</p>
                                 </div>
                                 <div className="bg-surface-variant/40 rounded-md3-sm p-3">
                                     <p className="text-body-sm text-outline m-0">Ремонтов</p>
@@ -225,6 +231,40 @@ export function PublicVehiclePage() {
                                                     );
                                                 })}
                                             </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="md3-card p-6">
+                            <h2 className="text-title-md text-surface-on mb-4">Заправки</h2>
+
+                            {fuelRecords.length === 0 ? (
+                                <p className="text-body-md text-outline">Заправок пока нет.</p>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {fuelRecords.map((record) => (
+                                        <div
+                                            key={record.id}
+                                            className="flex items-center justify-between gap-3 p-3 rounded-md3-sm bg-surface border border-outline-variant flex-wrap"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="text-label-lg text-surface-on m-0">
+                                                    📅 {record.fuel_date}
+                                                </p>
+                                                <p className="text-body-sm text-outline m-0">
+                                                    📍 {record.km_at_fuel.toLocaleString()} км · ⛽ {record.liters.toLocaleString(undefined, { maximumFractionDigits: 3 })} л
+                                                </p>
+                                                <p className="text-body-sm text-outline m-0">
+                                                    📊 Расход: {record.consumption_l_per_100km == null
+                                                        ? '—'
+                                                        : `${record.consumption_l_per_100km.toLocaleString(undefined, { maximumFractionDigits: 2 })} л/100 км`}
+                                                </p>
+                                            </div>
+                                            <span className="text-title-sm text-surface-on shrink-0">
+                                                {formatMoney(record.total_cost)}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>

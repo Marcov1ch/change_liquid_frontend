@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { PublicOtherExpense, PublicRepair, PublicReplacement } from '../../types';
-import { calcOtherExpensesCost, calcRepairsCost, calcReplacementsCost, calcTotalCost } from '../publicTotals';
+import type { PublicFuelRecord, PublicOtherExpense, PublicRepair, PublicReplacement } from '../../types';
+import {
+  calcFuelCost,
+  calcOtherExpensesCost,
+  calcRepairsCost,
+  calcReplacementsCost,
+  calcTotalCost,
+} from '../publicTotals';
 
 function replacement(componentPrice: number | null, workPrice: number | null): PublicReplacement {
   return {
@@ -21,6 +27,17 @@ function expense(amount: number): PublicOtherExpense {
     name: 'Штраф',
     expense_date: '2026-01-10',
     amount,
+  };
+}
+
+function fuel(totalCost: number): PublicFuelRecord {
+  return {
+    id: 1,
+    fuel_date: '2026-01-06',
+    km_at_fuel: 10500,
+    liters: 35.5,
+    total_cost: totalCost,
+    consumption_l_per_100km: 7.1,
   };
 }
 
@@ -45,17 +62,22 @@ describe('publicTotals', () => {
     expect(calcRepairsCost([repair(2000, 3000), repair(0, 0), repair(200, 1000)])).toBe(6200);
   });
 
+  it('sums fuel costs', () => {
+    expect(calcFuelCost([fuel(2500), fuel(1800)])).toBe(4300);
+  });
+
   it('sums other expenses', () => {
     expect(calcOtherExpensesCost([expense(500), expense(1200)])).toBe(1700);
   });
 
-  it('does not double count replacements, repairs and expenses in the total', () => {
+  it('does not double count replacements, repairs, fuel and expenses in the total', () => {
     expect(
       calcTotalCost(
         [replacement(5000, 1500)],
         [repair(3000, 5000)],
+        [fuel(2500), fuel(1800)],
         [expense(500), expense(1200)],
       ),
-    ).toBe(16200);
+    ).toBe(20500);
   });
 });
