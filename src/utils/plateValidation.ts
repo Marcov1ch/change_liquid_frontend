@@ -1,17 +1,19 @@
-const ALLOWED_LETTERS = 'АВЕІКМНОРСТУХ';
-
-const RF_PATTERN = new RegExp(`^[${ALLOWED_LETTERS}]\\d{3}[${ALLOWED_LETTERS}]{2}\\d{2,3}$`);
-const BY_CURRENT_PATTERN = new RegExp(`^\\d{4}[${ALLOWED_LETTERS}]{2}\\d$`);
-const BY_OLD_PATTERN = new RegExp(`^\\d{4}[${ALLOWED_LETTERS}]{2}$`);
+export const MAX_PLATE_LENGTH = 15;
 
 export function validatePlateNumber(value: string): string | null {
-    const cleaned = value.replace(/\s/g, '').replace(/-/g, '').toUpperCase();
+    const normalized = value.trim();
 
-    if (cleaned === '') return null;
-
-    if (RF_PATTERN.test(cleaned) || BY_CURRENT_PATTERN.test(cleaned) || BY_OLD_PATTERN.test(cleaned)) {
-        return null;
+    if (normalized === '') {
+        return 'Введите госномер';
     }
 
-    return 'Некорректный формат госномера. Допустимые форматы: А123АА178 (РФ) или 1234AB7 (РБ)';
+    if ([...normalized].some(ch => ch.charCodeAt(0) < 32)) {
+        return 'Госномер не может содержать управляющие символы';
+    }
+
+    if (normalized.length > MAX_PLATE_LENGTH) {
+        return `Госномер не может быть длиннее ${MAX_PLATE_LENGTH} символов`;
+    }
+
+    return null;
 }

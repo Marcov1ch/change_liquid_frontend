@@ -7,58 +7,42 @@ describe('validatePlateNumber', () => {
       expect(validatePlateNumber('А123АА178')).toBeNull()
     })
 
-    it('accepts RF format with 2-digit region: А123АА78', () => {
-      expect(validatePlateNumber('А123АА78')).toBeNull()
-    })
-
-    it('accepts BY current format: 1234AB7', () => {
+    it('accepts BY format: 1234АВ7', () => {
       expect(validatePlateNumber('1234АВ7')).toBeNull()
     })
 
-    it('accepts BY old format: 1234AB', () => {
-      expect(validatePlateNumber('1234АВ')).toBeNull()
+    it('accepts European format: AB-123-CD', () => {
+      expect(validatePlateNumber('AB-123-CD')).toBeNull()
     })
 
-    it('accepts empty string', () => {
-      expect(validatePlateNumber('')).toBeNull()
+    it('accepts plates with spaces', () => {
+      expect(validatePlateNumber('AB 123 CD')).toBeNull()
     })
 
-    it('normalizes lowercase to uppercase', () => {
-      expect(validatePlateNumber('а123аа178')).toBeNull()
+    it('accepts exactly 15 characters', () => {
+      expect(validatePlateNumber('A'.repeat(15))).toBeNull()
     })
 
-    it('strips spaces', () => {
-      expect(validatePlateNumber('А 123 АА 178')).toBeNull()
-    })
-
-    it('strips dashes', () => {
-      expect(validatePlateNumber('А-123-АА-178')).toBeNull()
+    it('trims surrounding spaces', () => {
+      expect(validatePlateNumber('  AB-123-CD  ')).toBeNull()
     })
   })
 
   describe('invalid plates', () => {
-    it('rejects too short', () => {
-      expect(validatePlateNumber('А12')).not.toBeNull()
+    it('rejects empty string', () => {
+      expect(validatePlateNumber('')).not.toBeNull()
     })
 
-    it('rejects too long', () => {
-      expect(validatePlateNumber('А123АБ1234')).not.toBeNull()
+    it('rejects spaces only', () => {
+      expect(validatePlateNumber('   ')).not.toBeNull()
     })
 
-    it('rejects digits only', () => {
-      expect(validatePlateNumber('1234567')).not.toBeNull()
+    it('rejects more than 15 characters', () => {
+      expect(validatePlateNumber('A'.repeat(16))).not.toBeNull()
     })
 
-    it('rejects letters only', () => {
-      expect(validatePlateNumber('АБВГДЕ')).not.toBeNull()
-    })
-
-    it('rejects non-Cyrillic letters', () => {
-      expect(validatePlateNumber('A123BC178')).not.toBeNull()
-    })
-
-    it('rejects invalid BY format (5 digits)', () => {
-      expect(validatePlateNumber('12345АВ7')).not.toBeNull()
+    it('rejects control characters', () => {
+      expect(validatePlateNumber('AB\tCD')).not.toBeNull()
     })
   })
 })
