@@ -1,5 +1,12 @@
 import type { Vehicle } from '../types';
 import type { VehicleWorkspace, WorkspaceTab } from '../hooks/useVehicleWorkspace';
+import {
+  ExpensesIcon,
+  FuelIcon,
+  RepairIcon,
+  ReplacementsIcon,
+  StatisticsIcon,
+} from './icons/VehicleSectionIcons';
 import { FuelRecordsList } from './FuelRecordsList';
 import { OtherExpensesList } from './OtherExpensesList';
 import { ReplacementList } from './ReplacementList';
@@ -33,11 +40,31 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
   if (!selectedVehicle) return null;
 
   const tabItems: TabItem<WorkspaceTab>[] = [
-    { value: 'replacements', label: `Замены (${replacements.length})` },
-    { value: 'fuelRecords', label: `Заправки (${fuelRecords.length})` },
-    { value: 'repairs', label: `Ремонт или обслуживание (${repairs.length})` },
-    { value: 'otherExpenses', label: `Прочие траты (${otherExpenses.length})` },
-    { value: 'statistics', label: 'Статистика' },
+    {
+      value: 'replacements',
+      label: `Замены (${replacements.length})`,
+      icon: <ReplacementsIcon />,
+    },
+    {
+      value: 'fuelRecords',
+      label: `Заправки (${fuelRecords.length})`,
+      icon: <FuelIcon />,
+    },
+    {
+      value: 'repairs',
+      label: `Ремонт или обслуживание (${repairs.length})`,
+      icon: <RepairIcon />,
+    },
+    {
+      value: 'otherExpenses',
+      label: `Прочие траты (${otherExpenses.length})`,
+      icon: <ExpensesIcon />,
+    },
+    {
+      value: 'statistics',
+      label: 'Статистика',
+      icon: <StatisticsIcon />,
+    },
   ];
 
   const share = () => onShare(selectedVehicle);
@@ -50,6 +77,8 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
         onChange={setActiveTab}
         className="mb-3"
         ariaLabel="Разделы автомобиля"
+        iconOnlyMobile
+        stretch
       />
 
       {activeTab === 'replacements' && (
