@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import type { Vehicle } from '../types';
+import { StatisticsIcon } from './icons/VehicleSectionIcons';
 
 interface Props {
   vehicles: Vehicle[];
   selectedId: number | null;
   onSelect: (id: number) => void;
   onEditVehicle: (vehicle: Vehicle) => void;
+  onOpenStatistics: (vehicle: Vehicle) => void;
   onHardDeleteVehicle: (id: number) => void;
   onRestoreVehicle: (id: number) => void;
   onUpdateKm: (vehicleId: number, newKm: number) => Promise<void>;
@@ -26,7 +28,7 @@ const statusBg: Record<string, string> = {
 };
 
 export function VehicleList({
-  vehicles, selectedId, onSelect, onEditVehicle,
+  vehicles, selectedId, onSelect, onEditVehicle, onOpenStatistics,
   onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, onStartTrip,
   trackingVehicleId, showArchived,
   statusIcons, getVehicleStatus,
@@ -118,6 +120,15 @@ export function VehicleList({
                       <span className="hidden sm:inline">Настройки</span>
                     </button>
 
+                    <button
+                      onClick={() => onOpenStatistics(vehicle)}
+                      className="md3-btn-tonal !px-3 !py-2 !rounded-md3-sm text-label-sm"
+                      aria-label="Статистика"
+                    >
+                      <StatisticsIcon className="w-4 h-4" />
+                      <span className="hidden sm:inline">Статистика</span>
+                    </button>
+
                     {trackingVehicleId === vehicle.id ? (
                       <button
                         disabled
@@ -186,6 +197,14 @@ export function VehicleList({
                   </>
                 ) : (
                   <>
+                    <button
+                      onClick={() => onOpenStatistics(vehicle)}
+                      className="md3-btn-tonal !px-3 !py-2 !rounded-md3-sm text-label-sm"
+                      aria-label="Статистика"
+                    >
+                      <StatisticsIcon className="w-4 h-4" />
+                      <span className="hidden sm:inline">Статистика</span>
+                    </button>
                     <button
                       onClick={() => onRestoreVehicle(vehicle.id)}
                       className="md3-btn-tonal !px-3 !py-2 !rounded-md3-sm text-label-sm"

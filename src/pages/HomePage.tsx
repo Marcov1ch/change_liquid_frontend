@@ -7,6 +7,7 @@ import { VehicleForm } from '../components/VehicleForm';
 import { EditVehicleForm } from '../components/EditVehicleForm';
 import { ShareVehicleDialog } from '../components/ShareVehicleDialog';
 import { TrackingBar } from '../components/TrackingBar';
+import { VehicleStatisticsDialog } from '../components/VehicleStatisticsDialog';
 import { useGpsTracker } from '../hooks/useGpsTracker';
 import { useVehicleActions } from '../hooks/useVehicleActions';
 import { useVehicleWorkspace } from '../hooks/useVehicleWorkspace';
@@ -67,6 +68,7 @@ export function HomePage() {
           selectedId={workspace.selectedId}
           onSelect={workspace.selectVehicle}
           onEditVehicle={actions.handleEditVehicle}
+          onOpenStatistics={actions.openStatistics}
           onHardDeleteVehicle={actions.handleHardDeleteVehicle}
           onRestoreVehicle={actions.handleRestoreVehicle}
           onUpdateKm={actions.handleUpdateKm}
@@ -96,6 +98,11 @@ export function HomePage() {
         <ShareVehicleDialog
           vehicle={actions.shareVehicle}
           onClose={actions.closeShare}
+        />
+
+        <VehicleStatisticsDialog
+          vehicle={actions.statsVehicle}
+          onClose={actions.closeStatistics}
         />
 
         <TrackingBar

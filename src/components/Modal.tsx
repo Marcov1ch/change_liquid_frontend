@@ -5,9 +5,15 @@ interface Props {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  size?: 'md' | 'xl';
 }
 
-export function Modal({ isOpen, onClose, title, children }: Props) {
+const SIZE_CLASSES: Record<NonNullable<Props['size']>, string> = {
+  md: 'max-w-lg',
+  xl: 'max-w-4xl',
+};
+
+export function Modal({ isOpen, onClose, title, children, size = 'md' }: Props) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -36,7 +42,7 @@ export function Modal({ isOpen, onClose, title, children }: Props) {
       aria-label={title}
     >
       <div
-        className="bg-surface rounded-md3-md shadow-md3-4 w-full max-w-lg mx-4 max-h-[85vh] overflow-y-auto animate-scale-in"
+        className={`bg-surface rounded-md3-md shadow-md3-4 w-full ${SIZE_CLASSES[size]} mx-4 max-h-[85vh] overflow-y-auto animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface rounded-t-md3-md">
