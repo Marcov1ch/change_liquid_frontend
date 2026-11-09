@@ -1,5 +1,11 @@
 import type { Repair, Replacement } from '../types';
-import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent } from '../utils/replacementTypes';
+import {
+    getReplacementDateReminder,
+    getReplacementStatusLabel,
+} from '../utils/replacementDisplay';
+import { getDateWarningDays, isDateOnlyComponent } from '../utils/replacementTypes';
+import { ReplacementEditFields } from './ReplacementEditFields';
+import { ReplacementMeta } from './ReplacementMeta';
 
 const REPAIR_PLACEHOLDER_NAME = 'ВНЕСИТЕ ИЗМЕНЕНИЕ';
 
@@ -28,28 +34,8 @@ interface Props {
     onDelete: () => void;
 }
 
-function statusLabel(
-    status: string | undefined,
-    kmRemaining: number | undefined,
-    daysRemaining: number | null | undefined,
-    isDateBased: boolean,
-    warningDays: number,
-): string | null {
-    if (isDateBased) {
-        if (daysRemaining == null) return null;
-        if (daysRemaining < 0) return `Просрочено на ${-daysRemaining} дн.`;
-        if (daysRemaining <= warningDays) return `Скоро замена: осталось ${daysRemaining} дн.`;
-        return null;
-    }
-    if (status === 'replaced') return 'Заменено';
-    if (kmRemaining == null) return null;
-    if (status === 'overdue') return `Просрочено на ${Math.abs(kmRemaining).toLocaleString()} км`;
-    if (status === 'critical' || status === 'warning') return `Осталось ${kmRemaining.toLocaleString()} км`;
-    return null;
-}
-
 export function ReplacementItem({
-    replacement: r,
+    replacement,
     isFirst,
     itemStyle,
     editing,
@@ -63,233 +49,67 @@ export function ReplacementItem({
     onSaveEdit,
     onDelete,
 }: Props) {
-    const isTire = r.component_type === 'tire_change';
-    const isDateOnly = isDateOnlyComponent(r.component_type);
-    const isParking = r.component_type === 'parking_monthly';
-    const isDateBased = isDateBasedComponent(r.component_type);
-    const warningDays = getDateWarningDays(r.component_type);
-    const label = statusLabel(r.status, r.km_remaining, r.days_remaining, isDateBased, warningDays);
-
-    let dateReminder: string | null = null;
-    if (!isDateBased && r.next_change_date && r.days_remaining != null) {
-        if (r.days_remaining < 0) {
-            dateReminder = `⏳ Просрочено по дате на ${-r.days_remaining} дн.`;
-        } else if (r.days_remaining <= warningDays) {
-            dateReminder = `⏳ Замена по дате через ${r.days_remaining} дн.`;
-        }
-    }
+    const isTire = replacement.component_type === 'tire_change';
+    const isDateOnly = isDateOnlyComponent(replacement.component_type);
+    const isParking = replacement.component_type === 'parking_monthly';
+    const warningDays = getDateWarningDays(replacement.component_type);
+    const label = getReplacementStatusLabel(replacement);
+    const dateReminder = getReplacementDateReminder(replacement);
 
     return (
         <div className={`p-3 rounded-md3-sm border-l-4 ${itemStyle.border} bg-surface transition-shadow duration-200 hover:shadow-md3-1`}>
             {editing ? (
                 <div className="flex flex-col gap-3">
-                    <div>
-                        <label className="block text-label-md text-surface-on-variant mb-1">Название</label>
-                        <input
-                            type="text"
-                            placeholder="Название"
-                            value={editForm.component_name}
-                            onChange={(e) => onEditFormChange({ component_name: e.target.value })}
-                            className="md3-field"
-                        />
-                    </div>
-                    {isDateOnly ? (
-                        <>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата начала</label>
-                                <input
-                                    type="date"
-                                    max={today}
-                                    value={editForm.replacement_date}
-                                    onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата окончания</label>
-                                <input
-                                    type="date"
-                                    value={editForm.next_change_date}
-                                    onChange={(e) => onEditFormChange({ next_change_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                        </>
-                    ) : isTire ? (
-                        <>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег при установке (км)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="Пробег"
-                                    value={editForm.km_at_replacement}
-                                    onChange={(e) => onEditFormChange({ km_at_replacement: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
-                                <input
-                                    type="date"
-                                    max={today}
-                                    value={editForm.replacement_date}
-                                    onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата следующей замены</label>
-                                <input
-                                    type="date"
-                                    value={editForm.next_change_date}
-                                    onChange={(e) => onEditFormChange({ next_change_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="Пробег"
-                                    value={editForm.km_at_replacement}
-                                    onChange={(e) => onEditFormChange({ km_at_replacement: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата замены</label>
-                                <input
-                                    type="date"
-                                    max={today}
-                                    value={editForm.replacement_date}
-                                    onChange={(e) => onEditFormChange({ replacement_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                        </>
-                    )}
-                    {isDateOnly ? (
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">
-                                {isParking ? 'Стоимость аренды (₽)' : 'Стоимость страховки (₽)'}
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder={isParking ? '8000' : '12000'}
-                                value={editForm.component_price}
-                                onChange={(e) => onEditFormChange({ component_price: e.target.value })}
-                                disabled={!!blockedByRepair}
-                                className="md3-field"
-                            />
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">
-                                    {isTire ? 'Стоимость шин (₽)' : 'Цена (₽)'}
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="5000"
-                                    value={editForm.component_price}
-                                    onChange={(e) => onEditFormChange({ component_price: e.target.value })}
-                                    disabled={!!blockedByRepair}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="1500"
-                                    value={editForm.work_price}
-                                    onChange={(e) => onEditFormChange({ work_price: e.target.value })}
-                                    disabled={!!blockedByRepair}
-                                    className="md3-field"
-                                />
-                            </div>
-                        </div>
-                    )}
+                    <ReplacementEditFields
+                        replacement={replacement}
+                        editForm={editForm}
+                        today={today}
+                        blockedByRepair={blockedByRepair}
+                        onEditFormChange={onEditFormChange}
+                    />
+
                     {blockedByRepair && (
                         <div className="p-3 rounded-md3-sm bg-error-container text-error text-body-sm" role="alert">
                             Компонент входит в ремонт от {blockedByRepair.repair_date}.
                             Стоимость уже учтена в ремонте — поля цены недоступны.
                         </div>
                     )}
+
                     <div className="flex gap-2">
-                        <button onClick={onSaveEdit} className="md3-btn-primary !py-2 !px-4 !rounded-md3-sm text-label-sm flex-1">Сохранить</button>
-                        <button onClick={onCancelEdit} className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm">Отмена</button>
+                        <button onClick={onSaveEdit} className="md3-btn-primary !py-2 !px-4 !rounded-md3-sm text-label-sm flex-1">
+                            Сохранить
+                        </button>
+                        <button onClick={onCancelEdit} className="md3-btn-text !py-2 !px-4 !rounded-md3-sm text-label-sm">
+                            Отмена
+                        </button>
                     </div>
                 </div>
             ) : (
                 <>
                     <div className="flex items-center gap-2 min-w-0">
                         {isFirst && <span className="text-label-md">{itemStyle.icon}</span>}
-                        <span className="text-label-lg text-surface-on">{r.component_name}</span>
-                        {isFirst && <span className="md3-badge bg-primary-container text-primary-on-container">последняя</span>}
-                        {r.source_repair_id && r.component_name === REPAIR_PLACEHOLDER_NAME && (
+                        <span className="text-label-lg text-surface-on">{replacement.component_name}</span>
+                        {isFirst && (
+                            <span className="md3-badge bg-primary-container text-primary-on-container">
+                                последняя
+                            </span>
+                        )}
+                        {replacement.source_repair_id && replacement.component_name === REPAIR_PLACEHOLDER_NAME && (
                             <span className="md3-badge bg-surface-variant text-surface-on-variant">
                                 из ремонта
                             </span>
                         )}
                     </div>
+
                     <div className="mt-2 flex items-center justify-between gap-2">
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
-                            <span>📅 {r.replacement_date}</span>
-                            {isDateOnly ? (
-                                <>
-                                    {r.component_price != null && r.component_price > 0 && (
-                                        <span>🧾 {isParking ? 'Аренда' : 'Страховка'}: {r.component_price.toLocaleString()} ₽</span>
-                                    )}
-                                    {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
-                                    {r.days_remaining != null && (
-                                        <span className={r.days_remaining <= warningDays ? 'text-error font-semibold' : ''}>
-                                            ⏳ {r.days_remaining} дн.
-                                        </span>
-                                    )}
-                                </>
-                            ) : isTire ? (
-                                <>
-                                    <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
-                                    <span>🛣 Пройдено: {kmTraveled.toLocaleString()} км</span>
-                                    {r.component_price != null && r.component_price > 0 && (
-                                        <span>🧾 Шины: {r.component_price.toLocaleString()} ₽</span>
-                                    )}
-                                    {r.work_price != null && r.work_price > 0 && (
-                                        <span>🔧 Работы: {r.work_price.toLocaleString()} ₽</span>
-                                    )}
-                                    {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
-                                    {r.days_remaining != null && (
-                                        <span className={r.days_remaining <= warningDays ? 'text-error font-semibold' : ''}>
-                                            ⏳ {r.days_remaining} дн.
-                                        </span>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <span>📍 {r.km_at_replacement.toLocaleString()} км</span>
-                                    <span>🛣 Пройдено: {kmTraveled.toLocaleString()} км</span>
-                                    {r.component_price != null && r.component_price > 0 && (
-                                        <span>🧾 Цена: {r.component_price.toLocaleString()} ₽</span>
-                                    )}
-                                    {r.work_price != null && r.work_price > 0 && (
-                                        <span>🔧 Работы: {r.work_price.toLocaleString()} ₽</span>
-                                    )}
-                                    {r.next_replacement_km != null && (
-                                        <span>⏱ Следующая: {r.next_replacement_km.toLocaleString()} км</span>
-                                    )}
-                                    {r.next_change_date && <span>📅 До: {r.next_change_date}</span>}
-                                </>
-                            )}
-                        </div>
+                        <ReplacementMeta
+                            replacement={replacement}
+                            isDateOnly={isDateOnly}
+                            isTire={isTire}
+                            isParking={isParking}
+                            kmTraveled={kmTraveled}
+                            warningDays={warningDays}
+                        />
                         <div className="flex gap-0">
                             <button
                                 onClick={onStartEdit}
@@ -312,6 +132,7 @@ export function ReplacementItem({
                             </button>
                         </div>
                     </div>
+
                     {label && (
                         <p className={`mt-1 text-body-sm ${itemStyle.text}`}>{label}</p>
                     )}
