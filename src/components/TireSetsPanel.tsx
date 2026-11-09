@@ -183,7 +183,7 @@ export function TireSetsPanel({
                 </p>
                 {current.next_change_date && (
                   <p className="text-body-sm m-0 mt-1 opacity-80">
-                    📅 Следующая смена: {current.next_change_date} · уведомление за 5 дней
+                    📅 Следующая смена: {current.next_change_date}
                   </p>
                 )}
                 {current.status && (
@@ -237,17 +237,22 @@ export function TireSetsPanel({
               {tireSets.map(tireSet => (
                 <div
                   key={tireSet.id}
-                  className="flex items-start justify-between gap-3 p-3 rounded-md3-sm bg-surface border border-outline-variant flex-wrap"
+                  className="flex items-start justify-between gap-3 p-3 rounded-md3-sm bg-surface border border-outline-variant"
                 >
-                  <div className="min-w-0">
-                    <p className="text-label-lg text-surface-on m-0 truncate">
-                      {TIRE_SEASON_ICONS[tireSet.season]} {tireSet.name}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p
+                        className="text-label-lg text-surface-on m-0 truncate"
+                        title={tireSet.name}
+                      >
+                        {TIRE_SEASON_ICONS[tireSet.season]} {tireSet.name}
+                      </p>
                       {tireSet.is_installed && (
-                        <span className="ml-2 md3-badge bg-primary-container text-primary-on-container">
+                        <span className="md3-badge bg-primary-container text-primary-on-container shrink-0">
                           установлены
                         </span>
                       )}
-                    </p>
+                    </div>
                     <p className="text-body-sm text-outline m-0">
                       {TIRE_SEASON_LABELS[tireSet.season]} · всего {formatKm(tireSet.total_km)}
                       {tireSet.accumulated_km > 0 && ` · прошлые сезоны ${formatKm(tireSet.accumulated_km)}`}
@@ -289,11 +294,14 @@ export function TireSetsPanel({
                   key={event.id}
                   className="p-3 rounded-md3-sm bg-surface border border-outline-variant"
                 >
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-label-lg text-surface-on">
+                  <div className="flex items-start justify-between gap-2">
+                    <p
+                      className="text-label-lg text-surface-on m-0 min-w-0 truncate"
+                      title={event.component_name}
+                    >
                       {event.tire_event_type === 'purchase' ? '🧾' : '🛞'} {formatEventLabel(event)} · {event.component_name}
-                    </span>
-                    <div className="flex items-center gap-2">
+                    </p>
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="text-body-sm text-outline">📅 {event.replacement_date}</span>
                       <button
                         onClick={() => handleDeleteEvent(event)}
