@@ -4,10 +4,10 @@ import { api } from '../api/client';
 
 export type WorkspaceTab =
   | 'replacements'
+  | 'tires'
   | 'fuelRecords'
   | 'repairs'
-  | 'otherExpenses'
-  | 'statistics';
+  | 'otherExpenses';
 
 export function useVehicleWorkspace() {
   const queryClient = useQueryClient();
@@ -23,6 +23,12 @@ export function useVehicleWorkspace() {
   const { data: replacements = [] } = useQuery({
     queryKey: ['replacements', selectedId],
     queryFn: () => api.getReplacements(selectedId!),
+    enabled: !!selectedId,
+  });
+
+  const { data: tireSets = [] } = useQuery({
+    queryKey: ['tire-sets', selectedId],
+    queryFn: () => api.getTireSets(selectedId!),
     enabled: !!selectedId,
   });
 
@@ -57,6 +63,9 @@ export function useVehicleWorkspace() {
   const invalidateOtherExpenses = () => {
     if (selectedId) queryClient.invalidateQueries({ queryKey: ['other-expenses', selectedId] });
   };
+  const invalidateTireSets = () => {
+    if (selectedId) queryClient.invalidateQueries({ queryKey: ['tire-sets', selectedId] });
+  };
 
   const handleReplacementsUpdate = () => {
     invalidateReplacements();
@@ -76,6 +85,12 @@ export function useVehicleWorkspace() {
 
   const handleFuelRecordsUpdate = () => {
     if (selectedId) queryClient.invalidateQueries({ queryKey: ['fuel-records', selectedId] });
+    invalidateReplacements();
+    invalidateVehicles();
+  };
+
+  const handleTireSetsUpdate = () => {
+    invalidateTireSets();
     invalidateReplacements();
     invalidateVehicles();
   };
@@ -103,16 +118,19 @@ export function useVehicleWorkspace() {
     selectVehicle,
     closeVehicle,
     replacements,
+    tireSets,
     fuelRecords,
     repairs,
     otherExpenses,
     invalidateVehicles,
     invalidateReplacements,
     invalidateOtherExpenses,
+    invalidateTireSets,
     handleReplacementsUpdate,
     handleVehicleUpdate,
     handleRepairsUpdate,
     handleFuelRecordsUpdate,
+    handleTireSetsUpdate,
   };
 }
 

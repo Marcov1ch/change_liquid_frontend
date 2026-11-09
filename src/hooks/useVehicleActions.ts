@@ -11,6 +11,7 @@ export function useVehicleActions(workspace: VehicleWorkspace) {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [shareVehicle, setShareVehicle] = useState<Vehicle | null>(null);
+  const [statsVehicle, setStatsVehicle] = useState<Vehicle | null>(null);
 
   const createVehicleMutation = useMutation({
     mutationFn: api.createVehicle,
@@ -88,11 +89,14 @@ export function useVehicleActions(workspace: VehicleWorkspace) {
     editingVehicle,
     showEditForm,
     shareVehicle,
+    statsVehicle,
     openCreateForm: () => setShowForm(true),
     closeCreateForm: () => setShowForm(false),
     closeEditForm: () => setShowEditForm(false),
     openShare: (vehicle: Vehicle) => setShareVehicle(vehicle),
     closeShare: () => setShareVehicle(null),
+    openStatistics: (vehicle: Vehicle) => setStatsVehicle(vehicle),
+    closeStatistics: () => setStatsVehicle(null),
     handleAddVehicle,
     handleEditVehicle,
     handleDeleteVehicle,

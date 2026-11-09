@@ -6,6 +6,7 @@ import { StatisticsPanel } from '../components/StatisticsPanel';
 import type { PublicReplacement } from '../types';
 import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent, REPLACEMENT_TYPE_LABELS } from '../utils/replacementTypes';
 import { calcTotalCost } from '../utils/publicTotals';
+import { formatKm, formatTireMoney, getTireStatusMeta, TIRE_SEASON_ICONS, TIRE_SEASON_LABELS } from '../utils/tireSets';
 
 const statusStyles: Record<string, { bg: string; text: string; border: string; icon: string; label: string }> = {
     good: { bg: 'bg-[#E6F7E6]', text: 'text-[#1B5E1B]', border: 'border-l-[#28A745]', icon: '🟢', label: 'В порядке' },
@@ -61,9 +62,18 @@ export function PublicVehiclePage() {
         return names;
     }, [configsData]);
 
+    const hasTireSets = (vehicle?.tire_sets?.length ?? 0) > 0;
+
+    const visibleReplacements = useMemo(() => {
+        const all = vehicle?.replacements ?? [];
+        return hasTireSets
+            ? all.filter(replacement => replacement.component_type !== 'tire_change')
+            : all;
+    }, [vehicle, hasTireSets]);
+
     const grouped = useMemo(() => {
         const result: Record<string, PublicReplacement[]> = {};
-        vehicle?.replacements.forEach(replacement => {
+        visibleReplacements.forEach(replacement => {
             if (!result[replacement.component_type]) result[replacement.component_type] = [];
             result[replacement.component_type].push(replacement);
         });
@@ -74,11 +84,12 @@ export function PublicVehiclePage() {
             });
         });
         return result;
-    }, [vehicle]);
+    }, [visibleReplacements]);
 
     const otherExpenses = vehicle?.other_expenses ?? [];
     const repairs = vehicle?.repairs ?? [];
     const fuelRecords = vehicle?.fuel_records ?? [];
+    const tireSets = vehicle?.tire_sets ?? [];
 
     const totalCost = useMemo(() => {
         return vehicle
@@ -147,7 +158,7 @@ export function PublicVehiclePage() {
                                 </div>
                                 <div className="bg-surface-variant/40 rounded-md3-sm p-3">
                                     <p className="text-body-sm text-outline m-0">Замен</p>
-                                    <p className="text-title-md text-surface-on m-0">{vehicle.replacements.length}</p>
+                                    <p className="text-title-md text-surface-on m-0">{visibleReplacements.length}</p>
                                 </div>
                                 <div className="bg-surface-variant/40 rounded-md3-sm p-3">
                                     <p className="text-body-sm text-outline m-0">Заправок</p>
@@ -177,10 +188,60 @@ export function PublicVehiclePage() {
                             />
                         </div>
 
+                        {tireSets.length > 0 && (
+                            <div className="md3-card p-6">
+                                <h2 className="text-title-md text-surface-on mb-4">Шины</h2>
+                                <div className="flex flex-col gap-2">
+                                    {tireSets.map(tireSet => (
+                                        <div
+                                            key={tireSet.id}
+                                            className="p-3 rounded-md3-sm bg-surface border border-outline-variant"
+                                        >
+                                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                                                <span className="text-label-lg text-surface-on">
+                                                    {TIRE_SEASON_ICONS[tireSet.season]} {tireSet.name}
+                                                    {tireSet.is_installed && (
+                                                        <span className="ml-2 md3-badge bg-primary-container text-primary-on-container">
+                                                            установлены
+                                                        </span>
+                                                    )}
+                                                    {tireSet.is_installed && tireSet.status && (
+                                                        <span
+                                                            className={`ml-2 md3-badge ${getTireStatusMeta(tireSet.status).bgClass} ${getTireStatusMeta(tireSet.status).textClass}`}
+                                                        >
+                                                            {getTireStatusMeta(tireSet.status).icon} {getTireStatusMeta(tireSet.status).label}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                <span className="text-title-sm text-surface-on">
+                                                    {formatKm(tireSet.total_km)}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-outline">
+                                                <span>{TIRE_SEASON_LABELS[tireSet.season]}</span>
+                                                {tireSet.installed_date && (
+                                                    <span>📅 Установлены: {tireSet.installed_date}</span>
+                                                )}
+                                                {tireSet.next_change_date && (
+                                                    <span>📅 Следующая смена: {tireSet.next_change_date}</span>
+                                                )}
+                                                {tireSet.purchase_price != null && (
+                                                    <span>
+                                                        🧾 Покупка: {formatTireMoney(tireSet.purchase_price)}
+                                                        {tireSet.purchase_date ? ` · ${tireSet.purchase_date}` : ''}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="md3-card p-6">
                             <h2 className="text-title-md text-surface-on mb-4">История замен</h2>
 
-                            {vehicle.replacements.length === 0 ? (
+                            {visibleReplacements.length === 0 ? (
                                 <p className="text-body-md text-outline">Замены пока не добавлены.</p>
                             ) : (
                                 <div className="flex flex-col gap-5">

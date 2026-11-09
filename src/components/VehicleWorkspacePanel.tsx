@@ -5,15 +5,15 @@ import {
   FuelIcon,
   RepairIcon,
   ReplacementsIcon,
-  StatisticsIcon,
+  TireIcon,
 } from './icons/VehicleSectionIcons';
 import { FuelRecordsList } from './FuelRecordsList';
 import { OtherExpensesList } from './OtherExpensesList';
 import { ReplacementList } from './ReplacementList';
 import { RepairList } from './RepairList';
-import { StatisticsPanel } from './StatisticsPanel';
+import { TireSetsPanel } from './TireSetsPanel';
 import { Tabs, type TabItem } from './Tabs';
-import { VehicleCardHeader } from './VehicleCardHeader';
+import { getTireStatusMeta } from '../utils/tireSets';
 
 interface Props {
   workspace: VehicleWorkspace;
@@ -28,22 +28,50 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
     setActiveTab,
     closeVehicle,
     replacements,
+    tireSets,
     fuelRecords,
     repairs,
     otherExpenses,
     handleReplacementsUpdate,
     handleRepairsUpdate,
     handleFuelRecordsUpdate,
+    handleTireSetsUpdate,
     invalidateOtherExpenses,
   } = workspace;
 
   if (!selectedVehicle) return null;
 
+  const hasTireSets = tireSets.length > 0;
+  const visibleReplacements = hasTireSets
+    ? replacements.filter(replacement => replacement.component_type !== 'tire_change')
+    : replacements;
+
+  const currentTireSet = tireSets.find(item => item.is_installed);
+  const tireNeedsAttention = currentTireSet?.status === 'warning'
+    || currentTireSet?.status === 'critical'
+    || currentTireSet?.status === 'overdue';
+  const tireStatus = getTireStatusMeta(currentTireSet?.status);
+
   const tabItems: TabItem<WorkspaceTab>[] = [
     {
       value: 'replacements',
-      label: `Замены (${replacements.length})`,
+      label: `Замены (${visibleReplacements.length})`,
       icon: <ReplacementsIcon />,
+    },
+    {
+      value: 'tires',
+      label: `Шины (${tireSets.length})`,
+      icon: (
+        <span className="relative inline-flex">
+          <TireIcon />
+          {tireNeedsAttention && (
+            <span
+              className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-surface ${tireStatus.dotClass}`}
+              aria-hidden="true"
+            />
+          )}
+        </span>
+      ),
     },
     {
       value: 'fuelRecords',
@@ -59,11 +87,6 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
       value: 'otherExpenses',
       label: `Прочие траты (${otherExpenses.length})`,
       icon: <ExpensesIcon />,
-    },
-    {
-      value: 'statistics',
-      label: 'Статистика',
-      icon: <StatisticsIcon />,
     },
   ];
 
@@ -83,13 +106,25 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
 
       {activeTab === 'replacements' && (
         <ReplacementList
-          replacements={replacements}
+          replacements={visibleReplacements}
           repairs={repairs}
           vehicleId={selectedId}
           selectedVehicle={selectedVehicle}
           onClose={closeVehicle}
           onShare={share}
           onReplacementsUpdate={handleReplacementsUpdate}
+        />
+      )}
+
+      {activeTab === 'tires' && (
+        <TireSetsPanel
+          tireSets={tireSets}
+          replacements={replacements}
+          vehicleId={selectedId}
+          selectedVehicle={selectedVehicle}
+          onClose={closeVehicle}
+          onShare={share}
+          onTireSetsUpdate={handleTireSetsUpdate}
         />
       )}
 
@@ -127,24 +162,6 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
         />
       )}
 
-      {activeTab === 'statistics' && (
-        <div className="md3-card overflow-hidden animate-fade-in">
-          <VehicleCardHeader
-            vehicle={selectedVehicle}
-            title={`Статистика: ${selectedVehicle.brand} ${selectedVehicle.model}`}
-            onClose={closeVehicle}
-            onShare={share}
-          />
-          <div className="p-4">
-            <StatisticsPanel
-              replacements={replacements}
-              repairs={repairs}
-              fuelRecords={fuelRecords}
-              otherExpenses={otherExpenses}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

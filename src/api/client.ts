@@ -121,7 +121,8 @@ async function handleResponse<T>(res: Response): Promise<T> {
 import type {
     Vehicle, Replacement, VehicleFormData, ComponentConfig, User, RimSize, TireSize,
     ShareLink, PublicVehicle, OtherExpense, OtherExpensePayload, Repair, RepairPayload,
-    FuelRecord, FuelRecordPayload,
+    FuelRecord, FuelRecordPayload, TireSet, TireSetPayload, TireInstallPayload,
+    TireInstallResponse,
 } from '../types';
 
 export const api = {
@@ -208,6 +209,33 @@ export const api = {
 
     deleteReplacement: (replacementId: number) =>
         authFetch(`${API_BASE}/replacements/${replacementId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
+
+    getTireSets: (vehicleId: number) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/tire-sets`).then(res => handleResponse<TireSet[]>(res)),
+
+    createTireSet: (vehicleId: number, data: TireSetPayload) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/tire-sets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<TireSet>(res)),
+
+    updateTireSet: (tireSetId: number, data: Partial<TireSetPayload>) =>
+        authFetch(`${API_BASE}/tire-sets/${tireSetId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<TireSet>(res)),
+
+    deleteTireSet: (tireSetId: number) =>
+        authFetch(`${API_BASE}/tire-sets/${tireSetId}`, { method: 'DELETE' }).then(res => handleResponse<{ status: string; message: string }>(res)),
+
+    installTireSet: (vehicleId: number, tireSetId: number, data: TireInstallPayload = {}) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/tire-sets/${tireSetId}/install`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }).then(res => handleResponse<TireInstallResponse>(res)),
 
     getOtherExpenses: (vehicleId: number) =>
         authFetch(`${API_BASE}/vehicles/${vehicleId}/other-expenses`).then(res => handleResponse<OtherExpense[]>(res)),

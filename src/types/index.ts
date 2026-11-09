@@ -29,6 +29,49 @@ export interface Vehicle {
     tires: TireSize[];
 }
 
+export type TireSeason = 'summer' | 'winter' | 'all_season';
+
+export type TireEventType = 'purchase' | 'install';
+
+export interface TireSet {
+    id: number;
+    vehicle_id: number;
+    name: string;
+    season: TireSeason;
+    purchase_date: string | null;
+    purchase_price: number | null;
+    accumulated_km: number;
+    installed_km: number | null;
+    installed_date: string | null;
+    is_installed: boolean;
+    next_change_date: string | null;
+    status: string | null;
+    days_remaining: number | null;
+    total_km: number;
+    created_at: string | null;
+}
+
+export interface TireSetPayload {
+    name: string;
+    season: TireSeason;
+    purchase_date?: string | null;
+    purchase_price?: number | null;
+    install_now?: boolean;
+    work_price?: number | null;
+    next_change_date?: string | null;
+}
+
+export interface TireInstallPayload {
+    switch_date?: string;
+    next_change_date?: string | null;
+    work_price?: number | null;
+}
+
+export interface TireInstallResponse {
+    tire_set: TireSet;
+    replacement: Replacement;
+}
+
 export interface Replacement {
     id: number;
     vehicle_id: number;
@@ -46,6 +89,8 @@ export interface Replacement {
     days_remaining?: number | null;
     status?: string;
     source_repair_id?: number | null;
+    tire_set_id?: number | null;
+    tire_event_type?: TireEventType | null;
 }
 
 export interface FuelRecord {
@@ -108,6 +153,11 @@ export interface ShareLink {
 
 export type PublicReplacement = Omit<Replacement, 'vehicle_id'>;
 
+export type PublicTireSet = Pick<
+    TireSet,
+    'id' | 'name' | 'season' | 'purchase_date' | 'purchase_price' | 'is_installed' | 'installed_date' | 'next_change_date' | 'status' | 'days_remaining' | 'total_km'
+>;
+
 export type PublicOtherExpense = Omit<OtherExpense, 'vehicle_id'>;
 
 export type PublicFuelRecord = Omit<FuelRecord, 'vehicle_id'>;
@@ -122,6 +172,7 @@ export interface PublicVehicle {
     current_km: number;
     vehicle_status: string;
     replacements: PublicReplacement[];
+    tire_sets: PublicTireSet[];
     other_expenses: PublicOtherExpense[];
     repairs: PublicRepair[];
     fuel_records: PublicFuelRecord[];
