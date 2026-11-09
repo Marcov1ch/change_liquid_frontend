@@ -1,5 +1,9 @@
 import type { ComponentConfig, Repair, Vehicle } from '../types';
 import { isDateOnlyComponent } from '../utils/replacementTypes';
+import {
+    AddDateOnlyReplacementFields,
+    AddRegularReplacementFields,
+} from './AddReplacementFields';
 
 export interface NewReplacementData {
     component_type: string;
@@ -22,7 +26,16 @@ interface Props {
     onCancel: () => void;
 }
 
-export function AddReplacementForm({ configs, today, selectedVehicle, value, blockedByRepair, onChange, onSubmit, onCancel }: Props) {
+export function AddReplacementForm({
+    configs,
+    today,
+    selectedVehicle,
+    value,
+    blockedByRepair,
+    onChange,
+    onSubmit,
+    onCancel,
+}: Props) {
     const isDateOnly = isDateOnlyComponent(value.component_type);
     const isParking = value.component_type === 'parking_monthly';
 
@@ -41,11 +54,11 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, blo
                     <label className="block text-label-md text-surface-on-variant mb-1">Тип</label>
                     <select
                         value={value.component_type}
-                        onChange={(e) => onChange({ component_type: e.target.value })}
+                        onChange={(event) => onChange({ component_type: event.target.value })}
                         className="md3-select"
                     >
-                        {configs.map(cfg => (
-                            <option key={cfg.key} value={cfg.key}>{cfg.name}</option>
+                        {configs.map(config => (
+                            <option key={config.key} value={config.key}>{config.name}</option>
                         ))}
                         <option value="insurance">Страховка</option>
                         <option value="parking_monthly">Аренда машиноместа</option>
@@ -58,98 +71,27 @@ export function AddReplacementForm({ configs, today, selectedVehicle, value, blo
                         type="text"
                         placeholder={namePlaceholder}
                         value={value.component_name}
-                        onChange={(e) => onChange({ component_name: e.target.value })}
+                        onChange={(event) => onChange({ component_name: event.target.value })}
                         className="md3-field"
                     />
                 </div>
 
                 {isDateOnly ? (
-                    <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата начала</label>
-                                <input
-                                    type="date"
-                                    max={today}
-                                    value={value.replacement_date}
-                                    onChange={(e) => onChange({ replacement_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата окончания *</label>
-                                <input
-                                    type="date"
-                                    value={value.next_change_date}
-                                    onChange={(e) => onChange({ next_change_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-label-md text-surface-on-variant mb-1">
-                                {isParking ? 'Стоимость аренды (₽)' : 'Стоимость страховки (₽)'}
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder={isParking ? '8000' : '12000'}
-                                value={value.component_price === 0 ? '' : value.component_price}
-                                onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                disabled={!!blockedByRepair}
-                                className="md3-field"
-                            />
-                        </div>
-                    </div>
+                    <AddDateOnlyReplacementFields
+                        value={value}
+                        today={today}
+                        blockedByRepair={blockedByRepair}
+                        onChange={onChange}
+                        isParking={isParking}
+                    />
                 ) : (
-                    <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
-                                <input
-                                    type="number"
-                                placeholder="5000"
-                                value={value.component_price === 0 ? '' : value.component_price}
-                                onChange={(e) => onChange({ component_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                disabled={!!blockedByRepair}
-                                className="md3-field"
-                            />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
-                                <input
-                                    type="number"
-                                placeholder="1500"
-                                value={value.work_price === 0 ? '' : value.work_price}
-                                onChange={(e) => onChange({ work_price: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                disabled={!!blockedByRepair}
-                                className="md3-field"
-                            />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Пробег (км)</label>
-                                <input
-                                    type="number"
-                                    placeholder={String(selectedVehicle?.current_km || 0)}
-                                    value={value.km_at_replacement === 0 ? '' : value.km_at_replacement}
-                                    onChange={(e) => onChange({ km_at_replacement: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                                    className="md3-field"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-label-md text-surface-on-variant mb-1">Дата</label>
-                                <input
-                                    type="date"
-                                    max={today}
-                                    value={value.replacement_date}
-                                    onChange={(e) => onChange({ replacement_date: e.target.value })}
-                                    className="md3-field"
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <AddRegularReplacementFields
+                        value={value}
+                        today={today}
+                        selectedVehicle={selectedVehicle}
+                        blockedByRepair={blockedByRepair}
+                        onChange={onChange}
+                    />
                 )}
 
                 {blockedByRepair && (

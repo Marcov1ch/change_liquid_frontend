@@ -1,6 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import { ProfileDeleteAccountSection } from '../components/profile/ProfileDeleteAccountSection'
+import { ProfileEmailSection } from '../components/profile/ProfileEmailSection'
+import { ProfileHeader } from '../components/profile/ProfileHeader'
+import { ProfilePasswordSection } from '../components/profile/ProfilePasswordSection'
+import { ProfileUserCard } from '../components/profile/ProfileUserCard'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import {
@@ -60,8 +65,8 @@ export function ProfilePage() {
     setClock(Date.now())
   }
 
-  const handleEmailSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const handleEmailSubmit = async (event: FormEvent) => {
+    event.preventDefault()
     setEmailError('')
     setEmailSuccess(false)
     setEmailSubmitting(true)
@@ -98,8 +103,8 @@ export function ProfilePage() {
     }
   }
 
-  const handlePasswordSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const handlePasswordSubmit = async (event: FormEvent) => {
+    event.preventDefault()
     setPasswordError('')
     setPasswordSuccess(false)
 
@@ -135,155 +140,40 @@ export function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-sm border-b border-outline-variant shadow-md3-1">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center justify-center w-10 h-10 rounded-md3-full text-surface-on-variant hover:bg-surface-variant transition-colors"
-            aria-label="Назад"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-            </svg>
-          </button>
-          <h1 className="text-title-md text-surface-on m-0">Профиль</h1>
-        </div>
-      </header>
+      <ProfileHeader onBack={() => navigate('/')} />
 
       <main className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex flex-col gap-6">
-          {/* User info */}
-          <div className="md3-card p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-headline-md text-primary shrink-0">
-                {user?.username?.charAt(0).toUpperCase() || '?'}
-              </div>
-              <div>
-                <p className="text-title-md text-surface-on">{user?.username}</p>
-                <p className="text-body-md text-outline">{user?.email}</p>
-                {user && (
-                  <span className={`inline-block mt-1 text-label-sm ${user.email_verified ? 'text-[#1B5E1B]' : 'text-[#7A6100]'}`}>
-                    {user.email_verified ? 'Email подтверждён' : 'Email не подтверждён'}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+          <ProfileUserCard user={user} />
 
-          {/* Email */}
-          <div className="md3-card p-6">
-            <h2 className="text-title-md text-surface-on mb-4">Email</h2>
-            <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="md3-field"
-              />
-              {emailError && <p className="text-body-sm text-error" role="alert">{emailError}</p>}
-              {emailSuccess && (
-                <p className="text-body-sm text-[#1B5E1B]" role="status">
-                  Email обновлён. Подтвердите новый адрес по ссылке из письма.
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={emailSubmitting}
-                className="md3-btn-primary self-start"
-              >
-                {emailSubmitting ? 'Сохранение...' : 'Сохранить'}
-              </button>
-            </form>
+          <ProfileEmailSection
+            user={user}
+            email={email}
+            emailError={emailError}
+            emailSubmitting={emailSubmitting}
+            emailSuccess={emailSuccess}
+            resendSubmitting={resendSubmitting}
+            resendSuccess={resendSuccess}
+            resendSecondsLeft={resendSecondsLeft}
+            onEmailChange={setEmail}
+            onSubmit={handleEmailSubmit}
+            onResend={handleResendVerification}
+          />
 
-            {user && !user.email_verified && (
-              <div className="mt-4 pt-4 border-t border-outline-variant flex flex-col gap-2">
-                <p className="text-body-md text-outline m-0">
-                  Email не подтверждён. Пока адрес не подтверждён, восстановление пароля и уведомления не отправляются.
-                </p>
-                {resendSuccess && (
-                  <p className="text-body-sm text-[#1B5E1B]" role="status">Письмо отправлено повторно.</p>
-                )}
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={resendSubmitting || resendSecondsLeft > 0}
-                  className="md3-btn-text self-start"
-                  aria-live="polite"
-                >
-                  {resendSubmitting
-                    ? 'Отправка...'
-                    : resendSecondsLeft > 0
-                      ? `Отправить повторно через ${resendSecondsLeft} с`
-                      : 'Отправить письмо повторно'}
-                </button>
-              </div>
-            )}
-          </div>
+          <ProfilePasswordSection
+            oldPassword={oldPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            passwordError={passwordError}
+            passwordSubmitting={passwordSubmitting}
+            passwordSuccess={passwordSuccess}
+            onOldPasswordChange={setOldPassword}
+            onNewPasswordChange={setNewPassword}
+            onConfirmPasswordChange={setConfirmPassword}
+            onSubmit={handlePasswordSubmit}
+          />
 
-          {/* Password */}
-          <div className="md3-card p-6">
-            <h2 className="text-title-md text-surface-on mb-4">Смена пароля</h2>
-            <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
-              <div>
-                <label htmlFor="old-password" className="block text-label-lg text-surface-on mb-1">Текущий пароль</label>
-                <input
-                  id="old-password"
-                  type="password"
-                  value={oldPassword}
-                  onChange={e => setOldPassword(e.target.value)}
-                  required
-                  className="md3-field"
-                />
-              </div>
-              <div>
-                <label htmlFor="new-password" className="block text-label-lg text-surface-on mb-1">Новый пароль</label>
-                <input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  required
-                  className="md3-field"
-                />
-              </div>
-              <div>
-                <label htmlFor="confirm-password" className="block text-label-lg text-surface-on mb-1">Подтвердите пароль</label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  required
-                  className="md3-field"
-                />
-              </div>
-              {passwordError && <p className="text-body-sm text-error" role="alert">{passwordError}</p>}
-              {passwordSuccess && <p className="text-body-sm text-[#1B5E1B]" role="status">Пароль изменён</p>}
-              <button
-                type="submit"
-                disabled={passwordSubmitting}
-                className="md3-btn-primary self-start"
-              >
-                {passwordSubmitting ? 'Сохранение...' : 'Изменить пароль'}
-              </button>
-            </form>
-          </div>
-
-          {/* Удаление аккаунта */}
-          <div className="md3-card p-6 border-l-4 border-l-error">
-            <h2 className="text-title-md text-error mb-2">Удаление аккаунта</h2>
-            <p className="text-body-md text-outline mb-4">Это действие необратимо.</p>
-            <button
-              onClick={handleDeleteAccount}
-              className="md3-btn-danger"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
-              Удалить аккаунт
-            </button>
-          </div>
+          <ProfileDeleteAccountSection onDelete={handleDeleteAccount} />
         </div>
       </main>
     </div>
