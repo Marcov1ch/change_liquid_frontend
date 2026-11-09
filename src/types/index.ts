@@ -182,6 +182,7 @@ export interface PublicVehicle {
 export interface MonthlyStatistics {
     month: number;
     replacements: number;
+    tires: number;
     repairs: number;
     fuel: number;
     other_expenses: number;
@@ -190,6 +191,7 @@ export interface MonthlyStatistics {
 
 export interface StatisticsTotals {
     replacements: number;
+    tires: number;
     repairs: number;
     fuel: number;
     other_expenses: number;

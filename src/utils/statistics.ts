@@ -31,6 +31,10 @@ function replacementCost(record: PublicReplacement): number {
   return (record.component_price ?? 0) + (record.work_price ?? 0);
 }
 
+function isTireReplacement(record: PublicReplacement): boolean {
+  return record.component_type === 'tire_change';
+}
+
 function collectDatedCosts(
   replacements: PublicReplacement[],
   repairs: PublicRepair[],
@@ -38,6 +42,7 @@ function collectDatedCosts(
   otherExpenses: PublicOtherExpense[],
 ): {
   replacements: DatedCost[];
+  tires: DatedCost[];
   repairs: DatedCost[];
   fuel: DatedCost[];
   other_expenses: DatedCost[];
@@ -56,7 +61,14 @@ function collectDatedCosts(
 
   return {
     replacements: collect(
-      replacements.map(item => ({ date: item.replacement_date, amount: replacementCost(item) })),
+      replacements
+        .filter(item => !isTireReplacement(item))
+        .map(item => ({ date: item.replacement_date, amount: replacementCost(item) })),
+    ),
+    tires: collect(
+      replacements
+        .filter(isTireReplacement)
+        .map(item => ({ date: item.replacement_date, amount: replacementCost(item) })),
     ),
     repairs: collect(
       repairs.map(item => ({
@@ -77,6 +89,7 @@ function emptyMonths(): MonthlyStatistics[] {
   return Array.from({ length: MONTHS_COUNT }, (_, index) => ({
     month: index + 1,
     replacements: 0,
+    tires: 0,
     repairs: 0,
     fuel: 0,
     other_expenses: 0,
@@ -95,6 +108,7 @@ export function buildVehicleStatistics(
   const months = emptyMonths();
   const totals: StatisticsTotals = {
     replacements: 0,
+    tires: 0,
     repairs: 0,
     fuel: 0,
     other_expenses: 0,
@@ -104,7 +118,7 @@ export function buildVehicleStatistics(
 
   const apply = (
     items: DatedCost[],
-    key: 'replacements' | 'repairs' | 'fuel' | 'other_expenses',
+    key: 'replacements' | 'tires' | 'repairs' | 'fuel' | 'other_expenses',
   ) => {
     items.forEach(item => {
       years.add(item.year);
@@ -116,6 +130,7 @@ export function buildVehicleStatistics(
   };
 
   apply(dated.replacements, 'replacements');
+  apply(dated.tires, 'tires');
   apply(dated.repairs, 'repairs');
   apply(dated.fuel, 'fuel');
   apply(dated.other_expenses, 'other_expenses');
@@ -123,12 +138,17 @@ export function buildVehicleStatistics(
   months.forEach(month => {
     month.total =
       month.replacements +
+      month.tires +
       month.repairs +
       month.fuel +
       month.other_expenses;
   });
   totals.total =
-    totals.replacements + totals.repairs + totals.fuel + totals.other_expenses;
+    totals.replacements +
+    totals.tires +
+    totals.repairs +
+    totals.fuel +
+    totals.other_expenses;
 
   return {
     year,
