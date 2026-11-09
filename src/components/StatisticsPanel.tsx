@@ -51,6 +51,7 @@ export function StatisticsPanel({
 
   const summary = [
     { label: 'Замены', value: stats.totals.replacements },
+    { label: 'Шины', value: stats.totals.tires },
     { label: 'Ремонт', value: stats.totals.repairs },
     { label: 'Заправки', value: stats.totals.fuel },
     { label: 'Прочие траты', value: stats.totals.other_expenses },
@@ -75,7 +76,7 @@ export function StatisticsPanel({
         </label>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {summary.map(item => (
           <div key={item.label} className="bg-surface-variant/40 rounded-md3-sm p-3">
             <p className="text-body-sm text-outline m-0">{item.label}</p>
@@ -119,11 +120,12 @@ export function StatisticsPanel({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-body-sm min-w-[560px]">
+            <table className="w-full text-body-sm min-w-[640px]">
               <thead>
                 <tr className="text-outline border-b border-outline-variant">
                   <th className="text-left font-normal py-2 pr-3">Месяц</th>
                   <th className="text-right font-normal py-2 px-2">Замены</th>
+                  <th className="text-right font-normal py-2 px-2">Шины</th>
                   <th className="text-right font-normal py-2 px-2">Ремонт</th>
                   <th className="text-right font-normal py-2 px-2">Заправки</th>
                   <th className="text-right font-normal py-2 px-2">Прочие</th>
@@ -135,6 +137,7 @@ export function StatisticsPanel({
                   <tr key={month.month} className="border-b border-outline-variant/50">
                     <td className="py-2 pr-3 text-surface-on">{MONTH_NAMES_FULL[month.month - 1]}</td>
                     <td className="py-2 px-2 text-right text-surface-on-variant">{formatMoney(month.replacements)}</td>
+                    <td className="py-2 px-2 text-right text-surface-on-variant">{formatMoney(month.tires)}</td>
                     <td className="py-2 px-2 text-right text-surface-on-variant">{formatMoney(month.repairs)}</td>
                     <td className="py-2 px-2 text-right text-surface-on-variant">{formatMoney(month.fuel)}</td>
                     <td className="py-2 px-2 text-right text-surface-on-variant">{formatMoney(month.other_expenses)}</td>
@@ -144,6 +147,7 @@ export function StatisticsPanel({
                 <tr>
                   <td className="py-2 pr-3 text-surface-on font-semibold">Итого за год</td>
                   <td className="py-2 px-2 text-right text-surface-on font-semibold">{formatMoney(stats.totals.replacements)}</td>
+                  <td className="py-2 px-2 text-right text-surface-on font-semibold">{formatMoney(stats.totals.tires)}</td>
                   <td className="py-2 px-2 text-right text-surface-on font-semibold">{formatMoney(stats.totals.repairs)}</td>
                   <td className="py-2 px-2 text-right text-surface-on font-semibold">{formatMoney(stats.totals.fuel)}</td>
                   <td className="py-2 px-2 text-right text-surface-on font-semibold">{formatMoney(stats.totals.other_expenses)}</td>

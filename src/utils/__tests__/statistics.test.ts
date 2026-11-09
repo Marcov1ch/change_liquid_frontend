@@ -11,11 +11,12 @@ function replacement(
   replacementDate: string,
   componentPrice: number | null,
   workPrice: number | null,
+  componentType = 'engine_oil',
 ): PublicReplacement {
   return {
     id: 1,
-    component_type: 'engine_oil',
-    component_name: 'Масло',
+    component_type: componentType,
+    component_name: componentType === 'tire_change' ? 'Шины' : 'Масло',
     component_price: componentPrice,
     work_price: workPrice,
     replacement_date: replacementDate,
@@ -59,6 +60,7 @@ function expense(expenseDate: string, amount: number): PublicOtherExpense {
 describe('buildVehicleStatistics', () => {
   const replacements = [
     replacement('2026-01-01', 5000, 1000),
+    replacement('2026-02-15', 30000, 1500, 'tire_change'),
     replacement('2026-12-31', 2000, 0),
     replacement('2025-06-15', 1000, 0),
   ];
@@ -73,10 +75,17 @@ describe('buildVehicleStatistics', () => {
     expect(stats.months[0]).toMatchObject({
       month: 1,
       replacements: 6000,
+      tires: 0,
       repairs: 0,
       fuel: 2500,
       other_expenses: 0,
       total: 8500,
+    });
+    expect(stats.months[1]).toMatchObject({
+      month: 2,
+      replacements: 0,
+      tires: 31500,
+      total: 31500,
     });
     expect(stats.months[2]).toMatchObject({ month: 3, repairs: 3000, total: 3000 });
     expect(stats.months[11]).toMatchObject({
@@ -92,12 +101,13 @@ describe('buildVehicleStatistics', () => {
 
     expect(stats.totals).toEqual({
       replacements: 8000,
+      tires: 31500,
       repairs: 3000,
       fuel: 2500,
       other_expenses: 500,
-      total: 14000,
+      total: 45500,
     });
-    expect(stats.max_monthly_total).toBe(8500);
+    expect(stats.max_monthly_total).toBe(31500);
   });
 
   it('returns empty months for a year without records', () => {
