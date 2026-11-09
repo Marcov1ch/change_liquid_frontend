@@ -1,4 +1,4 @@
-import type { Replacement, TireSeason } from '../types';
+import type { Replacement, TireSeason, TireSet } from '../types';
 
 export const TIRE_SEASON_LABELS: Record<TireSeason, string> = {
     summer: 'Лето',
@@ -103,6 +103,24 @@ export function formatTireEventLabel(replacement: Replacement): string {
     if (replacement.tire_event_type === 'purchase') return 'Покупка';
     if (replacement.tire_event_type === 'install') return 'Установка';
     return 'Замена';
+}
+
+export function getCurrentTireInstallId(
+    events: Replacement[],
+    current: TireSet | null,
+): number | null {
+    if (!current) return null;
+
+    const installs = events.filter(
+        event => event.tire_event_type === 'install' && event.tire_set_id === current.id,
+    );
+    if (installs.length === 0) return null;
+
+    return installs.reduce((best, item) => {
+        if (item.km_at_replacement > best.km_at_replacement) return item;
+        if (item.km_at_replacement === best.km_at_replacement && item.id > best.id) return item;
+        return best;
+    }).id;
 }
 
 export function sortTireEvents(events: Replacement[]): Replacement[] {

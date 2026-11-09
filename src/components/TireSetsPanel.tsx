@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import type { Replacement, TireSet, TireSetPayload, Vehicle } from '../types';
-import { isTireChange, sortTireEvents } from '../utils/tireSets';
+import { getCurrentTireInstallId, isTireChange, sortTireEvents } from '../utils/tireSets';
 import { Modal } from './Modal';
 import { TireHistoryList } from './TireHistoryList';
 import { TireInstallForm } from './TireInstallForm';
@@ -43,6 +43,7 @@ export function TireSetsPanel({
   const current = tireSets.find(item => item.is_installed) ?? null;
   const others = tireSets.filter(item => !item.is_installed);
   const events = sortTireEvents(replacements.filter(isTireChange));
+  const protectedEventId = getCurrentTireInstallId(events, current);
 
   const openCreateForm = () => {
     setEditingSet(null);
@@ -159,7 +160,11 @@ export function TireSetsPanel({
         )}
 
         <TireSetList tireSets={tireSets} onEdit={openEditForm} onDelete={handleDelete} />
-        <TireHistoryList events={events} onDelete={handleDeleteEvent} />
+        <TireHistoryList
+          events={events}
+          protectedEventId={protectedEventId}
+          onDelete={handleDeleteEvent}
+        />
 
         <div>
           <button onClick={openCreateForm} className="md3-btn-primary w-full">

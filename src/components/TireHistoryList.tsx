@@ -3,10 +3,11 @@ import { formatTireEventLabel, formatTireMoney } from '../utils/tireSets';
 
 interface Props {
     events: Replacement[];
+    protectedEventId?: number | null;
     onDelete: (event: Replacement) => void;
 }
 
-export function TireHistoryList({ events, onDelete }: Props) {
+export function TireHistoryList({ events, protectedEventId, onDelete }: Props) {
     if (events.length === 0) return null;
 
     return (
@@ -28,8 +29,14 @@ export function TireHistoryList({ events, onDelete }: Props) {
                             </p>
                             <button
                                 onClick={() => onDelete(event)}
-                                className="flex items-center justify-center w-8 h-8 rounded-md3-full text-error hover:bg-error-container transition-colors shrink-0"
-                                aria-label="Удалить запись из истории шин"
+                                disabled={event.id === protectedEventId}
+                                title={event.id === protectedEventId
+                                    ? 'Нельзя удалить установку текущего комплекта. Сначала переключитесь на другой комплект.'
+                                    : undefined}
+                                className="flex items-center justify-center w-8 h-8 rounded-md3-full text-error hover:bg-error-container transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                                aria-label={event.id === protectedEventId
+                                    ? 'Нельзя удалить установку текущего комплекта'
+                                    : 'Удалить запись из истории шин'}
                             >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
