@@ -237,7 +237,7 @@ export function TireSetsPanel({
               {tireSets.map(tireSet => (
                 <div
                   key={tireSet.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-md3-sm bg-surface border border-outline-variant flex-wrap"
+                  className="flex items-start justify-between gap-3 p-3 rounded-md3-sm bg-surface border border-outline-variant flex-wrap"
                 >
                   <div className="min-w-0">
                     <p className="text-label-lg text-surface-on m-0 truncate">
@@ -252,12 +252,6 @@ export function TireSetsPanel({
                       {TIRE_SEASON_LABELS[tireSet.season]} · всего {formatKm(tireSet.total_km)}
                       {tireSet.accumulated_km > 0 && ` · прошлые сезоны ${formatKm(tireSet.accumulated_km)}`}
                     </p>
-                    {tireSet.purchase_price != null && (
-                      <p className="text-body-sm text-outline m-0">
-                        🧾 Покупка: {formatTireMoney(tireSet.purchase_price)}
-                        {tireSet.purchase_date ? ` · ${tireSet.purchase_date}` : ''}
-                      </p>
-                    )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
