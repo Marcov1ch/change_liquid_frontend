@@ -26,7 +26,8 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   const showNextDate = initial ? initial.is_installed : installNow;
-  const nextDateMin = initial?.installed_date || today;
+  const nextDateMin = initial?.installed_date
+    || (installNow && purchaseDate ? purchaseDate : today);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -166,6 +167,9 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
                 onChange={(e) => setWorkPrice(e.target.value)}
                 className="md3-field"
               />
+              <p className="text-body-sm text-outline mt-1 mb-0">
+                Дата установки совпадёт с датой покупки{purchaseDate ? '' : ' (или с сегодняшней, если дата не указана)'}.
+              </p>
             </div>
           )}
         </div>
