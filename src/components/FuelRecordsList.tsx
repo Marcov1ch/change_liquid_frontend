@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { api } from '../api/client';
-import { useToast } from '../context/ToastContext';
+import { useCrudList } from '../hooks/useCrudList';
 import type { FuelRecord, FuelRecordPayload, Vehicle } from '../types';
 import { FuelRecordForm } from './FuelRecordForm';
 import { Modal } from './Modal';
@@ -35,9 +34,27 @@ export function FuelRecordsList({
   onShare,
   onRecordsUpdate,
 }: Props) {
-  const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<FuelRecord | null>(null);
+  const {
+    showForm,
+    editing,
+    openCreateForm,
+    openEditForm,
+    closeForm,
+    handleSubmit,
+    handleDelete,
+  } = useCrudList<FuelRecord, FuelRecordPayload>({
+    vehicleId,
+    create: api.createFuelRecord,
+    update: api.updateFuelRecord,
+    remove: api.deleteFuelRecord,
+    onChanged: onRecordsUpdate,
+    createSuccess: 'Заправка добавлена',
+    updateSuccess: 'Заправка обновлена',
+    saveError: 'Не удалось сохранить заправку',
+    deleteSuccess: 'Заправка удалена',
+    deleteError: 'Не удалось удалить заправку',
+    getDeleteConfirm: record => `Удалить заправку от ${record.fuel_date}?`,
+  });
 
   if (!vehicleId || !selectedVehicle) return null;
 
@@ -49,48 +66,6 @@ export function FuelRecordsList({
   });
   const totalLiters = sortedRecords.reduce((sum, record) => sum + record.liters, 0);
   const totalCost = sortedRecords.reduce((sum, record) => sum + record.total_cost, 0);
-
-  const openCreateForm = () => {
-    setEditingRecord(null);
-    setShowForm(true);
-  };
-
-  const openEditForm = (record: FuelRecord) => {
-    setEditingRecord(record);
-    setShowForm(true);
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingRecord(null);
-  };
-
-  const handleSubmit = async (payload: FuelRecordPayload) => {
-    try {
-      if (editingRecord) {
-        await api.updateFuelRecord(editingRecord.id, payload);
-        toast.success('Заправка обновлена');
-      } else {
-        await api.createFuelRecord(vehicleId, payload);
-        toast.success('Заправка добавлена');
-      }
-      closeForm();
-      onRecordsUpdate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось сохранить заправку');
-    }
-  };
-
-  const handleDelete = async (record: FuelRecord) => {
-    if (!confirm(`Удалить заправку от ${record.fuel_date}?`)) return;
-    try {
-      await api.deleteFuelRecord(record.id);
-      toast.success('Заправка удалена');
-      onRecordsUpdate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось удалить заправку');
-    }
-  };
 
   return (
     <div className="md3-card overflow-hidden animate-fade-in">
@@ -177,12 +152,12 @@ export function FuelRecordsList({
       <Modal
         isOpen={showForm}
         onClose={closeForm}
-        title={editingRecord ? 'Редактировать заправку' : 'Новая заправка'}
+        title={editing ? 'Редактировать заправку' : 'Новая заправка'}
       >
         <FuelRecordForm
-          key={editingRecord?.id ?? 'new'}
+          key={editing?.id ?? 'new'}
           vehicle={selectedVehicle}
-          initial={editingRecord}
+          initial={editing}
           today={today}
           onSubmit={handleSubmit}
           onCancel={closeForm}

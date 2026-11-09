@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { api } from '../api/client';
-import { useToast } from '../context/ToastContext';
+import { useCrudList } from '../hooks/useCrudList';
 import { useComponentConfigs } from '../hooks/useEnums';
 import type { Repair, RepairPayload, Replacement, Vehicle } from '../types';
 import { Modal } from './Modal';
@@ -30,10 +29,28 @@ export function RepairList({
   onShare,
   onRepairsUpdate,
 }: Props) {
-  const { toast } = useToast();
   const { data: configsData } = useComponentConfigs();
-  const [showForm, setShowForm] = useState(false);
-  const [editingRepair, setEditingRepair] = useState<Repair | null>(null);
+  const {
+    showForm,
+    editing,
+    openCreateForm,
+    openEditForm,
+    closeForm,
+    handleSubmit,
+    handleDelete,
+  } = useCrudList<Repair, RepairPayload>({
+    vehicleId,
+    create: api.createRepair,
+    update: api.updateRepair,
+    remove: api.deleteRepair,
+    onChanged: onRepairsUpdate,
+    createSuccess: 'Ремонт добавлен',
+    updateSuccess: 'Ремонт обновлён',
+    saveError: 'Не удалось сохранить ремонт',
+    deleteSuccess: 'Ремонт удалён',
+    deleteError: 'Не удалось удалить ремонт',
+    getDeleteConfirm: repair => `Удалить ремонт от ${repair.repair_date}?`,
+  });
 
   if (!vehicleId || !selectedVehicle) return null;
 
@@ -46,48 +63,6 @@ export function RepairList({
     if (dateDiff !== 0) return dateDiff;
     return b.id - a.id;
   });
-
-  const openCreateForm = () => {
-    setEditingRepair(null);
-    setShowForm(true);
-  };
-
-  const openEditForm = (repair: Repair) => {
-    setEditingRepair(repair);
-    setShowForm(true);
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingRepair(null);
-  };
-
-  const handleSubmit = async (payload: RepairPayload) => {
-    try {
-      if (editingRepair) {
-        await api.updateRepair(editingRepair.id, payload);
-        toast.success('Ремонт обновлён');
-      } else {
-        await api.createRepair(vehicleId, payload);
-        toast.success('Ремонт добавлен');
-      }
-      closeForm();
-      onRepairsUpdate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось сохранить ремонт');
-    }
-  };
-
-  const handleDelete = async (repair: Repair) => {
-    if (!confirm(`Удалить ремонт от ${repair.repair_date}?`)) return;
-    try {
-      await api.deleteRepair(repair.id);
-      toast.success('Ремонт удалён');
-      onRepairsUpdate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось удалить ремонт');
-    }
-  };
 
   return (
     <div className="md3-card overflow-hidden animate-fade-in">
@@ -186,13 +161,13 @@ export function RepairList({
       <Modal
         isOpen={showForm}
         onClose={closeForm}
-        title={editingRepair ? 'Редактировать ремонт' : 'Новый ремонт'}
+        title={editing ? 'Редактировать ремонт' : 'Новый ремонт'}
       >
         <RepairForm
-          key={editingRepair?.id ?? 'new'}
+          key={editing?.id ?? 'new'}
           vehicle={selectedVehicle}
           replacements={replacements}
-          initial={editingRepair}
+          initial={editing}
           today={today}
           onSubmit={handleSubmit}
           onCancel={closeForm}

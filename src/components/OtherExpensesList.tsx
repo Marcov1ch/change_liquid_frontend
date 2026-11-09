@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { api } from '../api/client';
-import { useToast } from '../context/ToastContext';
+import { useCrudList } from '../hooks/useCrudList';
 import type { OtherExpense, OtherExpensePayload, Vehicle } from '../types';
 import { Modal } from './Modal';
 import { OtherExpenseForm } from './OtherExpenseForm';
@@ -20,9 +19,27 @@ function formatMoney(value: number): string {
 }
 
 export function OtherExpensesList({ expenses, vehicleId, selectedVehicle, onClose, onShare, onExpensesUpdate }: Props) {
-  const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<OtherExpense | null>(null);
+  const {
+    showForm,
+    editing,
+    openCreateForm,
+    openEditForm,
+    closeForm,
+    handleSubmit,
+    handleDelete,
+  } = useCrudList<OtherExpense, OtherExpensePayload>({
+    vehicleId,
+    create: api.createOtherExpense,
+    update: api.updateOtherExpense,
+    remove: api.deleteOtherExpense,
+    onChanged: onExpensesUpdate,
+    createSuccess: 'Трата добавлена',
+    updateSuccess: 'Трата обновлена',
+    saveError: 'Не удалось сохранить трату',
+    deleteSuccess: 'Трата удалена',
+    deleteError: 'Не удалось удалить трату',
+    getDeleteConfirm: expense => `Удалить трату «${expense.name}»?`,
+  });
 
   if (!vehicleId || !selectedVehicle) return null;
 
@@ -33,48 +50,6 @@ export function OtherExpensesList({ expenses, vehicleId, selectedVehicle, onClos
     return b.id - a.id;
   });
   const total = sortedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-
-  const openCreateForm = () => {
-    setEditingExpense(null);
-    setShowForm(true);
-  };
-
-  const openEditForm = (expense: OtherExpense) => {
-    setEditingExpense(expense);
-    setShowForm(true);
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingExpense(null);
-  };
-
-  const handleSubmit = async (payload: OtherExpensePayload) => {
-    try {
-      if (editingExpense) {
-        await api.updateOtherExpense(editingExpense.id, payload);
-        toast.success('Трата обновлена');
-      } else {
-        await api.createOtherExpense(vehicleId, payload);
-        toast.success('Трата добавлена');
-      }
-      closeForm();
-      onExpensesUpdate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось сохранить трату');
-    }
-  };
-
-  const handleDelete = async (expense: OtherExpense) => {
-    if (!confirm(`Удалить трату «${expense.name}»?`)) return;
-    try {
-      await api.deleteOtherExpense(expense.id);
-      toast.success('Трата удалена');
-      onExpensesUpdate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не удалось удалить трату');
-    }
-  };
 
   return (
     <div className="md3-card overflow-hidden animate-fade-in">
@@ -151,11 +126,11 @@ export function OtherExpensesList({ expenses, vehicleId, selectedVehicle, onClos
       <Modal
         isOpen={showForm}
         onClose={closeForm}
-        title={editingExpense ? 'Редактировать трату' : 'Новая трата'}
+        title={editing ? 'Редактировать трату' : 'Новая трата'}
       >
         <OtherExpenseForm
-          key={editingExpense?.id ?? 'new'}
-          initial={editingExpense}
+          key={editing?.id ?? 'new'}
+          initial={editing}
           today={today}
           onSubmit={handleSubmit}
           onCancel={closeForm}
