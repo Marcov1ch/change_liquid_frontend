@@ -99,6 +99,12 @@ export function isTireChange(replacement: Replacement): boolean {
     return replacement.component_type === 'tire_change';
 }
 
+export function formatTireEventLabel(replacement: Replacement): string {
+    if (replacement.tire_event_type === 'purchase') return 'Покупка';
+    if (replacement.tire_event_type === 'install') return 'Установка';
+    return 'Замена';
+}
+
 export function sortTireEvents(events: Replacement[]): Replacement[] {
     return [...events].sort((a, b) => {
         const dateDiff = new Date(b.replacement_date).getTime() - new Date(a.replacement_date).getTime();
