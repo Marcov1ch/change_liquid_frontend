@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
+import { ProfileCurrencySection } from '../components/profile/ProfileCurrencySection'
 import { ProfileDeleteAccountSection } from '../components/profile/ProfileDeleteAccountSection'
 import { ProfileEmailSection } from '../components/profile/ProfileEmailSection'
 import { ProfileHeader } from '../components/profile/ProfileHeader'
@@ -17,7 +18,7 @@ import {
 } from '../utils/resendCooldown'
 
 export function ProfilePage() {
-  const { user, updateEmail, resendVerification, changePassword, deleteAccount } = useAuth()
+  const { user, updateEmail, markProfileVisited, resendVerification, changePassword, deleteAccount } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -46,6 +47,12 @@ export function ProfilePage() {
     setResendAvailableAt(resendCooldownKey ? readResendCooldown(resendCooldownKey) : 0)
     setClock(Date.now())
   }, [resendCooldownKey])
+
+  useEffect(() => {
+    if (user && !user.profile_visited) {
+      void markProfileVisited().catch(() => undefined)
+    }
+  }, [user, markProfileVisited])
 
   useEffect(() => {
     if (resendAvailableAt <= Date.now()) return
@@ -159,6 +166,8 @@ export function ProfilePage() {
             onSubmit={handleEmailSubmit}
             onResend={handleResendVerification}
           />
+
+          <ProfileCurrencySection />
 
           <ProfilePasswordSection
             oldPassword={oldPassword}

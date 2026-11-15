@@ -1,5 +1,5 @@
+import { useCurrency } from '../../context/CurrencyContext';
 import type { PublicVehicle } from '../../types';
-import { formatPublicMoney } from '../../utils/publicVehicle';
 import { getReplacementStatusStyle } from '../../utils/statusStyles';
 
 interface Props {
@@ -19,6 +19,7 @@ export function PublicVehicleSummary({
     otherExpensesCount,
     totalCost,
 }: Props) {
+    const { formatMoney } = useCurrency();
     const statusStyle = getReplacementStatusStyle(vehicle.vehicle_status);
 
     return (
@@ -43,7 +44,7 @@ export function PublicVehicleSummary({
                 <SummaryItem label="Заправок" value={String(fuelRecordsCount)} />
                 <SummaryItem label="Ремонтов" value={String(repairsCount)} />
                 <SummaryItem label="Прочих трат" value={String(otherExpensesCount)} />
-                <SummaryItem label="Общие расходы" value={formatPublicMoney(totalCost)} />
+                <SummaryItem label="Общие расходы" value={formatMoney(totalCost)} />
             </div>
         </div>
     );

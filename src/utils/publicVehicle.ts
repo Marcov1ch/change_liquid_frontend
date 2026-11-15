@@ -1,10 +1,6 @@
 import type { PublicReplacement } from '../types';
 import { getDateWarningDays, isDateBasedComponent, isDateOnlyComponent } from './replacementTypes';
 
-export function formatPublicMoney(value: number | null): string {
-    return value == null ? '—' : `${value.toLocaleString()} ₽`;
-}
-
 export function getPublicReplacementNote(replacement: PublicReplacement): string | null {
     if (isDateBasedComponent(replacement.component_type)) {
         if (replacement.days_remaining == null) return null;

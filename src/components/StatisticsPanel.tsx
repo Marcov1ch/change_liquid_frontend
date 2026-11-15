@@ -5,6 +5,7 @@ import type {
   PublicRepair,
   PublicReplacement,
 } from '../types';
+import { useCurrency } from '../context/CurrencyContext';
 import { buildVehicleStatistics } from '../utils/statistics';
 
 interface Props {
@@ -24,16 +25,13 @@ const MONTH_NAMES_FULL = [
   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
 ];
 
-function formatMoney(value: number): string {
-  return `${value.toLocaleString()} ₽`;
-}
-
 export function StatisticsPanel({
   replacements,
   repairs,
   fuelRecords,
   otherExpenses,
 }: Props) {
+  const { formatMoney } = useCurrency();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
 

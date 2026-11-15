@@ -1,3 +1,27 @@
+export type CurrencyCode = 'RUB' | 'BYN' | 'USD' | 'EUR';
+
+export interface CurrencyConversionPreview {
+    from_currency: CurrencyCode;
+    to_currency: CurrencyCode;
+    rate: number | null;
+    to_rub_rate: number | null;
+    records_count: number;
+    vehicles_count: number;
+    source: string;
+    fetched_at: string | null;
+    stale: boolean;
+}
+
+export interface CurrencyChangeResponse {
+    user: User;
+    from_currency: CurrencyCode;
+    to_currency: CurrencyCode;
+    rate: number | null;
+    records_count: number;
+    source: string;
+    stale: boolean;
+}
+
 export interface RimSize {
     diameter: number | null;
     pcd: string;
@@ -168,6 +192,7 @@ export interface PublicVehicle {
     brand: string;
     model: string;
     plate_number: string;
+    currency: CurrencyCode;
     year: number;
     current_km: number;
     vehicle_status: string;
@@ -231,5 +256,7 @@ export interface User {
     email: string;
     email_verified: boolean;
     is_active: boolean;
+    currency: CurrencyCode;
+    profile_visited: boolean;
     created_at: string;
 }

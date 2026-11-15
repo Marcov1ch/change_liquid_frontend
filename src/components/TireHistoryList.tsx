@@ -1,5 +1,6 @@
+import { useCurrency } from '../context/CurrencyContext';
 import type { Replacement } from '../types';
-import { formatTireEventLabel, formatTireMoney } from '../utils/tireSets';
+import { formatTireEventLabel } from '../utils/tireSets';
 
 interface Props {
     events: Replacement[];
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function TireHistoryList({ events, protectedEventId, onDelete }: Props) {
+    const { formatMoney } = useCurrency();
     if (events.length === 0) return null;
 
     return (
@@ -47,10 +49,10 @@ export function TireHistoryList({ events, protectedEventId, onDelete }: Props) {
                             <span>📅 {event.replacement_date}</span>
                             <span>📍 {event.km_at_replacement.toLocaleString()} км</span>
                             {event.component_price != null && event.component_price > 0 && (
-                                <span>🧾 {formatTireMoney(event.component_price)}</span>
+                                <span>🧾 {formatMoney(event.component_price)}</span>
                             )}
                             {event.work_price != null && event.work_price > 0 && (
-                                <span>🔧 Работа: {formatTireMoney(event.work_price)}</span>
+                                <span>🔧 Работа: {formatMoney(event.work_price)}</span>
                             )}
                             {event.next_change_date && <span>📅 До: {event.next_change_date}</span>}
                         </div>

@@ -1,11 +1,12 @@
+import { useCurrency } from '../../context/CurrencyContext';
 import type { PublicOtherExpense } from '../../types';
-import { formatPublicMoney } from '../../utils/publicVehicle';
 
 interface Props {
     expenses: PublicOtherExpense[];
 }
 
 export function PublicOtherExpensesSection({ expenses }: Props) {
+    const { formatMoney } = useCurrency();
     return (
         <div className="md3-card p-6">
             <h2 className="text-title-md text-surface-on mb-4">Прочие траты</h2>
@@ -28,7 +29,7 @@ export function PublicOtherExpensesSection({ expenses }: Props) {
                                 </p>
                             </div>
                             <span className="text-title-sm text-surface-on shrink-0">
-                                {formatPublicMoney(expense.amount)}
+                                {formatMoney(expense.amount)}
                             </span>
                         </div>
                     ))}

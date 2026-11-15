@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
+import { roundMoney } from '../utils/currency';
 
 interface Props {
   tireSetName: string;
@@ -10,6 +12,7 @@ interface Props {
 
 export function TireInstallForm({ tireSetName, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
+  const { symbol } = useCurrency();
   const [workPrice, setWorkPrice] = useState('');
   const [nextChangeDate, setNextChangeDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +32,7 @@ export function TireInstallForm({ tireSetName, today, onSubmit, onCancel }: Prop
         toast.error('Стоимость работ должна быть неотрицательной');
         return;
       }
-      parsedPrice = Math.round(value);
+      parsedPrice = roundMoney(value);
     }
 
     setSubmitting(true);
@@ -50,11 +53,11 @@ export function TireInstallForm({ tireSetName, today, onSubmit, onCancel }: Prop
       </p>
 
       <div>
-        <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, ₽</label>
+        <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, {symbol}</label>
         <input
           type="number"
           min="0"
-          step="1"
+          step="0.01"
           placeholder="0"
           value={workPrice}
           onChange={(e) => setWorkPrice(e.target.value)}

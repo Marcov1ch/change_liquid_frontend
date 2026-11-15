@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { useCurrency } from '../../context/CurrencyContext';
 import type { PublicReplacement } from '../../types';
-import { formatPublicMoney, getPublicReplacementNote } from '../../utils/publicVehicle';
+import { getPublicReplacementNote } from '../../utils/publicVehicle';
 import { isDateOnlyComponent } from '../../utils/replacementTypes';
 import { groupReplacements } from '../../utils/replacementList';
 import { getReplacementStatusStyle } from '../../utils/statusStyles';
@@ -50,6 +51,7 @@ function PublicReplacementRow({
     replacement: PublicReplacement;
     isFirst: boolean;
 }) {
+    const { formatMoney } = useCurrency();
     const style = getReplacementStatusStyle(replacement.status);
     const note = getPublicReplacementNote(replacement);
     const isDateOnly = isDateOnlyComponent(replacement.component_type);
@@ -74,7 +76,7 @@ function PublicReplacementRow({
                     <>
                         <span>
                             🧾 {isParking ? 'Аренда' : 'Страховка'}:{' '}
-                            {formatPublicMoney(replacement.component_price)}
+                            {formatMoney(replacement.component_price)}
                         </span>
                         {replacement.next_change_date && (
                             <span>📅 До: {replacement.next_change_date}</span>
@@ -86,8 +88,8 @@ function PublicReplacementRow({
                         {replacement.component_type === 'tire_change' && replacement.km_traveled != null && (
                             <span>🛣 Пройдено: {replacement.km_traveled.toLocaleString()} км</span>
                         )}
-                        <span>🧾 {formatPublicMoney(replacement.component_price)}</span>
-                        <span>🔧 {formatPublicMoney(replacement.work_price)}</span>
+                        <span>🧾 {formatMoney(replacement.component_price)}</span>
+                        <span>🔧 {formatMoney(replacement.work_price)}</span>
                         {replacement.next_change_date && (
                             <span>📅 До: {replacement.next_change_date}</span>
                         )}

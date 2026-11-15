@@ -1,3 +1,4 @@
+import { useCurrency } from '../context/CurrencyContext';
 import type { Repair, Replacement } from '../types';
 import { isDateOnlyComponent } from '../utils/replacementTypes';
 import type { ReplacementEditForm } from './ReplacementItem';
@@ -20,6 +21,7 @@ export function ReplacementEditFields({
     const isDateOnly = isDateOnlyComponent(replacement.component_type);
     const isTire = replacement.component_type === 'tire_change';
     const isParking = replacement.component_type === 'parking_monthly';
+    const { symbol } = useCurrency();
 
     return (
         <>
@@ -118,11 +120,12 @@ export function ReplacementEditFields({
             {isDateOnly ? (
                 <div>
                     <label className="block text-label-md text-surface-on-variant mb-1">
-                        {isParking ? 'Стоимость аренды (₽)' : 'Стоимость страховки (₽)'}
+                        {isParking ? `Стоимость аренды (${symbol})` : `Стоимость страховки (${symbol})`}
                     </label>
                     <input
                         type="number"
                         min="0"
+                        step="0.01"
                         placeholder={isParking ? '8000' : '12000'}
                         value={editForm.component_price}
                         onChange={(event) => onEditFormChange({ component_price: event.target.value })}
@@ -134,11 +137,12 @@ export function ReplacementEditFields({
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="block text-label-md text-surface-on-variant mb-1">
-                            {isTire ? 'Стоимость шин (₽)' : 'Цена (₽)'}
+                            {isTire ? `Стоимость шин (${symbol})` : `Цена (${symbol})`}
                         </label>
                         <input
                             type="number"
                             min="0"
+                            step="0.01"
                             placeholder="5000"
                             value={editForm.component_price}
                             onChange={(event) => onEditFormChange({ component_price: event.target.value })}
@@ -147,10 +151,11 @@ export function ReplacementEditFields({
                         />
                     </div>
                     <div>
-                        <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ (₽)</label>
+                        <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ ({symbol})</label>
                         <input
                             type="number"
                             min="0"
+                            step="0.01"
                             placeholder="1500"
                             value={editForm.work_price}
                             onChange={(event) => onEditFormChange({ work_price: event.target.value })}

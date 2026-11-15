@@ -1,3 +1,4 @@
+import { useCurrency } from '../context/CurrencyContext';
 import type { Replacement } from '../types';
 
 interface Props {
@@ -17,6 +18,7 @@ export function ReplacementMeta({
     kmTraveled,
     warningDays,
 }: Props) {
+    const { formatMoney } = useCurrency();
     const warningClass = replacement.days_remaining != null
         && replacement.days_remaining <= warningDays
         ? 'text-error font-semibold'
@@ -30,7 +32,7 @@ export function ReplacementMeta({
                     {replacement.component_price != null && replacement.component_price > 0 && (
                         <span>
                             🧾 {isParking ? 'Аренда' : 'Страховка'}:{' '}
-                            {replacement.component_price.toLocaleString()} ₽
+                            {formatMoney(replacement.component_price)}
                         </span>
                     )}
                     {replacement.next_change_date && (
@@ -49,11 +51,11 @@ export function ReplacementMeta({
                     {replacement.component_price != null && replacement.component_price > 0 && (
                         <span>
                             🧾 {isTire ? 'Шины' : 'Цена'}:{' '}
-                            {replacement.component_price.toLocaleString()} ₽
+                            {formatMoney(replacement.component_price)}
                         </span>
                     )}
                     {replacement.work_price != null && replacement.work_price > 0 && (
-                        <span>🔧 Работы: {replacement.work_price.toLocaleString()} ₽</span>
+                        <span>🔧 Работы: {formatMoney(replacement.work_price)}</span>
                     )}
                     {replacement.next_replacement_km != null && !isTire && (
                         <span>⏱ Следующая: {replacement.next_replacement_km.toLocaleString()} км</span>

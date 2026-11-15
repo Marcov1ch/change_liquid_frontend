@@ -91,10 +91,6 @@ export function formatKm(value: number): string {
     return `${value.toLocaleString()} км`;
 }
 
-export function formatTireMoney(value: number | null): string {
-    return value == null ? '—' : `${value.toLocaleString()} ₽`;
-}
-
 export function isTireChange(replacement: Replacement): boolean {
     return replacement.component_type === 'tire_change';
 }

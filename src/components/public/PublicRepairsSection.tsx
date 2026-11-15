@@ -1,5 +1,5 @@
+import { useCurrency } from '../../context/CurrencyContext';
 import type { PublicRepair } from '../../types';
-import { formatPublicMoney } from '../../utils/publicVehicle';
 
 interface Props {
     repairs: PublicRepair[];
@@ -7,6 +7,7 @@ interface Props {
 }
 
 export function PublicRepairsSection({ repairs, componentNames }: Props) {
+    const { formatMoney } = useCurrency();
     return (
         <div className="md3-card p-6">
             <h2 className="text-title-md text-surface-on mb-4">Ремонт или обслуживание</h2>
@@ -25,15 +26,15 @@ export function PublicRepairsSection({ repairs, componentNames }: Props) {
                                     📅 {repair.repair_date}
                                 </span>
                                 <span className="text-title-sm text-surface-on">
-                                    {formatPublicMoney(repair.work_cost + repair.parts_cost)}
+                                    {formatMoney(repair.work_cost + repair.parts_cost)}
                                 </span>
                             </div>
                             <p className="text-body-sm text-outline m-0 mt-1">
                                 📍 {repair.km_at_repair.toLocaleString()} км
                             </p>
                             <p className="text-body-sm text-outline m-0">
-                                🔧 Работы: {formatPublicMoney(repair.work_cost)} · 🧾 Запчасти:{' '}
-                                {formatPublicMoney(repair.parts_cost)}
+                                🔧 Работы: {formatMoney(repair.work_cost)} · 🧾 Запчасти:{' '}
+                                {formatMoney(repair.parts_cost)}
                             </p>
                             {repair.description && (
                                 <p className="text-body-md text-surface-on m-0 mt-2 whitespace-pre-line">
