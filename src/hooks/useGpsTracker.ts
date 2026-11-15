@@ -1,13 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+
+import { MIN_ACCURACY_M, haversine, type GpsPoint } from '../utils/gpsTracker';
+import { clearTracking, loadTracking, saveTracking } from '../utils/gpsStorage';
 import {
-    MIN_ACCURACY_M,
-    clearTracking,
-    gpsErrorMessage,
-    haversine,
-    loadTracking,
-    saveTracking,
-    type GpsPoint,
-} from '../utils/gpsTracker';
+    getCurrentGpsPosition,
+    requestGpsPermission,
+    watchGpsPosition,
+    type GpsWatcher,
+} from '../utils/gpsService';
 
 export interface TrackingState {
     isTracking: boolean;
@@ -16,161 +16,191 @@ export interface TrackingState {
     distanceKm: number;
 }
 
-export function useGpsTracker(onError?: (message: string) => void) {
-    const [state, setState] = useState<TrackingState>(() => {
-        const saved = loadTracking();
-        if (saved) {
-            return {
-                isTracking: true,
-                vehicleId: saved.vehicleId,
-                elapsed: Math.floor((Date.now() - saved.startTimestamp) / 1000),
-                distanceKm: saved.distanceKm,
-            };
-        }
-        return { isTracking: false, vehicleId: null, elapsed: 0, distanceKm: 0 };
-    });
+const EMPTY_STATE: TrackingState = {
+    isTracking: false,
+    vehicleId: null,
+    elapsed: 0,
+    distanceKm: 0,
+};
 
-    const watchIdRef = useRef<number | null>(null);
+export function useGpsTracker(onError?: (message: string) => void) {
+    const [state, setState] = useState<TrackingState>(EMPTY_STATE);
+
+    const watchRef = useRef<GpsWatcher | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const startRef = useRef<number>(0);
     const lastPointRef = useRef<GpsPoint | null>(null);
     const distanceRef = useRef(0);
     const stateRef = useRef(state);
+    const onErrorRef = useRef(onError);
 
     useEffect(() => {
         stateRef.current = state;
     });
 
-    const clearTimers = useCallback(() => {
+    useEffect(() => {
+        onErrorRef.current = onError;
+    }, [onError]);
+
+    const clearTimers = useCallback(async () => {
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
-        if (watchIdRef.current !== null) {
-            navigator.geolocation.clearWatch(watchIdRef.current);
-            watchIdRef.current = null;
+        if (watchRef.current) {
+            const watcher = watchRef.current;
+            watchRef.current = null;
+            try {
+                await watcher.clear();
+            } catch {
+                // ignore watcher cleanup errors
+            }
         }
         lastPointRef.current = null;
     }, []);
 
-    const resetState = useCallback(() => {
-        clearTimers();
-        clearTracking();
-        setState({ isTracking: false, vehicleId: null, elapsed: 0, distanceKm: 0 });
+    const resetState = useCallback(async () => {
+        await clearTimers();
+        await clearTracking();
+        stateRef.current = EMPTY_STATE;
+        setState(EMPTY_STATE);
         distanceRef.current = 0;
     }, [clearTimers]);
 
-    const stopTracking = useCallback((): TrackingState | null => {
-        clearTimers();
-        clearTracking();
+    const stopTracking = useCallback(async (): Promise<TrackingState | null> => {
+        await clearTimers();
+        await clearTracking();
         const final = { ...stateRef.current };
-        setState(prev => ({ ...prev, isTracking: false }));
+        stateRef.current = EMPTY_STATE;
+        setState(EMPTY_STATE);
         distanceRef.current = 0;
         return final.isTracking ? final : null;
     }, [clearTimers]);
 
     const persistPoint = useCallback((point: GpsPoint) => {
-        saveTracking({
-            vehicleId: stateRef.current.vehicleId!,
+        const vehicleId = stateRef.current.vehicleId;
+        if (vehicleId === null) return;
+        void saveTracking({
+            vehicleId,
             startTimestamp: startRef.current,
             distanceKm: distanceRef.current,
             lastPoint: point,
-        });
+        }).catch(() => undefined);
     }, []);
 
-    const handleError = useCallback((error: GeolocationPositionError) => {
-        const message = gpsErrorMessage(error.code);
-        resetState();
-        onError?.(message);
-    }, [resetState, onError]);
+    const handleError = useCallback((message: string) => {
+        void resetState();
+        onErrorRef.current?.(message);
+    }, [resetState]);
 
-    const requestPosition = useCallback((): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-                () => resolve(),
-                (error) => reject(error),
-                { enableHighAccuracy: true, timeout: 15000 }
-            );
-        });
-    }, []);
-
-    const setupWatch = useCallback((initialPoint?: GpsPoint | null) => {
-        if (!navigator.geolocation) {
-            throw new Error('Геолокация не поддерживается вашим браузером');
-        }
-
+    const setupWatch = useCallback(async (initialPoint?: GpsPoint | null) => {
         if (initialPoint) {
             lastPointRef.current = initialPoint;
         }
 
-        watchIdRef.current = navigator.geolocation.watchPosition(
-            (pos) => {
-                const point: GpsPoint = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                if (pos.coords.accuracy > MIN_ACCURACY_M) return;
+        try {
+            watchRef.current = await watchGpsPosition(
+                position => {
+                    if (position.accuracy > MIN_ACCURACY_M) return;
 
-                if (lastPointRef.current) {
-                    const delta = haversine(
-                        lastPointRef.current.lat, lastPointRef.current.lng,
-                        point.lat, point.lng
-                    );
-                    if (delta < 5) {
-                        distanceRef.current += delta;
-                        setState(prev => ({ ...prev, distanceKm: distanceRef.current }));
+                    const point = position.point;
+                    if (lastPointRef.current) {
+                        const delta = haversine(
+                            lastPointRef.current.lat,
+                            lastPointRef.current.lng,
+                            point.lat,
+                            point.lng,
+                        );
+                        if (delta < 5) {
+                            distanceRef.current += delta;
+                            setState(prev => ({ ...prev, distanceKm: distanceRef.current }));
+                        }
                     }
-                }
-                lastPointRef.current = point;
-                persistPoint(point);
-            },
-            handleError,
-            { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
-        );
+                    lastPointRef.current = point;
+                    persistPoint(point);
+                },
+                handleError,
+            );
+        } catch (error) {
+            handleError(error instanceof Error ? error.message : 'Ошибка геолокации');
+        }
     }, [persistPoint, handleError]);
 
     const startTracking = useCallback(async (vehicleId: number) => {
         if (stateRef.current.isTracking) {
-            stopTracking();
+            await stopTracking();
         }
 
-        if (!navigator.geolocation) {
-            throw new Error('Геолокация не поддерживается вашим браузером');
-        }
-
-        await requestPosition();
+        await requestGpsPermission();
+        const position = await getCurrentGpsPosition();
 
         distanceRef.current = 0;
         startRef.current = Date.now();
+        lastPointRef.current = position.point;
 
-        saveTracking({ vehicleId, startTimestamp: startRef.current, distanceKm: 0, lastPoint: null });
-        setState({ isTracking: true, vehicleId, elapsed: 0, distanceKm: 0 });
+        const nextState: TrackingState = {
+            isTracking: true,
+            vehicleId,
+            elapsed: 0,
+            distanceKm: 0,
+        };
+        stateRef.current = nextState;
+        setState(nextState);
+
+        try {
+            await saveTracking({
+                vehicleId,
+                startTimestamp: startRef.current,
+                distanceKm: 0,
+                lastPoint: position.point,
+            });
+        } catch {
+            // tracking can continue even if persistence is unavailable
+        }
 
         timerRef.current = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
             setState(prev => ({ ...prev, elapsed }));
         }, 1000);
 
-        setupWatch();
-    }, [stopTracking, setupWatch, requestPosition]);
+        await setupWatch(position.point);
+    }, [setupWatch, stopTracking]);
 
-    // Восстанавливаем трекинг из sessionStorage при загрузке страницы (один раз)
+    // Восстанавливаем поездку из Preferences после запуска приложения.
     useEffect(() => {
-        const saved = loadTracking();
-        if (saved && state.isTracking && watchIdRef.current === null) {
+        let cancelled = false;
+
+        const restore = async () => {
+            const saved = await loadTracking();
+            if (cancelled || !saved) return;
+
             startRef.current = saved.startTimestamp;
             distanceRef.current = saved.distanceKm;
+
+            const restoredState: TrackingState = {
+                isTracking: true,
+                vehicleId: saved.vehicleId,
+                elapsed: Math.floor((Date.now() - saved.startTimestamp) / 1000),
+                distanceKm: saved.distanceKm,
+            };
+            stateRef.current = restoredState;
+            setState(restoredState);
 
             timerRef.current = setInterval(() => {
                 const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
                 setState(prev => ({ ...prev, elapsed }));
             }, 1000);
 
-            setupWatch(saved.lastPoint);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            await setupWatch(saved.lastPoint);
+        };
 
-    useEffect(() => {
-        return () => clearTimers();
-    }, [clearTimers]);
+        void restore();
+
+        return () => {
+            cancelled = true;
+            void clearTimers();
+        };
+    }, [clearTimers, setupWatch]);
 
     return {
         ...state,

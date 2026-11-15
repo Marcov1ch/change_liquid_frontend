@@ -67,6 +67,8 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 `android/local.properties` с путём к SDK создаётся локально и не коммитится. Для Gradle используйте JDK 21, а не bundled JBR Android Studio.
 
+Для foreground GPS используются `@capacitor/geolocation` и `@capacitor/preferences`. В манифесте разрешены только `ACCESS_FINE_LOCATION` и `ACCESS_COARSE_LOCATION`; background location пока не подключён.
+
 ## Структура проекта
 
 ```
