@@ -38,36 +38,13 @@ Vite проксирует запросы `/api` и `/auth` на бэкенд `ht
 | --- | --- |
 | `npm run dev` | Запуск dev-сервера с HMR |
 | `npm run build` | Проверка типов (`tsc -b`) + сборка в `dist/` |
-| `npm run build:android` | Сборка web-части для Android с `VITE_API_ORIGIN` из `.env.android` |
 | `npm run lint` | ESLint |
 | `npm test` | Запуск тестов (Vitest) |
 | `npm run preview` | Предпросмотр production-сборки |
 
-## Android APK
+## Android
 
-Требования:
-- JDK 21;
-- Android SDK Platform 36;
-- Android Studio 2026.2.2+ или сборка из терминала.
-
-Сборка debug APK:
-
-```bash
-npm run build:android
-npx cap sync android
-cd android
-./gradlew assembleDebug
-```
-
-Результат:
-
-```text
-android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-`android/local.properties` с путём к SDK создаётся локально и не коммитится. Для Gradle используйте JDK 21, а не bundled JBR Android Studio.
-
-Для foreground GPS используются `@capacitor/geolocation` и `@capacitor/preferences`. В манифесте разрешены только `ACCESS_FINE_LOCATION` и `ACCESS_COARSE_LOCATION`; background location пока не подключён.
+Android-приложение вынесено в отдельный репозиторий `change_liquid_android`. Оно использует собственный UI-код и не зависит от этого репозитория.
 
 ## Структура проекта
 
