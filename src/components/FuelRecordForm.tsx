@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
 import type { FuelRecord, FuelRecordPayload, Vehicle } from '../types';
+import { roundMoney } from '../utils/currency';
 
 interface Props {
   vehicle: Vehicle;
@@ -12,6 +14,7 @@ interface Props {
 
 export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
+  const { symbol } = useCurrency();
   const [fuelDate, setFuelDate] = useState(initial?.fuel_date ?? today);
   const [kmAtFuel, setKmAtFuel] = useState(String(initial?.km_at_fuel ?? vehicle.current_km));
   const [liters, setLiters] = useState(initial ? String(initial.liters) : '');
@@ -45,7 +48,7 @@ export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: 
         fuel_date: fuelDate,
         km_at_fuel: Math.round(km),
         liters: Math.round(parsedLiters * 1000) / 1000,
-        total_cost: Math.round(parsedCost),
+        total_cost: roundMoney(parsedCost),
       });
     } finally {
       setSubmitting(false);
@@ -91,10 +94,11 @@ export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: 
           />
         </div>
         <div>
-          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость, ₽ *</label>
+          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость, {symbol} *</label>
           <input
             type="number"
             min="0"
+            step="0.01"
             placeholder="2500"
             value={totalCost}
             onChange={(e) => setTotalCost(e.target.value)}

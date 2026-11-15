@@ -1,4 +1,5 @@
 import { api } from '../api/client';
+import { useCurrency } from '../context/CurrencyContext';
 import { useCrudList } from '../hooks/useCrudList';
 import type { OtherExpense, OtherExpensePayload, Vehicle } from '../types';
 import { Modal } from './Modal';
@@ -14,11 +15,8 @@ interface Props {
   onExpensesUpdate: () => void;
 }
 
-function formatMoney(value: number): string {
-  return `${value.toLocaleString()} ₽`;
-}
-
 export function OtherExpensesList({ expenses, vehicleId, selectedVehicle, onClose, onShare, onExpensesUpdate }: Props) {
+  const { formatMoney } = useCurrency();
   const {
     showForm,
     editing,

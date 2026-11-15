@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 import { api, setTokens, clearTokens, getRefreshToken } from '../api/client'
-import type { User } from '../types'
+import type { CurrencyChangeResponse, CurrencyCode, User } from '../types'
 
 interface AuthContextType {
     user: User | null
@@ -11,6 +11,8 @@ interface AuthContextType {
     register: (username: string, email: string, password: string) => Promise<User>
     logout: () => void
     updateEmail: (email: string) => Promise<void>
+    updateCurrency: (currency: CurrencyCode) => Promise<CurrencyChangeResponse>
+    markProfileVisited: () => Promise<void>
     resendVerification: () => Promise<void>
     changePassword: (old_password: string, new_password: string) => Promise<void>
     deleteAccount: () => Promise<void>
@@ -73,6 +75,17 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
         setUser(updated)
     }
 
+    const updateCurrency = useCallback(async (currency: CurrencyCode) => {
+        const response = await api.updateCurrency(currency)
+        setUser(response.user)
+        return response
+    }, [])
+
+    const markProfileVisited = useCallback(async () => {
+        const updated = await api.markProfileVisited()
+        setUser(updated)
+    }, [])
+
     const resendVerification = async () => {
         await api.resendVerification()
     }
@@ -89,7 +102,7 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmail, resendVerification, changePassword, deleteAccount, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmail, updateCurrency, markProfileVisited, resendVerification, changePassword, deleteAccount, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     )

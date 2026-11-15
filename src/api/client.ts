@@ -1,4 +1,5 @@
 import { authApi } from './auth'
+import { currencyApi } from './currency'
 import { enumsApi } from './enums'
 import { expensesApi } from './expenses'
 import { fuelApi } from './fuel'
@@ -18,6 +19,7 @@ export const api = {
     ...repairsApi,
     ...enumsApi,
     ...shareApi,
+    ...currencyApi,
 }
 
 export {

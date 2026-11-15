@@ -1,11 +1,12 @@
+import { useCurrency } from '../../context/CurrencyContext';
 import type { PublicFuelRecord } from '../../types';
-import { formatPublicMoney } from '../../utils/publicVehicle';
 
 interface Props {
     records: PublicFuelRecord[];
 }
 
 export function PublicFuelRecordsSection({ records }: Props) {
+    const { formatMoney } = useCurrency();
     return (
         <div className="md3-card p-6">
             <h2 className="text-title-md text-surface-on mb-4">Заправки</h2>
@@ -35,7 +36,7 @@ export function PublicFuelRecordsSection({ records }: Props) {
                                 </p>
                             </div>
                             <span className="text-title-sm text-surface-on shrink-0">
-                                {formatPublicMoney(record.total_cost)}
+                                {formatMoney(record.total_cost)}
                             </span>
                         </div>
                     ))}

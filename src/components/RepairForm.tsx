@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
 import { useComponentConfigs } from '../hooks/useEnums';
 import type { Repair, RepairPayload, Replacement, Vehicle } from '../types';
+import { roundMoney } from '../utils/currency';
 import { hasPricedReplacement } from '../utils/repairConflicts';
 
 interface Props {
@@ -22,6 +24,7 @@ export function RepairForm({
   onCancel,
 }: Props) {
   const { toast } = useToast();
+  const { symbol } = useCurrency();
   const { data: configsData } = useComponentConfigs();
   const configs = configsData?.configs ?? [];
 
@@ -80,8 +83,8 @@ export function RepairForm({
         repair_date: repairDate,
         km_at_repair: Math.round(km),
         description: description.trim() || null,
-        work_cost: Math.round(Number(workCost)),
-        parts_cost: Math.round(Number(partsCost)),
+        work_cost: roundMoney(Number(workCost)),
+        parts_cost: roundMoney(Number(partsCost)),
         component_types: componentTypes,
       });
     } finally {
@@ -127,10 +130,11 @@ export function RepairForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, ₽ *</label>
+          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, {symbol} *</label>
           <input
             type="number"
             min="0"
+            step="0.01"
             placeholder="0"
             value={workCost}
             onChange={(e) => setWorkCost(e.target.value)}
@@ -138,10 +142,11 @@ export function RepairForm({
           />
         </div>
         <div>
-          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость запчастей, ₽ *</label>
+          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость запчастей, {symbol} *</label>
           <input
             type="number"
             min="0"
+            step="0.01"
             placeholder="0"
             value={partsCost}
             onChange={(e) => setPartsCost(e.target.value)}

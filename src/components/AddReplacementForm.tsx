@@ -8,8 +8,8 @@ import {
 export interface NewReplacementData {
     component_type: string;
     component_name: string;
-    component_price: number;
-    work_price: number;
+    component_price: string;
+    work_price: string;
     replacement_date: string;
     km_at_replacement: number;
     next_change_date: string;

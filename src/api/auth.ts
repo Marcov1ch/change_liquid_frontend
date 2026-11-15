@@ -1,4 +1,4 @@
-import type { User } from '../types'
+import type { CurrencyChangeResponse, CurrencyCode, User } from '../types'
 import { AUTH_BASE, authFetch, handleResponse, type DetailResponse } from './http'
 
 export const authApi = {
@@ -24,6 +24,18 @@ export const authApi = {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
+        }).then(res => handleResponse<User>(res)),
+
+    updateCurrency: (currency: CurrencyCode) =>
+        authFetch(`${AUTH_BASE}/currency`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currency }),
+        }).then(res => handleResponse<CurrencyChangeResponse>(res)),
+
+    markProfileVisited: () =>
+        authFetch(`${AUTH_BASE}/profile-visited`, {
+            method: 'PATCH',
         }).then(res => handleResponse<User>(res)),
 
     verifyEmail: (token: string) =>

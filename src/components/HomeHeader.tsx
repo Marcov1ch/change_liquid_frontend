@@ -23,12 +23,17 @@ export function HomeHeader() {
           </span>
           <button
             onClick={() => navigate('/profile')}
-            className="md3-btn-tonal !py-2 !px-4 !rounded-md3-sm text-label-sm"
+            className="relative md3-btn-tonal !py-2 !px-4 !rounded-md3-sm text-label-sm"
+            aria-label={user && !user.profile_visited ? 'Профиль: требуется настройка' : 'Профиль'}
+            title={user && !user.profile_visited ? 'Загляните в профиль и выберите валюту' : undefined}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
             </svg>
             <span className="hidden sm:inline">Профиль</span>
+            {user && !user.profile_visited && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500" aria-hidden="true" />
+            )}
           </button>
           <button
             onClick={() => { logout(); navigate('/login'); }}

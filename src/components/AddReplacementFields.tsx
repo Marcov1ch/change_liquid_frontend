@@ -1,3 +1,4 @@
+import { useCurrency } from '../context/CurrencyContext';
 import type { Repair, Vehicle } from '../types';
 import type { NewReplacementData } from './AddReplacementForm';
 
@@ -15,6 +16,7 @@ export function AddDateOnlyReplacementFields({
     onChange,
     isParking,
 }: BaseProps & { isParking: boolean }) {
+    const { symbol } = useCurrency();
     return (
         <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
@@ -40,16 +42,15 @@ export function AddDateOnlyReplacementFields({
             </div>
             <div>
                 <label className="block text-label-md text-surface-on-variant mb-1">
-                    {isParking ? 'Стоимость аренды (₽)' : 'Стоимость страховки (₽)'}
+                    {isParking ? `Стоимость аренды (${symbol})` : `Стоимость страховки (${symbol})`}
                 </label>
                 <input
                     type="number"
                     min="0"
+                    step="0.01"
                     placeholder={isParking ? '8000' : '12000'}
-                    value={value.component_price === 0 ? '' : value.component_price}
-                    onChange={(event) => onChange({
-                        component_price: event.target.value === '' ? 0 : parseInt(event.target.value),
-                    })}
+                    value={value.component_price}
+                    onChange={(event) => onChange({ component_price: event.target.value })}
                     disabled={!!blockedByRepair}
                     className="md3-field"
                 />
@@ -65,33 +66,32 @@ export function AddRegularReplacementFields({
     blockedByRepair,
     onChange,
 }: BaseProps & { selectedVehicle: Vehicle | undefined }) {
+    const { symbol } = useCurrency();
     return (
         <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-label-md text-surface-on-variant mb-1">Цена (₽)</label>
+                    <label className="block text-label-md text-surface-on-variant mb-1">Цена ({symbol})</label>
                     <input
                         type="number"
                         min="0"
+                        step="0.01"
                         placeholder="5000"
-                        value={value.component_price === 0 ? '' : value.component_price}
-                        onChange={(event) => onChange({
-                            component_price: event.target.value === '' ? 0 : parseInt(event.target.value),
-                        })}
+                        value={value.component_price}
+                        onChange={(event) => onChange({ component_price: event.target.value })}
                         disabled={!!blockedByRepair}
                         className="md3-field"
                     />
                 </div>
                 <div>
-                    <label className="block text-label-md text-surface-on-variant mb-1">Работа (₽)</label>
+                    <label className="block text-label-md text-surface-on-variant mb-1">Работа ({symbol})</label>
                     <input
                         type="number"
                         min="0"
+                        step="0.01"
                         placeholder="1500"
-                        value={value.work_price === 0 ? '' : value.work_price}
-                        onChange={(event) => onChange({
-                            work_price: event.target.value === '' ? 0 : parseInt(event.target.value),
-                        })}
+                        value={value.work_price}
+                        onChange={(event) => onChange({ work_price: event.target.value })}
                         disabled={!!blockedByRepair}
                         className="md3-field"
                     />

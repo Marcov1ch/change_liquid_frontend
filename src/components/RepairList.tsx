@@ -1,4 +1,5 @@
 import { api } from '../api/client';
+import { useCurrency } from '../context/CurrencyContext';
 import { useCrudList } from '../hooks/useCrudList';
 import { useComponentConfigs } from '../hooks/useEnums';
 import type { Repair, RepairPayload, Replacement, Vehicle } from '../types';
@@ -16,10 +17,6 @@ interface Props {
   onRepairsUpdate: () => void;
 }
 
-function formatMoney(value: number | null): string {
-  return value == null ? '—' : `${value.toLocaleString()} ₽`;
-}
-
 export function RepairList({
   repairs,
   replacements,
@@ -29,6 +26,7 @@ export function RepairList({
   onShare,
   onRepairsUpdate,
 }: Props) {
+  const { formatMoney } = useCurrency();
   const { data: configsData } = useComponentConfigs();
   const {
     showForm,

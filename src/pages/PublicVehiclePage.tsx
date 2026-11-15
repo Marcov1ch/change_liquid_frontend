@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
+import { CurrencyProvider } from '../context/CurrencyContext';
 import { StatisticsPanel } from '../components/StatisticsPanel';
 import { PublicFuelRecordsSection } from '../components/public/PublicFuelRecordsSection';
 import { PublicOtherExpensesSection } from '../components/public/PublicOtherExpensesSection';
@@ -94,6 +95,7 @@ export function PublicVehiclePage() {
                 )}
 
                 {vehicle && (
+                    <CurrencyProvider currency={vehicle.currency}>
                     <div className="flex flex-col gap-5 animate-slide-up">
                         <PublicVehicleSummary
                             vehicle={vehicle}
@@ -126,6 +128,7 @@ export function PublicVehiclePage() {
                         <PublicOtherExpensesSection expenses={otherExpenses} />
                         <PublicRegisterCta registerUrl={vehicle.register_url} />
                     </div>
+                    </CurrencyProvider>
                 )}
             </main>
         </div>

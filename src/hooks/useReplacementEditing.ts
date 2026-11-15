@@ -7,6 +7,7 @@ import type {
     Replacement,
     Vehicle,
 } from '../types';
+import { roundMoney } from '../utils/currency';
 import { findBlockingRepair } from '../utils/repairConflicts';
 import { isDateBasedComponent, isDateOnlyComponent } from '../utils/replacementTypes';
 import type { NewReplacementData } from '../components/AddReplacementForm';
@@ -36,8 +37,8 @@ function initialNewReplacement(
     return {
         component_type: configs[0]?.key ?? '',
         component_name: '',
-        component_price: 0,
-        work_price: 0,
+        component_price: '',
+        work_price: '',
         replacement_date: new Date().toISOString().split('T')[0],
         km_at_replacement: selectedVehicle?.current_km ?? 0,
         next_change_date: '',
@@ -120,14 +121,14 @@ export function useReplacementEditing({
         }
         const componentPrice = blockingRepair
             ? 0
-            : (editForm.component_price === '' ? 0 : parseInt(editForm.component_price));
+            : (editForm.component_price === '' ? 0 : roundMoney(parseFloat(editForm.component_price)));
         if (componentPrice !== (editingReplacement.component_price ?? 0)) {
             updateData.component_price = componentPrice;
         }
         if (!isDateOnly) {
             const workPrice = blockingRepair
                 ? 0
-                : (editForm.work_price === '' ? 0 : parseInt(editForm.work_price));
+                : (editForm.work_price === '' ? 0 : roundMoney(parseFloat(editForm.work_price)));
             if (workPrice !== (editingReplacement.work_price ?? 0)) {
                 updateData.work_price = workPrice;
             }
@@ -181,18 +182,24 @@ export function useReplacementEditing({
                 component_type: newReplacement.component_type,
                 component_name: newReplacement.component_name,
                 replacement_date: newReplacement.replacement_date,
-                component_price: addBlockingRepair ? 0 : newReplacement.component_price,
+                component_price: addBlockingRepair
+                    ? 0
+                    : roundMoney(parseFloat(newReplacement.component_price) || 0),
             };
             if (isDateOnly) {
                 payload.km_at_replacement = 0;
                 payload.next_change_date = newReplacement.next_change_date;
             } else if (isDateBased) {
                 payload.km_at_replacement = newReplacement.km_at_replacement;
-                payload.work_price = addBlockingRepair ? 0 : newReplacement.work_price;
+                payload.work_price = addBlockingRepair
+                    ? 0
+                    : roundMoney(parseFloat(newReplacement.work_price) || 0);
                 payload.next_change_date = newReplacement.next_change_date;
             } else {
                 payload.km_at_replacement = newReplacement.km_at_replacement;
-                payload.work_price = addBlockingRepair ? 0 : newReplacement.work_price;
+                payload.work_price = addBlockingRepair
+                    ? 0
+                    : roundMoney(parseFloat(newReplacement.work_price) || 0);
             }
             await api.createReplacement(vehicleId, payload);
             toast.success('Замена добавлена');

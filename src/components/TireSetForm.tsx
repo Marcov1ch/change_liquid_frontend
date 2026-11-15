@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
 import type { TireSeason, TireSet, TireSetPayload } from '../types';
+import { roundMoney } from '../utils/currency';
 import { TIRE_SEASON_LABELS } from '../utils/tireSets';
 
 interface Props {
@@ -14,6 +16,7 @@ const SEASONS: TireSeason[] = ['winter', 'summer', 'all_season'];
 
 export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
+  const { symbol } = useCurrency();
   const [name, setName] = useState(initial?.name ?? '');
   const [season, setSeason] = useState<TireSeason>(initial?.season ?? 'winter');
   const [purchaseDate, setPurchaseDate] = useState(initial?.purchase_date ?? '');
@@ -57,7 +60,7 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
         toast.error('Стоимость покупки должна быть неотрицательной');
         return;
       }
-      parsedPrice = Math.round(value);
+      parsedPrice = roundMoney(value);
     }
 
     let parsedWorkPrice: number | null = null;
@@ -67,7 +70,7 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
         toast.error('Стоимость работ должна быть неотрицательной');
         return;
       }
-      parsedWorkPrice = Math.round(value);
+      parsedWorkPrice = roundMoney(value);
     }
 
     setSubmitting(true);
@@ -130,11 +133,11 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость, ₽</label>
+          <label className="block text-label-md text-surface-on-variant mb-1">Стоимость, {symbol}</label>
           <input
             type="number"
             min="0"
-            step="1"
+            step="0.01"
             placeholder="30000"
             value={purchasePrice}
             onChange={(e) => setPurchasePrice(e.target.value)}
@@ -157,11 +160,11 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
 
           {installNow && (
             <div>
-              <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, ₽</label>
+              <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, {symbol}</label>
               <input
                 type="number"
                 min="0"
-                step="1"
+                step="0.01"
                 placeholder="0"
                 value={workPrice}
                 onChange={(e) => setWorkPrice(e.target.value)}

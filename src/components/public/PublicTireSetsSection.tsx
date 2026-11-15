@@ -1,7 +1,7 @@
+import { useCurrency } from '../../context/CurrencyContext';
 import type { PublicTireSet } from '../../types';
 import {
     formatKm,
-    formatTireMoney,
     getTireStatusMeta,
     TIRE_SEASON_ICONS,
     TIRE_SEASON_LABELS,
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function PublicTireSetsSection({ tireSets }: Props) {
+    const { formatMoney } = useCurrency();
     if (tireSets.length === 0) return null;
 
     return (
@@ -54,7 +55,7 @@ export function PublicTireSetsSection({ tireSets }: Props) {
                                 )}
                                 {tireSet.purchase_price != null && (
                                     <span>
-                                        🧾 Покупка: {formatTireMoney(tireSet.purchase_price)}
+                                        🧾 Покупка: {formatMoney(tireSet.purchase_price)}
                                         {tireSet.purchase_date ? ` · ${tireSet.purchase_date}` : ''}
                                     </span>
                                 )}

@@ -1,4 +1,5 @@
 import { api } from '../api/client';
+import { useCurrency } from '../context/CurrencyContext';
 import { useCrudList } from '../hooks/useCrudList';
 import type { FuelRecord, FuelRecordPayload, Vehicle } from '../types';
 import { FuelRecordForm } from './FuelRecordForm';
@@ -12,10 +13,6 @@ interface Props {
   onClose: () => void;
   onShare: () => void;
   onRecordsUpdate: () => void;
-}
-
-function formatMoney(value: number): string {
-  return `${value.toLocaleString()} ₽`;
 }
 
 function formatLiters(value: number): string {
@@ -34,6 +31,7 @@ export function FuelRecordsList({
   onShare,
   onRecordsUpdate,
 }: Props) {
+  const { formatMoney } = useCurrency();
   const {
     showForm,
     editing,

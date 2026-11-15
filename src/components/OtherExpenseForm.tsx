@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
 import type { OtherExpense, OtherExpensePayload } from '../types';
+import { roundMoney } from '../utils/currency';
 
 interface Props {
   initial?: OtherExpense | null;
@@ -11,6 +13,7 @@ interface Props {
 
 export function OtherExpenseForm({ initial, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
+  const { symbol } = useCurrency();
   const [name, setName] = useState(initial?.name ?? '');
   const [expenseDate, setExpenseDate] = useState(initial?.expense_date ?? today);
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
@@ -41,7 +44,7 @@ export function OtherExpenseForm({ initial, today, onSubmit, onCancel }: Props) 
       await onSubmit({
         name: trimmedName,
         expense_date: expenseDate,
-        amount: Math.round(parsedAmount),
+        amount: roundMoney(parsedAmount),
       });
     } finally {
       setSubmitting(false);
@@ -74,11 +77,11 @@ export function OtherExpenseForm({ initial, today, onSubmit, onCancel }: Props) 
           />
         </div>
         <div>
-          <label className="block text-label-md text-surface-on-variant mb-1">Сумма, ₽ *</label>
+          <label className="block text-label-md text-surface-on-variant mb-1">Сумма, {symbol} *</label>
           <input
             type="number"
-            min="1"
-            step="1"
+            min="0.01"
+            step="0.01"
             placeholder="0"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
