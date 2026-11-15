@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { useToast } from '../context/ToastContext';
 import { HomeHeader } from '../components/HomeHeader';
 import { VehicleList } from '../components/VehicleList';
@@ -30,6 +31,7 @@ export function HomePage() {
   const actions = useVehicleActions(workspace);
   const { toast } = useToast();
   const gps = useGpsTracker((message) => toast.error(message));
+  const canTrackTrip = !Capacitor.isNativePlatform();
 
   const handleStartTrip = async (vehicleId: number) => {
     try {
@@ -73,6 +75,7 @@ export function HomePage() {
           onRestoreVehicle={actions.handleRestoreVehicle}
           onUpdateKm={actions.handleUpdateKm}
           onStartTrip={handleStartTrip}
+          canTrackTrip={canTrackTrip}
           trackingVehicleId={gps.isTracking ? gps.vehicleId : null}
           showArchived={workspace.showArchived}
           statusIcons={statusIcons}
