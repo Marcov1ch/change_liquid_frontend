@@ -1,7 +1,9 @@
 import { extractErrorMessage } from '../utils/apiError'
 
-export const API_BASE = '/api/v1'
-export const AUTH_BASE = '/auth'
+const apiOrigin = (import.meta.env.VITE_API_ORIGIN as string | undefined)?.replace(/\/$/, '') ?? ''
+
+export const API_BASE = apiOrigin ? `${apiOrigin}/api/v1` : '/api/v1'
+export const AUTH_BASE = apiOrigin ? `${apiOrigin}/auth` : '/auth'
 
 const TOKEN_KEY = 'access_token'
 const REFRESH_KEY = 'refresh_token'
