@@ -45,11 +45,6 @@ export function TireSetsPanel({
   const events = sortTireEvents(replacements.filter(isTireChange));
   const protectedEventId = getCurrentTireInstallId(events, current);
 
-  const openCreateForm = () => {
-    setEditingSet(null);
-    setShowForm(true);
-  };
-
   const openEditForm = (tireSet: TireSet) => {
     setEditingSet(tireSet);
     setShowForm(true);
@@ -166,14 +161,6 @@ export function TireSetsPanel({
           onDelete={handleDeleteEvent}
         />
 
-        <div>
-          <button onClick={openCreateForm} className="md3-btn-primary w-full">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Добавить комплект
-          </button>
-        </div>
       </div>
 
       <Modal
