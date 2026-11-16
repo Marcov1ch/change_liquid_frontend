@@ -5,6 +5,7 @@ import { ProfileCurrencySection } from '../components/profile/ProfileCurrencySec
 import { ProfileDeleteAccountSection } from '../components/profile/ProfileDeleteAccountSection'
 import { ProfileEmailSection } from '../components/profile/ProfileEmailSection'
 import { ProfileHeader } from '../components/profile/ProfileHeader'
+import { ProfileLegalSection } from '../components/profile/ProfileLegalSection'
 import { ProfilePasswordSection } from '../components/profile/ProfilePasswordSection'
 import { ProfileUserCard } from '../components/profile/ProfileUserCard'
 import { useAuth } from '../context/AuthContext'
@@ -136,7 +137,7 @@ export function ProfilePage() {
   }
 
   const handleDeleteAccount = async () => {
-    if (!confirm('Удалить аккаунт? Все данные будут удалены безвозвратно.')) return
+    if (!confirm('Удалить аккаунт? Вход станет невозможен. Полное удаление данных — по запросу в поддержку.')) return
     try {
       await deleteAccount()
       navigate('/login', { replace: true })
@@ -181,6 +182,8 @@ export function ProfilePage() {
             onConfirmPasswordChange={setConfirmPassword}
             onSubmit={handlePasswordSubmit}
           />
+
+          <ProfileLegalSection />
 
           <ProfileDeleteAccountSection onDelete={handleDeleteAccount} />
         </div>

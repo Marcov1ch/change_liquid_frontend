@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { LegalFooter } from '../components/LegalFooter'
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
@@ -95,6 +96,7 @@ export function LoginPage() {
               <Link to="/register" className="text-primary hover:underline underline-offset-2">Зарегистрироваться</Link>
             </span>
           </div>
+          <LegalFooter />
         </div>
       </div>
     </div>

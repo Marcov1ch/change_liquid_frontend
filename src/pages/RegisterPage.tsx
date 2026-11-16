@@ -128,6 +128,12 @@ export function RegisterPage() {
             Уже есть аккаунт?{' '}
             <Link to="/login" className="text-primary hover:underline underline-offset-2">Войти</Link>
           </p>
+          <p className="mt-3 text-center text-body-sm text-outline">
+            Регистрируясь, вы принимаете{' '}
+            <Link to="/privacy" className="text-primary hover:underline underline-offset-2">
+              Политику конфиденциальности
+            </Link>
+          </p>
         </div>
       </div>
     </div>
