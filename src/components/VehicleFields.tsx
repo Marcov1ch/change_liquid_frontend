@@ -1,21 +1,18 @@
 import type { useVehicleForm } from '../hooks/useVehicleForm';
-import { Spoiler } from './Spoiler';
 
 type VehicleFormModel = ReturnType<typeof useVehicleForm>;
 
 interface Props {
     form: VehicleFormModel;
-    collapsible?: boolean;
     yearKmInline?: boolean;
 }
 
-export function VehicleFields({ form, collapsible = false, yearKmInline = false }: Props) {
+export function VehicleFields({ form, yearKmInline = false }: Props) {
     const {
         formData, setFormData, setYearError,
-        intervals, notifyFlags, intervalMonths,
         plateError, yearError,
-        brands, models, configs,
-        handlePlateChange, handleIntervalChange, handleIntervalMonthsChange, handleNotifyChange,
+        brands, models,
+        handlePlateChange,
     } = form;
 
     const yearInput = (
@@ -44,79 +41,6 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
                 required
                 className="md3-field"
             />
-        </div>
-    );
-
-    const intervalsSection = (
-        <div className={collapsible ? 'flex flex-col gap-4 pt-3' : 'flex flex-col gap-4'}>
-            {configs.map(cfg => (
-                <div key={cfg.key} className="flex items-center gap-3">
-                    <label className="block text-body-md text-surface-on-variant flex-1">{cfg.name}</label>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="number"
-                            title="Интервал замены (км)"
-                            value={intervals[cfg.key] ?? cfg.default_interval}
-                            onChange={(e) => handleIntervalChange(cfg.key, parseInt(e.target.value))}
-                            className="md3-field !w-24"
-                        />
-                        <input
-                            type="number"
-                            title="Интервал замены (месяцев)"
-                            placeholder="мес"
-                            value={intervalMonths[cfg.key] ?? ''}
-                            onChange={(e) => handleIntervalMonthsChange(
-                                cfg.key,
-                                e.target.value === '' ? null : parseInt(e.target.value),
-                            )}
-                            className="md3-field !w-20"
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-
-    const notificationsList = (
-        <div className={`flex flex-col gap-2 ${collapsible ? 'pt-3' : ''}`}>
-            {configs.map(cfg => (
-                <label key={cfg.key} className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-                    <input
-                        type="checkbox"
-                        checked={notifyFlags[cfg.key] ?? true}
-                        onChange={(e) => handleNotifyChange(cfg.key, e.target.checked)}
-                        className="w-5 h-5 rounded-md3-xs accent-primary"
-                    />
-                    <span className="text-body-md text-surface-on">{cfg.name}</span>
-                </label>
-            ))}
-            <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-                <input
-                    type="checkbox"
-                    checked={notifyFlags['tire_change'] ?? true}
-                    onChange={(e) => handleNotifyChange('tire_change', e.target.checked)}
-                    className="w-5 h-5 rounded-md3-xs accent-primary"
-                />
-                <span className="text-body-md text-surface-on">Шины</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-                <input
-                    type="checkbox"
-                    checked={notifyFlags['insurance'] ?? true}
-                    onChange={(e) => handleNotifyChange('insurance', e.target.checked)}
-                    className="w-5 h-5 rounded-md3-xs accent-primary"
-                />
-                <span className="text-body-md text-surface-on">Страховка</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer p-2 rounded-md3-xs hover:bg-surface-variant/40 transition-colors">
-                <input
-                    type="checkbox"
-                    checked={notifyFlags['parking_monthly'] ?? true}
-                    onChange={(e) => handleNotifyChange('parking_monthly', e.target.checked)}
-                    className="w-5 h-5 rounded-md3-xs accent-primary"
-                />
-                <span className="text-body-md text-surface-on">Аренда машиноместа</span>
-            </label>
         </div>
     );
 
@@ -176,23 +100,6 @@ export function VehicleFields({ form, collapsible = false, yearKmInline = false 
                 <>
                     {yearInput}
                     {kmInput}
-                </>
-            )}
-
-            {collapsible ? (
-                <>
-                    <Spoiler title="Интервалы замен (км / мес)">{intervalsSection}</Spoiler>
-                    <Spoiler title="Уведомления">{notificationsList}</Spoiler>
-                </>
-            ) : (
-                <>
-                    <hr className="md3-divider" />
-                    <h4 className="text-title-sm text-surface-on m-0">Интервалы замен (км / мес)</h4>
-                    <p className="text-body-sm text-outline mb-2">Первое поле — пробег (км), второе — срок в месяцах. Дата следующей замены считается от даты замены.</p>
-                    {intervalsSection}
-                    <hr className="md3-divider" />
-                    <h4 className="text-title-sm text-surface-on m-0">Уведомления</h4>
-                    {notificationsList}
                 </>
             )}
         </>

@@ -51,6 +51,28 @@ export interface Vehicle {
     vehicle_status?: string;
     rims: RimSize[];
     tires: TireSize[];
+    reference_items?: ReferenceItem[];
+}
+
+export interface ReferenceVariant {
+    id?: number;
+    name: string;
+    approvals: string | null;
+}
+
+export interface ReferenceItem {
+    id?: number;
+    component_type: string;
+    volume_liters: number | null;
+    note: string | null;
+    variants: ReferenceVariant[];
+}
+
+export interface ReferenceItemPayload {
+    component_type: string;
+    volume_liters: number | null;
+    note: string | null;
+    variants: { name: string; approvals: string | null }[];
 }
 
 export type TireSeason = 'summer' | 'winter' | 'all_season';
@@ -237,6 +259,7 @@ export interface ComponentConfig {
     example: string;
     default_interval: number;
     default_interval_months?: number | null;
+    supports_volume?: boolean;
 }
 
 export interface VehicleFormData {
@@ -245,9 +268,9 @@ export interface VehicleFormData {
     plate_number: string;
     year: number;
     current_km: number;
-    intervals: Record<string, number>;
-    notify_flags: Record<string, boolean>;
-    interval_months: Record<string, number | null>;
+    intervals?: Record<string, number>;
+    notify_flags?: Record<string, boolean>;
+    interval_months?: Record<string, number | null>;
 }
 
 export interface User {

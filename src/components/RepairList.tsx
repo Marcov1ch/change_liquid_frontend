@@ -66,7 +66,7 @@ export function RepairList({
     <div className="md3-card overflow-hidden animate-fade-in">
       <VehicleCardHeader
         vehicle={selectedVehicle}
-        title={`Ремонт или обслуживание: ${selectedVehicle.brand} ${selectedVehicle.model}`}
+        title={`Ремонт: ${selectedVehicle.brand} ${selectedVehicle.model}`}
         onClose={onClose}
         onShare={onShare}
       />

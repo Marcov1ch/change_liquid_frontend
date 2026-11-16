@@ -10,7 +10,7 @@ export function PublicRepairsSection({ repairs, componentNames }: Props) {
     const { formatMoney } = useCurrency();
     return (
         <div className="md3-card p-6">
-            <h2 className="text-title-md text-surface-on mb-4">Ремонт или обслуживание</h2>
+            <h2 className="text-title-md text-surface-on mb-4">Ремонт</h2>
 
             {repairs.length === 0 ? (
                 <p className="text-body-md text-outline">Ремонтов пока нет.</p>

@@ -4,12 +4,14 @@ import {
   ExpensesIcon,
   FuelIcon,
   RepairIcon,
+  ReferenceIcon,
   ReplacementsIcon,
   TireIcon,
 } from './icons/VehicleSectionIcons';
 import { FuelRecordsList } from './FuelRecordsList';
 import { OtherExpensesList } from './OtherExpensesList';
 import { ReplacementList } from './ReplacementList';
+import { ReferenceTab } from './ReferenceTab';
 import { RepairList } from './RepairList';
 import { TireSetsPanel } from './TireSetsPanel';
 import { Tabs, type TabItem } from './Tabs';
@@ -80,13 +82,18 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
     },
     {
       value: 'repairs',
-      label: `Ремонт или обслуживание (${repairs.length})`,
+      label: `Ремонт (${repairs.length})`,
       icon: <RepairIcon />,
     },
     {
       value: 'otherExpenses',
       label: `Прочие траты (${otherExpenses.length})`,
       icon: <ExpensesIcon />,
+    },
+    {
+      value: 'reference',
+      label: 'Справочник',
+      icon: <ReferenceIcon />,
     },
   ];
 
@@ -159,6 +166,15 @@ export function VehicleWorkspacePanel({ workspace, onShare }: Props) {
           onClose={closeVehicle}
           onShare={share}
           onExpensesUpdate={invalidateOtherExpenses}
+        />
+      )}
+
+      {activeTab === 'reference' && (
+        <ReferenceTab
+          vehicle={selectedVehicle}
+          onClose={closeVehicle}
+          onShare={share}
+          onUpdate={workspace.invalidateVehicles}
         />
       )}
 

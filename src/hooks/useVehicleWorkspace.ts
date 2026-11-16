@@ -7,7 +7,8 @@ export type WorkspaceTab =
   | 'tires'
   | 'fuelRecords'
   | 'repairs'
-  | 'otherExpenses';
+  | 'otherExpenses'
+  | 'reference';
 
 export function useVehicleWorkspace() {
   const queryClient = useQueryClient();
