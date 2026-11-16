@@ -7,6 +7,8 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { PublicVehiclePage } from './pages/PublicVehiclePage'
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
+import { AccountDeletionPage } from './pages/AccountDeletionPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/share/:token" element={<PublicVehiclePage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/account-deletion" element={<AccountDeletionPage />} />
                 <Route
                     path="/"
                     element={
