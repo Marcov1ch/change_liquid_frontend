@@ -1,4 +1,4 @@
-import type { RimSize, TireSize, Vehicle, VehicleFormData } from '../types'
+import type { ReferenceItemPayload, RimSize, TireSize, Vehicle, VehicleFormData } from '../types'
 import { API_BASE, authFetch, handleResponse, type ActionResponse } from './http'
 
 export const vehiclesApi = {
@@ -50,5 +50,12 @@ export const vehiclesApi = {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
+        }).then(res => handleResponse<Vehicle>(res)),
+
+    updateVehicleReference: (vehicleId: number, referenceItems: ReferenceItemPayload[]) =>
+        authFetch(`${API_BASE}/vehicles/${vehicleId}/reference`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reference_items: referenceItems }),
         }).then(res => handleResponse<Vehicle>(res)),
 }

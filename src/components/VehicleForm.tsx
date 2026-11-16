@@ -22,12 +22,7 @@ export function VehicleForm({ isOpen, onClose, onSubmit }: Props) {
     }
 
     try {
-      await onSubmit({
-        ...form.formData,
-        intervals: form.intervals,
-        notify_flags: form.notifyFlags,
-        interval_months: form.intervalMonths,
-      });
+      await onSubmit(form.formData);
       form.resetForm();
     } catch {
       // handled in parent

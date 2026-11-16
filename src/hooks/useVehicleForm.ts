@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { MAX_PLATE_LENGTH, validatePlateNumber } from '../utils/plateValidation';
-import { useBrands, useComponentConfigs, useModels } from './useEnums';
+import { useBrands, useModels } from './useEnums';
 import type { Vehicle } from '../types';
 
 const YEAR_MIN = 1960;
@@ -12,9 +12,6 @@ interface UseVehicleFormOptions {
 export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
     const [plateError, setPlateError] = useState('');
     const [yearError, setYearError] = useState('');
-    const [intervals, setIntervals] = useState<Record<string, number>>({});
-    const [notifyFlags, setNotifyFlags] = useState<Record<string, boolean>>({});
-    const [intervalMonths, setIntervalMonths] = useState<Record<string, number | null>>({});
     const [formData, setFormData] = useState({
         brand: '',
         model: '',
@@ -24,12 +21,10 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
     });
 
     const { data: brandsData } = useBrands();
-    const { data: configsData } = useComponentConfigs();
     const { data: modelsData } = useModels(formData.brand);
 
     const brands = brandsData?.brands ?? [];
     const models = modelsData?.models ?? [];
-    const configs = configsData?.configs ?? [];
 
     useEffect(() => {
         if (vehicle) {
@@ -40,46 +35,13 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
                 year: vehicle.year || new Date().getFullYear(),
                 current_km: vehicle.current_km || 0,
             });
-            setIntervals(vehicle.intervals || {});
-            setNotifyFlags(vehicle.notify_flags || {});
-            setIntervalMonths(vehicle.interval_months || {});
         }
     }, [vehicle]);
-
-    useEffect(() => {
-        if (!configsData) return;
-        const cfgMap: Record<string, number> = {};
-        const monthMap: Record<string, number | null> = {};
-        const notifyMap: Record<string, boolean> = {};
-        configsData.configs.forEach(c => {
-            cfgMap[c.key] = c.default_interval;
-            monthMap[c.key] = c.default_interval_months ?? null;
-            notifyMap[c.key] = true;
-        });
-        notifyMap['tire_change'] = true;
-        notifyMap['insurance'] = true;
-        notifyMap['parking_monthly'] = true;
-        setIntervals(prev => ({ ...cfgMap, ...prev }));
-        setNotifyFlags(prev => ({ ...notifyMap, ...prev }));
-        setIntervalMonths(prev => ({ ...monthMap, ...prev }));
-    }, [configsData]);
 
     const handlePlateChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.toUpperCase().slice(0, MAX_PLATE_LENGTH);
         setFormData(prev => ({ ...prev, plate_number: value }));
         setPlateError(validatePlateNumber(value) || '');
-    };
-
-    const handleIntervalChange = (key: string, value: number) => {
-        setIntervals(prev => ({ ...prev, [key]: value }));
-    };
-
-    const handleIntervalMonthsChange = (key: string, value: number | null) => {
-        setIntervalMonths(prev => ({ ...prev, [key]: value }));
-    };
-
-    const handleNotifyChange = (key: string, checked: boolean) => {
-        setNotifyFlags(prev => ({ ...prev, [key]: checked }));
     };
 
     const validateForm = useCallback((): boolean => {
@@ -105,9 +67,6 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
             year: new Date().getFullYear(),
             current_km: 0,
         });
-        setIntervals({});
-        setNotifyFlags({});
-        setIntervalMonths({});
         setPlateError('');
         setYearError('');
     }, []);
@@ -116,21 +75,11 @@ export function useVehicleForm({ vehicle = null }: UseVehicleFormOptions = {}) {
         formData,
         setFormData,
         setYearError,
-        intervals,
-        setIntervals,
-        intervalMonths,
-        setIntervalMonths,
-        notifyFlags,
-        setNotifyFlags,
         plateError,
         yearError,
         brands,
         models,
-        configs,
         handlePlateChange,
-        handleIntervalChange,
-        handleIntervalMonthsChange,
-        handleNotifyChange,
         validateForm,
         resetForm,
     };
