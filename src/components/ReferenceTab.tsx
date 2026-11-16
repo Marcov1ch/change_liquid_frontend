@@ -2,7 +2,6 @@ import type { Vehicle } from '../types';
 import { Spoiler } from './Spoiler';
 import { VehicleCardHeader } from './VehicleCardHeader';
 import { ReferenceComponentsPanel } from './ReferenceComponentsPanel';
-import { ReferenceIntervalsPanel } from './ReferenceIntervalsPanel';
 import { ReferenceSizesPanel } from './ReferenceSizesPanel';
 
 interface Props {
@@ -24,16 +23,12 @@ export function ReferenceTab({ vehicle, onClose, onShare, onUpdate }: Props) {
 
       <div className="p-4 flex flex-col gap-4">
         <section>
-          <h3 className="text-title-sm text-surface-on m-0 mb-3">Компоненты и допуски</h3>
+          <h3 className="text-title-sm text-surface-on m-0 mb-1">Компоненты</h3>
+          <p className="text-body-sm text-outline m-0 mb-3">
+            Интервалы по умолчанию уже подставлены. Отметьте, о чём напоминать.
+          </p>
           <ReferenceComponentsPanel vehicle={vehicle} onUpdate={onUpdate} />
         </section>
-
-        <Spoiler
-          title="Интервалы и уведомления"
-          summary="Значения по умолчанию подставлены автоматически"
-        >
-          <ReferenceIntervalsPanel vehicle={vehicle} onUpdate={onUpdate} />
-        </Spoiler>
 
         <Spoiler
           title="Колёса и диски"
