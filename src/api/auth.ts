@@ -19,6 +19,13 @@ export const authApi = {
     getMe: () =>
         authFetch(`${AUTH_BASE}/me`).then(res => handleResponse<User>(res)),
 
+    setPrimaryVehicle: (vehicleId: number | null) =>
+        authFetch(`${AUTH_BASE}/primary-vehicle`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vehicle_id: vehicleId }),
+        }).then(res => handleResponse<User>(res)),
+
     updateEmail: (email: string) =>
         authFetch(`${AUTH_BASE}/email`, {
             method: 'PATCH',

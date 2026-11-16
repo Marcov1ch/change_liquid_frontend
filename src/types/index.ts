@@ -281,5 +281,6 @@ export interface User {
     is_active: boolean;
     currency: CurrencyCode;
     profile_visited: boolean;
+    primary_vehicle_id?: number | null;
     created_at: string;
 }
