@@ -15,6 +15,7 @@ interface Props {
   onStartTrip: (vehicleId: number) => void;
   trackingVehicleId: number | null;
   showArchived: boolean;
+  primaryId?: number | null;
   statusIcons: Record<string, string>;
   getVehicleStatus: (vehicle: Vehicle) => string;
 }
@@ -30,7 +31,7 @@ const statusBg: Record<string, string> = {
 export function VehicleList({
   vehicles, selectedId, onSelect, onEditVehicle, onOpenStatistics,
   onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, onStartTrip,
-  trackingVehicleId, showArchived,
+  trackingVehicleId, showArchived, primaryId,
   statusIcons, getVehicleStatus,
 }: Props) {
   const { toast } = useToast();
@@ -93,9 +94,17 @@ export function VehicleList({
                   <span role="img" aria-label={status}>{icon}</span>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-title-md text-surface-on truncate">
-                    {vehicle.brand} {vehicle.model}
-                  </p>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-title-md text-surface-on truncate">
+                      {vehicle.brand} {vehicle.model}
+                    </p>
+                    {primaryId === vehicle.id && (
+                      <span className="md3-badge bg-primary-container text-primary-on-container shrink-0">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+                        Основная
+                      </span>
+                    )}
+                  </div>
                   <p className="text-body-sm text-outline truncate">
                     {vehicle.plate_number}
                     {status === 'unknown' && <span className="text-error ml-1">*</span>}

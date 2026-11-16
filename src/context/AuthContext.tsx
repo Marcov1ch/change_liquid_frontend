@@ -11,6 +11,8 @@ interface AuthContextType {
     register: (username: string, email: string, password: string) => Promise<User>
     logout: () => void
     updateEmail: (email: string) => Promise<void>
+    refreshUser: () => Promise<void>
+    setPrimaryVehicle: (vehicleId: number | null) => Promise<void>
     updateCurrency: (currency: CurrencyCode) => Promise<CurrencyChangeResponse>
     markProfileVisited: () => Promise<void>
     resendVerification: () => Promise<void>
@@ -70,6 +72,17 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
         return created
     }
 
+    const refreshUser = useCallback(async () => {
+        const me = await api.getMe()
+        setUser(me)
+    }, [])
+
+    const setPrimaryVehicle = useCallback(async (vehicleId: number | null) => {
+        const updated = await api.setPrimaryVehicle(vehicleId)
+        setUser(updated)
+        queryClient.invalidateQueries({ queryKey: ['vehicles'] })
+    }, [queryClient])
+
     const updateEmail = async (email: string) => {
         const updated = await api.updateEmail(email)
         setUser(updated)
@@ -102,7 +115,7 @@ export function AuthProvider({ children, queryClient }: { children: ReactNode; q
     }
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmail, updateCurrency, markProfileVisited, resendVerification, changePassword, deleteAccount, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateEmail, refreshUser, setPrimaryVehicle, updateCurrency, markProfileVisited, resendVerification, changePassword, deleteAccount, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     )

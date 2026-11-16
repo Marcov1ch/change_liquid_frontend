@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import type { Vehicle, VehicleFormData } from '../types';
 import type { VehicleWorkspace } from './useVehicleWorkspace';
 
 export function useVehicleActions(workspace: VehicleWorkspace) {
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -33,6 +35,7 @@ export function useVehicleActions(workspace: VehicleWorkspace) {
   const handleAddVehicle = async (newVehicle: VehicleFormData) => {
     try {
       await createVehicleMutation.mutateAsync(newVehicle);
+      await refreshUser();
       toast.success('Автомобиль добавлен');
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
@@ -47,6 +50,7 @@ export function useVehicleActions(workspace: VehicleWorkspace) {
   const handleDeleteVehicle = async (id: number) => {
     try {
       await api.deleteVehicle(id);
+      await refreshUser();
       workspace.invalidateVehicles();
       if (workspace.selectedId === id) workspace.closeVehicle();
     } catch (error) {
@@ -58,6 +62,7 @@ export function useVehicleActions(workspace: VehicleWorkspace) {
     if (!confirm('ПОЛНОСТЬЮ удалить автомобиль из базы данных? Это действие необратимо!')) return;
     try {
       await api.hardDeleteVehicle(id);
+      await refreshUser();
       workspace.invalidateVehicles();
       if (workspace.selectedId === id) workspace.closeVehicle();
     } catch (error) {
@@ -68,6 +73,7 @@ export function useVehicleActions(workspace: VehicleWorkspace) {
   const handleRestoreVehicle = async (id: number) => {
     try {
       await api.restoreVehicle(id);
+      await refreshUser();
       toast.success('Автомобиль восстановлен');
       workspace.invalidateVehicles();
     } catch (error) {
