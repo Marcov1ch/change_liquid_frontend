@@ -91,7 +91,7 @@ export function HomePage() {
           getVehicleStatus={getVehicleStatus}
         />
 
-        {!workspace.showArchived && (
+        {!workspace.showArchived && workspace.activeVehicles.length === 0 && (
           <button
             type="button"
             onClick={actions.openCreateForm}

@@ -8,6 +8,7 @@ import { ProfileHeader } from '../components/profile/ProfileHeader'
 import { ProfileLegalSection } from '../components/profile/ProfileLegalSection'
 import { ProfilePasswordSection } from '../components/profile/ProfilePasswordSection'
 import { ProfileUserCard } from '../components/profile/ProfileUserCard'
+import { ProfileVehicleSection } from '../components/profile/ProfileVehicleSection'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import {
@@ -153,6 +154,8 @@ export function ProfilePage() {
       <main className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex flex-col gap-6">
           <ProfileUserCard user={user} />
+
+          <ProfileVehicleSection />
 
           <ProfileEmailSection
             user={user}
