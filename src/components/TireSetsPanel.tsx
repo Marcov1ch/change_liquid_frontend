@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import type { Replacement, TireSet, TireSetPayload, Vehicle } from '../types';
+import type { Replacement, TireInstallPayload, TireSet, TireSetPayload, Vehicle } from '../types';
 import { getCurrentTireInstallId, isTireChange, sortTireEvents } from '../utils/tireSets';
 import { Modal } from './Modal';
 import { TireHistoryList } from './TireHistoryList';
@@ -90,14 +90,11 @@ export function TireSetsPanel({
     if (!installing) setInstallTarget(null);
   };
 
-  const handleInstall = async (payload: { work_price: number | null; next_change_date: string | null }) => {
+  const handleInstall = async (payload: TireInstallPayload) => {
     if (!installTarget) return;
     setInstalling(true);
     try {
-      await api.installTireSet(vehicleId, installTarget.id, {
-        work_price: payload.work_price,
-        next_change_date: payload.next_change_date,
-      });
+      await api.installTireSet(vehicleId, installTarget.id, payload);
       toast.success(`Установлены: ${installTarget.name}`);
       setInstallTarget(null);
       onTireSetsUpdate();

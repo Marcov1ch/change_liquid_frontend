@@ -1,4 +1,4 @@
-import type { Replacement } from '../types'
+import type { CurrencyCode, Replacement } from '../types'
 import { API_BASE, authFetch, handleResponse, type ActionResponse } from './http'
 
 export const replacementsApi = {
@@ -6,11 +6,18 @@ export const replacementsApi = {
         authFetch(`${API_BASE}/vehicles/${vehicleId}/replacements`)
             .then(res => handleResponse<Replacement[]>(res)),
 
-    createReplacement: (vehicleId: number, data: Record<string, string | number | null>) =>
+    createReplacement: (
+        vehicleId: number,
+        data: Record<string, string | number | null>,
+        currency?: CurrencyCode,
+    ) =>
         authFetch(`${API_BASE}/vehicles/${vehicleId}/replacements/bulk`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ replacements: [data] }),
+            body: JSON.stringify({
+                replacements: [data],
+                ...(currency ? { currency } : {}),
+            }),
         }).then(res => handleResponse<Replacement[]>(res)),
 
     updateReplacement: (replacementId: number, data: Record<string, string | number | undefined>) =>

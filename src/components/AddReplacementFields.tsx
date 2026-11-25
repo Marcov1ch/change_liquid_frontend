@@ -1,5 +1,5 @@
-import { useCurrency } from '../context/CurrencyContext';
 import type { Repair, Vehicle } from '../types';
+import { CURRENCY_SYMBOLS } from '../utils/currency';
 import type { NewReplacementData } from './AddReplacementForm';
 
 interface BaseProps {
@@ -16,7 +16,7 @@ export function AddDateOnlyReplacementFields({
     onChange,
     isParking,
 }: BaseProps & { isParking: boolean }) {
-    const { symbol } = useCurrency();
+    const symbol = CURRENCY_SYMBOLS[value.currency];
     return (
         <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
@@ -66,7 +66,7 @@ export function AddRegularReplacementFields({
     blockedByRepair,
     onChange,
 }: BaseProps & { selectedVehicle: Vehicle | undefined }) {
-    const { symbol } = useCurrency();
+    const symbol = CURRENCY_SYMBOLS[value.currency];
     return (
         <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">

@@ -1,21 +1,25 @@
 import { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
-import { roundMoney } from '../utils/currency';
+import type { CurrencyCode, TireInstallPayload } from '../types';
+import { CURRENCY_SYMBOLS, roundMoney } from '../utils/currency';
+import { InputCurrencySelect } from './ui/InputCurrencySelect';
 
 interface Props {
   tireSetName: string;
   today: string;
-  onSubmit: (payload: { work_price: number | null; next_change_date: string | null }) => Promise<void> | void;
+  onSubmit: (payload: TireInstallPayload) => Promise<void> | void;
   onCancel: () => void;
 }
 
 export function TireInstallForm({ tireSetName, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
-  const { symbol } = useCurrency();
+  const { currency: profileCurrency } = useCurrency();
   const [workPrice, setWorkPrice] = useState('');
   const [nextChangeDate, setNextChangeDate] = useState('');
+  const [inputCurrency, setInputCurrency] = useState<CurrencyCode>(profileCurrency);
   const [submitting, setSubmitting] = useState(false);
+  const symbol = CURRENCY_SYMBOLS[inputCurrency];
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,6 +44,7 @@ export function TireInstallForm({ tireSetName, today, onSubmit, onCancel }: Prop
       await onSubmit({
         work_price: parsedPrice,
         next_change_date: nextChangeDate || null,
+        currency: inputCurrency,
       });
     } finally {
       setSubmitting(false);
@@ -51,6 +56,8 @@ export function TireInstallForm({ tireSetName, today, onSubmit, onCancel }: Prop
       <p className="text-body-md text-surface-on m-0">
         Установка комплекта: <strong>{tireSetName}</strong>
       </p>
+
+      <InputCurrencySelect value={inputCurrency} onChange={setInputCurrency} />
 
       <div>
         <label className="block text-label-md text-surface-on-variant mb-1">Стоимость работ, {symbol}</label>

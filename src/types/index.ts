@@ -105,12 +105,14 @@ export interface TireSetPayload {
     install_now?: boolean;
     work_price?: number | null;
     next_change_date?: string | null;
+    currency?: CurrencyCode;
 }
 
 export interface TireInstallPayload {
     switch_date?: string;
     next_change_date?: string | null;
     work_price?: number | null;
+    currency?: CurrencyCode;
 }
 
 export interface TireInstallResponse {
@@ -154,6 +156,7 @@ export interface FuelRecordPayload {
     km_at_fuel: number;
     liters: number;
     total_cost: number;
+    currency?: CurrencyCode;
 }
 
 export interface Repair {
@@ -174,6 +177,7 @@ export interface RepairPayload {
     work_cost: number;
     parts_cost: number;
     component_types: string[];
+    currency?: CurrencyCode;
 }
 
 export interface OtherExpense {
@@ -188,6 +192,7 @@ export interface OtherExpensePayload {
     name: string;
     expense_date: string;
     amount: number;
+    currency?: CurrencyCode;
 }
 
 export interface ShareLink {

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
-import type { FuelRecord, FuelRecordPayload, Vehicle } from '../types';
-import { roundMoney } from '../utils/currency';
+import type { CurrencyCode, FuelRecord, FuelRecordPayload, Vehicle } from '../types';
+import { CURRENCY_SYMBOLS, roundMoney } from '../utils/currency';
+import { InputCurrencySelect } from './ui/InputCurrencySelect';
 
 interface Props {
   vehicle: Vehicle;
@@ -14,12 +15,14 @@ interface Props {
 
 export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
-  const { symbol } = useCurrency();
+  const { currency: profileCurrency } = useCurrency();
   const [fuelDate, setFuelDate] = useState(initial?.fuel_date ?? today);
   const [kmAtFuel, setKmAtFuel] = useState(String(initial?.km_at_fuel ?? vehicle.current_km));
   const [liters, setLiters] = useState(initial ? String(initial.liters) : '');
   const [totalCost, setTotalCost] = useState(initial ? String(initial.total_cost) : '');
+  const [inputCurrency, setInputCurrency] = useState<CurrencyCode>(profileCurrency);
   const [submitting, setSubmitting] = useState(false);
+  const symbol = CURRENCY_SYMBOLS[inputCurrency];
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -44,12 +47,14 @@ export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: 
 
     setSubmitting(true);
     try {
-      await onSubmit({
+      const payload: FuelRecordPayload = {
         fuel_date: fuelDate,
         km_at_fuel: Math.round(km),
         liters: Math.round(parsedLiters * 1000) / 1000,
         total_cost: roundMoney(parsedCost),
-      });
+      };
+      if (!initial) payload.currency = inputCurrency;
+      await onSubmit(payload);
     } finally {
       setSubmitting(false);
     }
@@ -57,6 +62,10 @@ export function FuelRecordForm({ vehicle, initial, today, onSubmit, onCancel }: 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {!initial && (
+        <InputCurrencySelect value={inputCurrency} onChange={setInputCurrency} />
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-label-md text-surface-on-variant mb-1">Дата *</label>
