@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
 import type {
     ComponentConfig,
+    CurrencyCode,
     Repair,
     Replacement,
     Vehicle,
@@ -33,6 +35,7 @@ interface Params {
 function initialNewReplacement(
     configs: ComponentConfig[],
     selectedVehicle: Vehicle | undefined,
+    currency: CurrencyCode,
 ): NewReplacementData {
     return {
         component_type: configs[0]?.key ?? '',
@@ -42,6 +45,7 @@ function initialNewReplacement(
         replacement_date: new Date().toISOString().split('T')[0],
         km_at_replacement: selectedVehicle?.current_km ?? 0,
         next_change_date: '',
+        currency,
     };
 }
 
@@ -53,10 +57,11 @@ export function useReplacementEditing({
     onReplacementsUpdate,
 }: Params) {
     const { toast } = useToast();
+    const { currency } = useCurrency();
     const [editingReplacement, setEditingReplacement] = useState<Replacement | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newReplacement, setNewReplacement] = useState<NewReplacementData>(() =>
-        initialNewReplacement(configs, selectedVehicle),
+        initialNewReplacement(configs, selectedVehicle, currency),
     );
     const [editForm, setEditForm] = useState<ReplacementEditForm>(EMPTY_EDIT_FORM);
 
@@ -201,10 +206,10 @@ export function useReplacementEditing({
                     ? 0
                     : roundMoney(parseFloat(newReplacement.work_price) || 0);
             }
-            await api.createReplacement(vehicleId, payload);
+            await api.createReplacement(vehicleId, payload, newReplacement.currency);
             toast.success('Замена добавлена');
             setShowAddForm(false);
-            setNewReplacement(initialNewReplacement(configs, selectedVehicle));
+            setNewReplacement(initialNewReplacement(configs, selectedVehicle, currency));
             onReplacementsUpdate();
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Не удалось добавить замену');

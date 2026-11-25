@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client';
+import { useCurrency } from '../../context/CurrencyContext';
 import { useToast } from '../../context/ToastContext';
 import { useComponentConfigs } from '../../hooks/useEnums';
-import type { Repair, Vehicle } from '../../types';
+import type { CurrencyCode, Repair, Vehicle } from '../../types';
 import { buildReplacementPayload } from '../../utils/quickAdd';
 import { findBlockingRepair } from '../../utils/repairConflicts';
 import { AddReplacementForm, type NewReplacementData } from '../AddReplacementForm';
@@ -14,7 +15,11 @@ interface Props {
   onCancel: () => void;
 }
 
-function initialData(vehicle: Vehicle, componentType: string): NewReplacementData {
+function initialData(
+  vehicle: Vehicle,
+  componentType: string,
+  currency: CurrencyCode,
+): NewReplacementData {
   return {
     component_type: componentType,
     component_name: '',
@@ -23,14 +28,18 @@ function initialData(vehicle: Vehicle, componentType: string): NewReplacementDat
     replacement_date: new Date().toISOString().split('T')[0],
     km_at_replacement: vehicle.current_km,
     next_change_date: '',
+    currency,
   };
 }
 
 export function QuickAddReplacementForm({ vehicle, repairs, onSaved, onCancel }: Props) {
   const { toast } = useToast();
+  const { currency } = useCurrency();
   const { data: configsData } = useComponentConfigs();
   const configs = useMemo(() => configsData?.configs ?? [], [configsData]);
-  const [value, setValue] = useState<NewReplacementData>(() => initialData(vehicle, ''));
+  const [value, setValue] = useState<NewReplacementData>(
+    () => initialData(vehicle, '', currency),
+  );
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -49,7 +58,7 @@ export function QuickAddReplacementForm({ vehicle, repairs, onSaved, onCancel }:
     }
     setSubmitting(true);
     try {
-      await api.createReplacement(vehicle.id, result.payload);
+      await api.createReplacement(vehicle.id, result.payload, value.currency);
       toast.success('Замена добавлена');
       onSaved();
     } catch (error) {

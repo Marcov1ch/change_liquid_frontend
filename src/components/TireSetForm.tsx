@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
-import type { TireSeason, TireSet, TireSetPayload } from '../types';
-import { roundMoney } from '../utils/currency';
+import type { CurrencyCode, TireSeason, TireSet, TireSetPayload } from '../types';
+import { CURRENCY_SYMBOLS, roundMoney } from '../utils/currency';
 import { TIRE_SEASON_LABELS } from '../utils/tireSets';
+import { InputCurrencySelect } from './ui/InputCurrencySelect';
 
 interface Props {
   initial?: TireSet | null;
@@ -16,7 +17,7 @@ const SEASONS: TireSeason[] = ['winter', 'summer', 'all_season'];
 
 export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
-  const { symbol } = useCurrency();
+  const { currency: profileCurrency } = useCurrency();
   const [name, setName] = useState(initial?.name ?? '');
   const [season, setSeason] = useState<TireSeason>(initial?.season ?? 'winter');
   const [purchaseDate, setPurchaseDate] = useState(initial?.purchase_date ?? '');
@@ -26,7 +27,9 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
   const [installNow, setInstallNow] = useState(!initial);
   const [workPrice, setWorkPrice] = useState('');
   const [nextChangeDate, setNextChangeDate] = useState(initial?.next_change_date ?? '');
+  const [inputCurrency, setInputCurrency] = useState<CurrencyCode>(profileCurrency);
   const [submitting, setSubmitting] = useState(false);
+  const symbol = CURRENCY_SYMBOLS[inputCurrency];
 
   const showNextDate = initial ? initial.is_installed : installNow;
   const nextDateMin = initial?.installed_date
@@ -84,6 +87,7 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
       if (!initial) {
         payload.install_now = installNow;
         payload.work_price = installNow ? parsedWorkPrice : null;
+        payload.currency = inputCurrency;
       }
       if (showNextDate) {
         payload.next_change_date = nextChangeDate || null;
@@ -120,6 +124,10 @@ export function TireSetForm({ initial, today, onSubmit, onCancel }: Props) {
           ))}
         </select>
       </div>
+
+      {!initial && (
+        <InputCurrencySelect value={inputCurrency} onChange={setInputCurrency} />
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div>

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
 import { useComponentConfigs } from '../hooks/useEnums';
-import type { Repair, RepairPayload, Replacement, Vehicle } from '../types';
-import { roundMoney } from '../utils/currency';
+import type { CurrencyCode, Repair, RepairPayload, Replacement, Vehicle } from '../types';
+import { CURRENCY_SYMBOLS, roundMoney } from '../utils/currency';
 import { hasPricedReplacement } from '../utils/repairConflicts';
+import { InputCurrencySelect } from './ui/InputCurrencySelect';
 
 interface Props {
   vehicle: Vehicle;
@@ -24,7 +25,7 @@ export function RepairForm({
   onCancel,
 }: Props) {
   const { toast } = useToast();
-  const { symbol } = useCurrency();
+  const { currency: profileCurrency } = useCurrency();
   const { data: configsData } = useComponentConfigs();
   const configs = configsData?.configs ?? [];
 
@@ -38,7 +39,9 @@ export function RepairForm({
     initial ? String(initial.parts_cost) : '0',
   );
   const [componentTypes, setComponentTypes] = useState<string[]>(initial?.component_types ?? []);
+  const [inputCurrency, setInputCurrency] = useState<CurrencyCode>(profileCurrency);
   const [submitting, setSubmitting] = useState(false);
+  const symbol = CURRENCY_SYMBOLS[inputCurrency];
 
   const conflictingConfigs = configs.filter(
     config =>
@@ -79,14 +82,16 @@ export function RepairForm({
 
     setSubmitting(true);
     try {
-      await onSubmit({
+      const payload: RepairPayload = {
         repair_date: repairDate,
         km_at_repair: Math.round(km),
         description: description.trim() || null,
         work_cost: roundMoney(Number(workCost)),
         parts_cost: roundMoney(Number(partsCost)),
         component_types: componentTypes,
-      });
+      };
+      if (!initial) payload.currency = inputCurrency;
+      await onSubmit(payload);
     } finally {
       setSubmitting(false);
     }
@@ -127,6 +132,10 @@ export function RepairForm({
           className="md3-field resize-y"
         />
       </div>
+
+      {!initial && (
+        <InputCurrencySelect value={inputCurrency} onChange={setInputCurrency} />
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div>

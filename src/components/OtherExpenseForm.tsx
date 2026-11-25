@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
-import type { OtherExpense, OtherExpensePayload } from '../types';
-import { roundMoney } from '../utils/currency';
+import type { CurrencyCode, OtherExpense, OtherExpensePayload } from '../types';
+import { CURRENCY_SYMBOLS, roundMoney } from '../utils/currency';
+import { InputCurrencySelect } from './ui/InputCurrencySelect';
 
 interface Props {
   initial?: OtherExpense | null;
@@ -13,11 +14,13 @@ interface Props {
 
 export function OtherExpenseForm({ initial, today, onSubmit, onCancel }: Props) {
   const { toast } = useToast();
-  const { symbol } = useCurrency();
+  const { currency: profileCurrency } = useCurrency();
   const [name, setName] = useState(initial?.name ?? '');
   const [expenseDate, setExpenseDate] = useState(initial?.expense_date ?? today);
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
+  const [inputCurrency, setInputCurrency] = useState<CurrencyCode>(profileCurrency);
   const [submitting, setSubmitting] = useState(false);
+  const symbol = CURRENCY_SYMBOLS[inputCurrency];
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -41,11 +44,13 @@ export function OtherExpenseForm({ initial, today, onSubmit, onCancel }: Props) 
 
     setSubmitting(true);
     try {
-      await onSubmit({
+      const payload: OtherExpensePayload = {
         name: trimmedName,
         expense_date: expenseDate,
         amount: roundMoney(parsedAmount),
-      });
+      };
+      if (!initial) payload.currency = inputCurrency;
+      await onSubmit(payload);
     } finally {
       setSubmitting(false);
     }
@@ -53,6 +58,10 @@ export function OtherExpenseForm({ initial, today, onSubmit, onCancel }: Props) 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {!initial && (
+        <InputCurrencySelect value={inputCurrency} onChange={setInputCurrency} />
+      )}
+
       <div>
         <label className="block text-label-md text-surface-on-variant mb-1">Название *</label>
         <input

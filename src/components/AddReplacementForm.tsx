@@ -1,9 +1,10 @@
-import type { ComponentConfig, Repair, Vehicle } from '../types';
+import type { ComponentConfig, CurrencyCode, Repair, Vehicle } from '../types';
 import { isDateOnlyComponent } from '../utils/replacementTypes';
 import {
     AddDateOnlyReplacementFields,
     AddRegularReplacementFields,
 } from './AddReplacementFields';
+import { InputCurrencySelect } from './ui/InputCurrencySelect';
 
 export interface NewReplacementData {
     component_type: string;
@@ -13,6 +14,7 @@ export interface NewReplacementData {
     replacement_date: string;
     km_at_replacement: number;
     next_change_date: string;
+    currency: CurrencyCode;
 }
 
 interface Props {
@@ -75,6 +77,13 @@ export function AddReplacementForm({
                         className="md3-field"
                     />
                 </div>
+
+                {!blockedByRepair && (
+                    <InputCurrencySelect
+                        value={value.currency}
+                        onChange={(currency) => onChange({ currency })}
+                    />
+                )}
 
                 {isDateOnly ? (
                     <AddDateOnlyReplacementFields

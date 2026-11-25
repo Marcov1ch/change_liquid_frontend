@@ -10,6 +10,7 @@ const base: NewReplacementData = {
   replacement_date: '2026-11-16',
   km_at_replacement: 100000,
   next_change_date: '',
+  currency: 'RUB',
 };
 
 describe('buildReplacementPayload', () => {
