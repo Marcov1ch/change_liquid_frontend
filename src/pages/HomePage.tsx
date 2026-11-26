@@ -63,6 +63,13 @@ export function HomePage() {
     await actions.handleUpdateKm(result.vehicleId, newKm);
   };
 
+  const secondaryVehicles = workspace.showArchived
+    ? workspace.archivedVehicles
+    : workspace.activeVehicles.filter(vehicle => vehicle.id !== primary?.id);
+  const showEmptyState = secondaryVehicles.length === 0
+    && (workspace.showArchived || workspace.activeVehicles.length === 0);
+  const showAddButton = !workspace.showArchived && workspace.activeVehicles.length === 0;
+
   return (
     <div className="min-h-screen bg-surface">
       <HomeHeader />
@@ -71,8 +78,14 @@ export function HomePage() {
         {!workspace.showArchived && primary && workspace.activeVehicles.length > 0 && (
           <div className="mb-4">
             <PrimaryVehicleHero
+              key={primary.id}
               vehicle={primary}
               onOpen={() => workspace.selectVehicle(primary.id)}
+              onEdit={() => actions.handleEditVehicle(primary)}
+              onStatistics={() => actions.openStatistics(primary)}
+              onStartTrip={() => { void handleStartTrip(primary.id); }}
+              onUpdateKm={actions.handleUpdateKm}
+              isTracking={gps.isTracking && gps.vehicleId === primary.id}
             />
           </div>
         )}
@@ -85,7 +98,7 @@ export function HomePage() {
         />
 
         <VehicleList
-          vehicles={workspace.showArchived ? workspace.archivedVehicles : workspace.activeVehicles}
+          vehicles={secondaryVehicles}
           selectedId={workspace.selectedId}
           onSelect={workspace.selectVehicle}
           onEditVehicle={actions.handleEditVehicle}
@@ -99,9 +112,10 @@ export function HomePage() {
           primaryId={primary?.id ?? null}
           statusIcons={statusIcons}
           getVehicleStatus={getVehicleStatus}
+          showEmptyState={showEmptyState}
         />
 
-        {!workspace.showArchived && workspace.activeVehicles.length === 0 && (
+        {showAddButton && (
           <button
             type="button"
             onClick={actions.openCreateForm}

@@ -19,6 +19,7 @@ interface Props {
   primaryId?: number | null;
   statusIcons: Record<string, string>;
   getVehicleStatus: (vehicle: Vehicle) => string;
+  showEmptyState?: boolean;
 }
 
 const statusBg: Record<string, string> = {
@@ -33,7 +34,7 @@ export function VehicleList({
   vehicles, selectedId, onSelect, onEditVehicle, onOpenStatistics,
   onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, onStartTrip,
   trackingVehicleId, showArchived, primaryId,
-  statusIcons, getVehicleStatus,
+  statusIcons, getVehicleStatus, showEmptyState = true,
 }: Props) {
   const { toast } = useToast();
   const [editingKm, setEditingKm] = useState<number | null>(null);
@@ -55,6 +56,7 @@ export function VehicleList({
   };
 
   if (vehicles.length === 0) {
+    if (!showEmptyState) return null;
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
         <EmptyGarageIllustration className="mb-4 h-28 w-40" />
