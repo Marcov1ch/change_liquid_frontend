@@ -118,9 +118,9 @@ export function AddReplacementForm({
                             : '💡 Дату следующей замены система рассчитает сама из настроек авто (интервал в месяцах). Поля с ценой можно оставить пустыми.'}
                 </div>
 
-                <div className="flex gap-3 pt-1">
-                    <button onClick={onSubmit} className="md3-btn-primary flex-1">Сохранить</button>
-                    <button onClick={onCancel} className="md3-btn-text flex-1">Отмена</button>
+                <div className="flex gap-2 justify-end pt-2">
+                    <button type="button" onClick={onCancel} className="md3-btn-text">Отмена</button>
+                    <button type="button" onClick={onSubmit} className="md3-btn-primary">Добавить</button>
                 </div>
             </div>
         </div>
