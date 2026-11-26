@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { HomeHeader } from '../components/HomeHeader';
+import { PrimaryVehicleHero } from '../components/PrimaryVehicleHero';
 import { VehicleList } from '../components/VehicleList';
 import { VehicleToolbar } from '../components/VehicleToolbar';
 import { VehicleWorkspacePanel } from '../components/VehicleWorkspacePanel';
@@ -67,6 +68,15 @@ export function HomePage() {
       <HomeHeader />
 
       <main className="max-w-5xl mx-auto px-4 py-6 pb-28">
+        {!workspace.showArchived && primary && workspace.activeVehicles.length > 0 && (
+          <div className="mb-4">
+            <PrimaryVehicleHero
+              vehicle={primary}
+              onOpen={() => workspace.selectVehicle(primary.id)}
+            />
+          </div>
+        )}
+
         <VehicleToolbar
           showArchived={workspace.showArchived}
           onShowArchivedChange={workspace.setShowArchived}
