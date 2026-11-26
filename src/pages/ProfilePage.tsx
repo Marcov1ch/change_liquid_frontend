@@ -6,6 +6,7 @@ import { ProfileDeleteAccountSection } from '../components/profile/ProfileDelete
 import { ProfileEmailSection } from '../components/profile/ProfileEmailSection'
 import { ProfileHeader } from '../components/profile/ProfileHeader'
 import { ProfileLegalSection } from '../components/profile/ProfileLegalSection'
+import { ProfileLogoutSection } from '../components/profile/ProfileLogoutSection'
 import { ProfilePasswordSection } from '../components/profile/ProfilePasswordSection'
 import { ProfileUserCard } from '../components/profile/ProfileUserCard'
 import { ProfileVehicleSection } from '../components/profile/ProfileVehicleSection'
@@ -20,7 +21,7 @@ import {
 } from '../utils/resendCooldown'
 
 export function ProfilePage() {
-  const { user, updateEmail, markProfileVisited, resendVerification, changePassword, deleteAccount } = useAuth()
+  const { user, logout, updateEmail, markProfileVisited, resendVerification, changePassword, deleteAccount } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -137,6 +138,11 @@ export function ProfilePage() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   const handleDeleteAccount = async () => {
     if (!confirm('Удалить аккаунт? Вход станет невозможен. Полное удаление данных — по запросу в поддержку.')) return
     try {
@@ -185,6 +191,8 @@ export function ProfilePage() {
             onConfirmPasswordChange={setConfirmPassword}
             onSubmit={handlePasswordSubmit}
           />
+
+          <ProfileLogoutSection onLogout={handleLogout} />
 
           <ProfileLegalSection />
 

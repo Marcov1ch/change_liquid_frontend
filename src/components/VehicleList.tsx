@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import type { Vehicle } from '../types';
+import { EmptyGarageIllustration } from './EmptyGarageIllustration';
 import { StatisticsIcon } from './icons/VehicleSectionIcons';
 
 interface Props {
@@ -56,13 +57,9 @@ export function VehicleList({
   if (vehicles.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center mb-4">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#44474E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 16H9m5-4H9m5-4H9" /><path d="M17 4H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
-          </svg>
-        </div>
-        <p className="text-title-md text-outline mb-1">Нет автомобилей</p>
-        <p className="text-body-md text-outline">Добавьте первый автомобиль</p>
+        <EmptyGarageIllustration className="mb-4 h-28 w-40" />
+        <p className="text-title-md text-surface-on mb-1">Нет автомобилей</p>
+        <p className="text-body-md text-outline">Добавьте первый автомобиль, чтобы начать вести историю</p>
       </div>
     );
   }
