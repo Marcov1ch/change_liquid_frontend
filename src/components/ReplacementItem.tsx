@@ -87,7 +87,6 @@ export function ReplacementItem({
             ) : (
                 <>
                     <div className="flex items-center gap-2 min-w-0">
-                        {isFirst && <span className="text-label-md">{itemStyle.icon}</span>}
                         <span className="text-label-lg text-surface-on">{replacement.component_name}</span>
                         {isFirst && (
                             <span className="md3-badge bg-primary-container text-primary-on-container">

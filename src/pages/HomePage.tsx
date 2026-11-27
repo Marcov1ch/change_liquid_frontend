@@ -19,14 +19,6 @@ import { useVehicleActions } from '../hooks/useVehicleActions';
 import { useVehicleWorkspace } from '../hooks/useVehicleWorkspace';
 import type { Vehicle } from '../types';
 
-const statusIcons = {
-  overdue: '🔴',
-  critical: '🟠',
-  warning: '🟡',
-  good: '🟢',
-  unknown: '⚪',
-};
-
 function getVehicleStatus(vehicle: Vehicle): string {
   return vehicle.vehicle_status || 'unknown';
 }
@@ -110,7 +102,6 @@ export function HomePage() {
           trackingVehicleId={gps.isTracking ? gps.vehicleId : null}
           showArchived={workspace.showArchived}
           primaryId={primary?.id ?? null}
-          statusIcons={statusIcons}
           getVehicleStatus={getVehicleStatus}
           showEmptyState={showEmptyState}
         />

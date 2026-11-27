@@ -65,7 +65,6 @@ export function ReplacementGroup({
                 >
                     <polygon points="8 5 19 12 8 19 8 5" />
                 </svg>
-                <span>{statusStyle.icon}</span>
                 <span className="text-label-lg flex-1">{componentName || type}</span>
                 <button
                     onClick={(event) => {

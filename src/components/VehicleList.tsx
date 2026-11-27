@@ -17,24 +17,23 @@ interface Props {
   trackingVehicleId: number | null;
   showArchived: boolean;
   primaryId?: number | null;
-  statusIcons: Record<string, string>;
   getVehicleStatus: (vehicle: Vehicle) => string;
   showEmptyState?: boolean;
 }
 
-const statusBg: Record<string, string> = {
-  overdue: 'bg-error-container',
-  critical: 'bg-[#FFF0E6]',
-  warning: 'bg-[#FFF8E1]',
-  good: 'bg-[#E6F7E6]',
-  unknown: 'bg-surface-variant/50',
+const statusRail: Record<string, string> = {
+  overdue: 'bg-error',
+  critical: 'bg-[#E06900]',
+  warning: 'bg-[#FFC107]',
+  good: 'bg-[#28A745]',
+  unknown: 'bg-outline-variant',
 };
 
 export function VehicleList({
   vehicles, selectedId, onSelect, onEditVehicle, onOpenStatistics,
   onHardDeleteVehicle, onRestoreVehicle, onUpdateKm, onStartTrip,
   trackingVehicleId, showArchived, primaryId,
-  statusIcons, getVehicleStatus, showEmptyState = true,
+  getVehicleStatus, showEmptyState = true,
 }: Props) {
   const { toast } = useToast();
   const [editingKm, setEditingKm] = useState<number | null>(null);
@@ -70,28 +69,27 @@ export function VehicleList({
     <div className="flex flex-col gap-3">
       {vehicles.map(vehicle => {
         const status = getVehicleStatus(vehicle);
-        const icon = statusIcons[status] || '⚪';
-
 
         return (
           <div
             key={vehicle.id}
-            className={`md3-card overflow-hidden transition-all duration-200 ${
+            className={`md3-card relative overflow-hidden transition-all duration-200 ${
               selectedId === vehicle.id ? 'ring-2 ring-primary shadow-md3-2' : ''
             }`}
           >
+            <span
+              className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-md3-full ${statusRail[status] || statusRail.unknown}`}
+              aria-hidden="true"
+            />
             <div className="flex flex-row flex-wrap items-center gap-3 p-4">
               <div
-                className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
+                className="flex items-center gap-3 min-w-0 cursor-pointer flex-1 pl-1.5"
                 onClick={() => onSelect(vehicle.id)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(vehicle.id); }}
                 aria-label={`Выбрать ${vehicle.brand} ${vehicle.model}`}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 ${statusBg[status] || 'bg-surface-variant'}`}>
-                  <span role="img" aria-label={status}>{icon}</span>
-                </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <p className="text-title-md text-surface-on truncate">

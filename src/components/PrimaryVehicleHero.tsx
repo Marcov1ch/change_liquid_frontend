@@ -19,6 +19,14 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 const actionClass = 'inline-flex items-center gap-1.5 rounded-md3-full bg-white/20 px-3 py-1.5 text-label-md font-semibold text-white transition-colors hover:bg-white/30';
 
+const statusGradient: Record<string, string> = {
+  good: 'from-[#1A6DFF] to-[#4C8DFF]',
+  warning: 'from-[#92400E] to-[#D97706]',
+  critical: 'from-[#9A3412] to-[#EA580C]',
+  overdue: 'from-[#991B1B] to-[#DC2626]',
+  unknown: 'from-[#475569] to-[#64748B]',
+};
+
 export function PrimaryVehicleHero({
   vehicle,
   onOpen,
@@ -31,6 +39,7 @@ export function PrimaryVehicleHero({
   const [editingKm, setEditingKm] = useState(false);
   const [kmDraft, setKmDraft] = useState('');
   const [savingKm, setSavingKm] = useState(false);
+  const status = vehicle.vehicle_status || 'unknown';
 
   const { data: replacements = [] } = useQuery({
     queryKey: ['replacements', vehicle.id],
@@ -80,7 +89,7 @@ export function PrimaryVehicleHero({
         if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') onOpen();
       } : undefined}
-      className="relative overflow-hidden rounded-md3-lg bg-gradient-to-br from-[#1A6DFF] to-[#4C8DFF] p-5 text-white shadow-md3-3 transition-transform duration-200 hover:-translate-y-0.5"
+      className={`relative overflow-hidden rounded-md3-lg bg-gradient-to-br ${statusGradient[status] || statusGradient.unknown} p-5 text-white shadow-md3-3 transition-transform duration-200 hover:-translate-y-0.5`}
     >
       <span className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" aria-hidden="true" />
 

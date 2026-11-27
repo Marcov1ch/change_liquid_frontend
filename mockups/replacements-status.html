@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Мокап: замены без кружков статуса</title>
+<style>
+  :root {
+    --surface: #FDFBFF;
+    --surface-on: #1A1C1E;
+    --outline: #74777F;
+    --outline-variant: #C4C6D0;
+    --primary: #1A6DFF;
+    --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: var(--surface); color: var(--surface-on); -webkit-font-smoothing: antialiased; }
+  header.page { max-width: 1120px; margin: 0 auto; padding: 40px 24px 8px; }
+  h1 { font-size: 26px; line-height: 34px; font-weight: 700; margin: 0 0 8px; }
+  .lead { color: var(--outline); font-size: 15px; line-height: 22px; margin: 0; max-width: 780px; }
+  .lead b { color: var(--surface-on); }
+  code { background: #F0F1F6; padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+  section { max-width: 1120px; margin: 0 auto; padding: 30px 24px; border-top: 1px solid #ECEDF3; }
+  .sec-head { margin-bottom: 18px; }
+  .sec-tag { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--primary); background: #E8EFFF; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .sec-title { font-size: 19px; font-weight: 700; margin: 0 0 6px; }
+  .sec-desc { color: var(--outline); font-size: 14px; line-height: 21px; margin: 0; max-width: 760px; }
+
+  .groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; margin-top: 20px; }
+
+  /* ==== группа (аналог ReplacementGroup) ==== */
+  .group-card { background: #FDFBFF; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+  .group-head { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; text-align: left; font-size: 14px; font-weight: 500; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
+  .group-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chev { width: 12px; height: 12px; flex-shrink: 0; }
+  .chev polygon { fill: currentColor; }
+  .bell { font-size: 14px; line-height: 1; }
+  .count { font-size: 11px; opacity: .7; white-space: nowrap; }
+  .progress-row { padding: 0 16px 10px; }
+  .progress { display: flex; align-items: center; gap: 8px; }
+  .track { flex: 1; height: 6px; border-radius: 999px; overflow: hidden; background: rgba(196,198,208,.5); }
+  .fill { height: 100%; border-radius: 999px; }
+  .pct { font-size: 11px; font-weight: 500; flex-shrink: 0; }
+
+  .items { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+  .item { padding: 12px; border-radius: 8px; border-left: 4px solid; background: var(--surface); transition: box-shadow .2s; }
+  .item:hover { box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+  .item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .item-title { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; }
+  .item-title .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { font-size: 11px; line-height: 16px; font-weight: 500; padding: 2px 8px; border-radius: 999px; background: #D8E2FF; color: #001A41; white-space: nowrap; flex-shrink: 0; }
+  .item-actions { display: flex; gap: 2px; flex-shrink: 0; }
+  .icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 0; background: transparent; cursor: pointer; }
+  .icon-btn svg { width: 14px; height: 14px; }
+  .meta { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 12px; line-height: 18px; color: var(--outline); }
+  .item-label { margin: 4px 0 0; font-size: 12px; line-height: 16px; }
+
+  .note { margin-top: 22px; padding: 14px 16px; background: #EEF3FF; border: 1px solid #D6E0FF; border-radius: 12px; font-size: 13px; line-height: 20px; color: #23315B; max-width: 840px; }
+  .note b { color: #0E1F49; }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>Замены: убираем кружки статуса</h1>
+  <p class="lead">
+    Сейчас статус показан эмодзи-кружком в шапке группы (<code>ReplacementGroup.tsx:68</code>)
+    и в самой замене (<code>ReplacementItem.tsx:90</code>). Ниже — текущий вид и два предложения:
+    без кружков, статус передаётся цветом блока; у конкретной замены остаётся только левая полоска.
+  </p>
+</header>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-tag">Как сейчас</span>
+    <h2 class="sec-title">Кружки + цветная шапка + полоска</h2>
+    <p class="sec-desc">Для сравнения. Статус дублируется эмодзи-кружком в шапке группы и в «последней» замене.</p>
+  </div>
+  <div class="groups" id="grid-current"></div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-tag">Предложение A — рекомендуемое</span>
+    <h2 class="sec-title">Без кружков, шапка группы окрашена статусом</h2>
+    <p class="sec-desc">
+      Убираем эмодзи в шапке и в заменах. Шапка группы остаётся залитой цветом статуса (как сейчас),
+      у конкретной замены — только цветная полоска слева. Минимальные изменения, чище и без «иконок-светофоров».
+    </p>
+  </div>
+  <div class="groups" id="grid-a"></div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-tag">Предложение B — сильнее</span>
+    <h2 class="sec-title">Красим весь блок замены, а не только шапку</h2>
+    <p class="sec-desc">
+      Вся карточка группы заливается мягким тоном статуса, внутри — белые замены с цветной полоской.
+      Статус читается по всему блоку, даже когда он свёрнут. Заметнее, но больше цвета на экране.
+    </p>
+  </div>
+  <div class="groups" id="grid-b"></div>
+</section>
+
+<div class="note" style="max-width:1120px;margin:0 auto 40px;">
+  <b>Что остаётся неизменным:</b> полоска слева у конкретной замены, полоса прогресса с процентом,
+  бейдж «последняя», подпись статуса текстом, кнопки редактирования/удаления, колокольчик уведомлений.
+  <b>Что уходит:</b> только эмодзи-кружки 🟢🟡🟠🔴.
+  <br /><br />
+  <b>Важно про старые замены:</b> цветная полоска — только у последней (актуальной) замены.
+  Все предыдущие приходят с бэкенда со статусом <code>replaced</code> и по-прежнему получают
+  <b>серую полоску</b> и серую подпись «Заменено» (<code>statusStyles.ts</code>). Цвет статуса группы
+  берётся из последней замены. В мокапе это учтено.
+</div>
+
+<script>
+const STYLES = {
+  good:     { bg: '#E6F7E6', text: '#1B5E1B', border: '#28A745', icon: '🟢', label: 'В порядке',       fill: '#28A745' },
+  warning:  { bg: '#FFF8E1', text: '#7A6100', border: '#FFC107', icon: '🟡', label: 'Скоро замена',    fill: '#FFC107' },
+  critical: { bg: '#FFF0E6', text: '#7A2D00', border: '#E06900', icon: '🟠', label: 'Требует внимания', fill: '#E06900' },
+  overdue:  { bg: '#FFDAD6', text: '#410002', border: '#BA1A1A', icon: '🔴', label: 'Просрочено',      fill: '#BA1A1A' },
+  replaced: { bg: '#F5F5F5', text: '#74777F', border: '#C4C6D0', icon: '📌', label: 'Заменено',        fill: '#C4C6D0' },
+};
+
+const FIRST_NOTE = {
+  good: '',
+  warning: 'Осталось 350 км',
+  critical: 'Осталось 60 км',
+  overdue: 'Просрочено на 1 300 км',
+};
+
+const groups = [
+  {
+    name: 'Моторное масло', status: 'good', progress: 78,
+    items: [
+      { name: 'Моторное масло', first: true,  date: '12.10.2025', km: '80 500', traveled: '3 710', price: '2 400 ₽', work: '800 ₽', next: '92 000' },
+      { name: 'Моторное масло', first: false, date: '02.04.2025', km: '72 000', traveled: '8 500', price: '2 200 ₽', work: '800 ₽', next: '84 000' },
+      { name: 'Моторное масло', first: false, date: '18.11.2024', km: '61 000', traveled: '11 000', price: '2 000 ₽', work: '700 ₽', next: '72 000' },
+    ],
+  },
+  {
+    name: 'Тормозные колодки', status: 'critical', progress: 14,
+    items: [
+      { name: 'Тормозные колодки', first: true,  date: '05.06.2025', km: '76 100', traveled: '8 110', price: '4 900 ₽', work: '2 500 ₽', next: '85 000' },
+      { name: 'Тормозные колодки', first: false, date: '20.03.2024', km: '58 400', traveled: '17 700', price: '4 300 ₽', work: '2 200 ₽', next: '76 100' },
+    ],
+  },
+  {
+    name: 'Воздушный фильтр', status: 'warning', progress: 34,
+    items: [
+      { name: 'Воздушный фильтр', first: true,  date: '14.09.2025', km: '81 900', traveled: '2 310', price: '900 ₽', work: '400 ₽', next: '90 000' },
+      { name: 'Воздушный фильтр', first: false, date: '10.08.2024', km: '64 000', traveled: '17 900', price: '850 ₽', work: '400 ₽', next: '81 900' },
+    ],
+  },
+  {
+    name: 'Свечи зажигания', status: 'overdue', progress: 0,
+    items: [
+      { name: 'Свечи зажигания', first: true,  date: '22.02.2024', km: '52 000', traveled: '32 210', price: '3 200 ₽', work: '1 800 ₽', next: '70 000' },
+    ],
+  },
+];
+
+function meta(it) {
+  return `
+    <div class="meta">
+      <span>📅 ${it.date}</span>
+      <span>📍 ${it.km} км</span>
+      <span>🛣 Пройдено: ${it.traveled} км</span>
+      <span>🧾 Цена: ${it.price}</span>
+      <span>🔧 Работы: ${it.work}</span>
+      <span>⏱ Следующая: ${it.next} км</span>
+    </div>`;
+}
+
+function item(it, status, showIcon) {
+  const st = it.first ? STYLES[status] : STYLES.replaced;
+  const label = it.first ? FIRST_NOTE[status] : 'Заменено';
+  return `
+  <div class="item" style="border-left-color:${st.border}">
+    <div class="item-top">
+      <div class="item-title">
+        ${showIcon && it.first ? `<span>${st.icon}</span>` : ''}
+        <span class="nm">${it.name}</span>
+        ${it.first ? '<span class="badge">последняя</span>' : ''}
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn" aria-label="Редактировать" style="color:#7A6100">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Удалить" style="color:#BA1A1A">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+    ${meta(it)}
+    ${label ? `<p class="item-label" style="color:${st.text}">${label}</p>` : ''}
+  </div>`;
+}
+
+function progressBar(g, st) {
+  return `
+  <div class="progress-row">
+    <div class="progress">
+      <div class="track"><div class="fill" style="width:${g.progress}%;background:${st.fill}"></div></div>
+      <span class="pct" style="color:${st.text}">${g.progress}%</span>
+    </div>
+  </div>`;
+}
+
+function chevron() {
+  return `<svg class="chev" viewBox="0 0 24 24" style="transform:rotate(90deg)"><polygon points="8 5 19 12 8 19 8 5"/></svg>`;
+}
+
+function head(g, st, withIcon) {
+  return `
+  <div class="group-head" style="background:${st.bg};color:${st.text}">
+    ${chevron()}
+    ${withIcon ? `<span>${st.icon}</span>` : ''}
+    <span class="group-name">${g.name}</span>
+    <span class="bell">🔔</span>
+    <span class="count">${g.items.length} ${g.items.length === 1 ? 'замена' : 'замены'}</span>
+  </div>`;
+}
+
+/* Как сейчас */
+function currentCard(g) {
+  const st = STYLES[g.status];
+  return `<div class="group-card">${head(g, st, true)}${progressBar(g, st)}
+    <div class="items">${g.items.map(it => item(it, g.status, true)).join('')}</div></div>`;
+}
+
+/* Предложение A: без кружков, шапка окрашена */
+function cardA(g) {
+  const st = STYLES[g.status];
+  return `<div class="group-card">${head(g, st, false)}${progressBar(g, st)}
+    <div class="items">${g.items.map(it => item(it, g.status, false)).join('')}</div></div>`;
+}
+
+/* Предложение B: весь блок окрашен */
+function cardB(g) {
+  const st = STYLES[g.status];
+  return `
+  <div class="group-card" style="background:${st.bg}">
+    <div class="group-head" style="color:${st.text}">
+      ${chevron()}
+      <span class="group-name">${g.name}</span>
+      <span class="bell">🔔</span>
+      <span class="count">${g.items.length} ${g.items.length === 1 ? 'замена' : 'замены'}</span>
+    </div>
+    ${progressBar(g, st)}
+    <div class="items">${g.items.map(it => item(it, g.status, false)).join('')}</div>
+  </div>`;
+}
+
+document.getElementById('grid-current').innerHTML = groups.map(currentCard).join('');
+document.getElementById('grid-a').innerHTML = groups.map(cardA).join('');
+document.getElementById('grid-b').innerHTML = groups.map(cardB).join('');
+</script>
+</body>
+</html>

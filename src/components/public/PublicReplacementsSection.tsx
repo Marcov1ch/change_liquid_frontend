@@ -61,7 +61,6 @@ function PublicReplacementRow({
         <div className={`p-3 rounded-md3-sm border-l-4 ${style.border} bg-surface`}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-label-lg text-surface-on">
-                    {isFirst && <span className="mr-1">{style.icon}</span>}
                     {replacement.component_name}
                 </span>
                 {isFirst && (
